@@ -21,6 +21,7 @@ import { getCategories } from "@/lib/data";
 import { CartProvider } from "@/context/CartContext";
 
 import AuthProvider from "@/components/AuthProvider";
+import LayoutWrapper from "@/components/LayoutWrapper";
 
 export default async function RootLayout({ children }) {
   const categories = await getCategories();
@@ -33,76 +34,67 @@ export default async function RootLayout({ children }) {
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen bg-[#f3f4f6]`}>
         <CartProvider>
-          <Navbar categories={categories} />
+          <LayoutWrapper>
+            <Navbar categories={categories} />
 
-          <main className="flex-grow">
-            <AuthProvider>
-              {children}
-            </AuthProvider>
-          </main>
+            <main className="flex-grow">
+              <AuthProvider>
+                {children}
+              </AuthProvider>
+            </main>
 
-          {/* Emerald Professional Footer */}
-          <footer className="bg-[#0A3D2E] pt-12 pb-6 text-white text-sm mt-auto">
-            <div className="container mx-auto px-4 max-w-7xl">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-                <div>
-                  <h3 className="text-lg font-bold mb-4 flex items-center gap-2"><i className="fa-solid fa-store text-[#10b981]"></i> China Unique Store</h3>
-                  <p className="text-white/80 leading-relaxed mb-4">Your premium destination for high-quality kitchenware, home decor, and lifestyle products imported directly for you.</p>
-                  <div className="flex gap-4">
-                    <a href="#" className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-[#10b981] transition-colors"><i className="fa-brands fa-facebook-f"></i></a>
-                    <a href="#" className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-[#10b981] transition-colors"><i className="fa-brands fa-instagram"></i></a>
-                    <a href="#" className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-[#10b981] transition-colors"><i className="fa-brands fa-tiktok"></i></a>
+            {/* Emerald Professional Footer */}
+            <footer className="bg-[#0A3D2E] pt-12 pb-6 text-white text-sm mt-auto">
+              <div className="container mx-auto px-4 max-w-7xl">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                  <div>
+                    <h3 className="text-lg font-bold mb-4 flex items-center gap-2"><i className="fa-solid fa-store text-[#10b981]"></i> China Unique Store</h3>
+                    <p className="text-white/80 leading-relaxed mb-4">Your premium destination for high-quality kitchenware, home decor, and lifestyle products imported directly for you.</p>
+                    <div className="flex gap-4">
+                      <a href="#" className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-[#10b981] transition-colors"><i className="fa-brands fa-facebook-f"></i></a>
+                      <a href="#" className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-[#10b981] transition-colors"><i className="fa-brands fa-instagram"></i></a>
+                      <a href="#" className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-[#10b981] transition-colors"><i className="fa-brands fa-tiktok"></i></a>
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold mb-4 border-b border-white/10 pb-2">Quick Links</h3>
+                    <ul className="space-y-3 text-white/80">
+                      <li><a href="#" className="hover:text-[#10b981] transition-colors flex items-center gap-2"><i className="fa-solid fa-angle-right text-xs"></i> About Us</a></li>
+                      <li><a href="#" className="hover:text-[#10b981] transition-colors flex items-center gap-2"><i className="fa-solid fa-angle-right text-xs"></i> Refund Policy</a></li>
+                      <li><a href="#" className="hover:text-[#10b981] transition-colors flex items-center gap-2"><i className="fa-solid fa-angle-right text-xs"></i> Privacy Policy</a></li>
+                      <li><a href="#" className="hover:text-[#10b981] transition-colors flex items-center gap-2"><i className="fa-solid fa-angle-right text-xs"></i> Shipping Policy</a></li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold mb-4 border-b border-white/10 pb-2">Contact Us</h3>
+                    <ul className="space-y-4 text-white/80">
+                      <li className="flex items-start gap-3">
+                        <i className="fa-brands fa-whatsapp mt-1 text-[#10b981] text-lg"></i>
+                        <div>
+                          <span className="block font-semibold text-white">WhatsApp Line</span>
+                          <a href="https://wa.me/923001234567" className="hover:text-[#10b981] transition-colors">+92 300 1234567</a>
+                        </div>
+                      </li>
+                      <li className="flex items-start gap-3">
+                        <i className="fa-solid fa-location-dot mt-1 text-[#10b981] text-lg"></i>
+                        <div>
+                          <span className="block font-semibold text-white">Location</span>
+                          <span>Karachi, Pakistan</span>
+                        </div>
+                      </li>
+                    </ul>
                   </div>
                 </div>
-                <div>
-                  <h3 className="text-lg font-bold mb-4 border-b border-white/10 pb-2">Quick Links</h3>
-                  <ul className="space-y-3 text-white/80">
-                    <li><a href="#" className="hover:text-[#10b981] transition-colors flex items-center gap-2"><i className="fa-solid fa-angle-right text-xs"></i> About Us</a></li>
-                    <li><a href="#" className="hover:text-[#10b981] transition-colors flex items-center gap-2"><i className="fa-solid fa-angle-right text-xs"></i> Refund Policy</a></li>
-                    <li><a href="#" className="hover:text-[#10b981] transition-colors flex items-center gap-2"><i className="fa-solid fa-angle-right text-xs"></i> Privacy Policy</a></li>
-                    <li><a href="#" className="hover:text-[#10b981] transition-colors flex items-center gap-2"><i className="fa-solid fa-angle-right text-xs"></i> Shipping Policy</a></li>
-                  </ul>
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold mb-4 border-b border-white/10 pb-2">Contact Us</h3>
-                  <ul className="space-y-4 text-white/80">
-                    <li className="flex items-start gap-3">
-                      <i className="fa-brands fa-whatsapp mt-1 text-[#10b981] text-lg"></i>
-                      <div>
-                        <span className="block font-semibold text-white">WhatsApp Line</span>
-                        <a href="https://wa.me/923001234567" className="hover:text-[#10b981] transition-colors">+92 300 1234567</a>
-                      </div>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <i className="fa-solid fa-location-dot mt-1 text-[#10b981] text-lg"></i>
-                      <div>
-                        <span className="block font-semibold text-white">Location</span>
-                        <span>Karachi, Pakistan</span>
-                      </div>
-                    </li>
-                  </ul>
+                <div className="pt-6 border-t border-white/10 flex flex-col md:flex-row items-center justify-between text-white/60 text-xs">
+                  <p>&copy; {new Date().getFullYear()} China Unique Store. All rights reserved.</p>
+                  <div className="flex gap-4 mt-4 md:mt-0">
+                    <i className="fa-brands fa-cc-visa text-3xl opacity-50 hover:opacity-100 transition-opacity"></i>
+                    <i className="fa-brands fa-cc-mastercard text-3xl opacity-50 hover:opacity-100 transition-opacity"></i>
+                  </div>
                 </div>
               </div>
-              <div className="pt-6 border-t border-white/10 flex flex-col md:flex-row items-center justify-between text-white/60 text-xs">
-                <p>&copy; {new Date().getFullYear()} China Unique Store. All rights reserved.</p>
-                <div className="flex gap-4 mt-4 md:mt-0">
-                  <i className="fa-brands fa-cc-visa text-3xl opacity-50 hover:opacity-100 transition-opacity"></i>
-                  <i className="fa-brands fa-cc-mastercard text-3xl opacity-50 hover:opacity-100 transition-opacity"></i>
-                </div>
-              </div>
-            </div>
-          </footer>
-
-          {/* Floating WhatsApp Button */}
-          <a
-            href="https://wa.me/923001234567?text=Hello%20China%20Unique%20Store!"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="fixed bottom-6 right-6 z-50 bg-[#25D366] hover:bg-[#20bd5a] text-white w-14 h-14 rounded-full flex items-center justify-center shadow-2xl hover:scale-110 transition-transform duration-300 group"
-            aria-label="Contact us on WhatsApp"
-          >
-            <i className="fa-brands fa-whatsapp text-3xl"></i>
-          </a>
+            </footer>
+          </LayoutWrapper>
         </CartProvider>
       </body>
     </html>

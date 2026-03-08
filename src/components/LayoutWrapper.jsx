@@ -2,30 +2,37 @@
 
 import { useState, useEffect } from 'react';
 import SplashScreen from '@/components/SplashScreen';
+import FloatingWhatsApp from '@/components/FloatingWhatsApp';
 
 export default function LayoutWrapper({ children }) {
-    const [showSplash, setShowSplash] = useState(true);
+    const [loading, setLoading] = useState(true);
 
-    // After mount, wait 2 seconds, then remove Splash.
     useEffect(() => {
-        const timer = setTimeout(() => {
-            setShowSplash(false);
-        }, 2000);
-        return () => clearTimeout(timer);
+        // Show loader on every hard refresh, dismiss after window loads or 2s
+        const handleLoad = () => setLoading(false);
+
+        if (document.readyState === 'complete') {
+            // If already loaded, still show the splash for the full 2s
+            const timer = setTimeout(() => setLoading(false), 2000);
+            return () => clearTimeout(timer);
+        } else {
+            window.addEventListener('load', handleLoad);
+            // Fallback: dismiss after 2s regardless
+            const timer = setTimeout(() => setLoading(false), 2000);
+            return () => {
+                window.removeEventListener('load', handleLoad);
+                clearTimeout(timer);
+            };
+        }
     }, []);
 
     return (
         <>
-            {showSplash && <SplashScreen onComplete={() => setShowSplash(false)} />}
-
-            {/* 
-               We maintain a CSS opacity transition. 
-               When showSplash is true, the entire DOM stays strictly hidden (opacity-0).
-               Once showSplash finishes, it cascades opacity-1 over the children seamlessly. 
-            */}
-            <div className={`transition-opacity duration-1000 ease-in-out flex flex-col min-h-screen ${showSplash ? 'opacity-0 h-screen overflow-hidden' : 'opacity-100'}`}>
+            {loading && <SplashScreen onComplete={() => setLoading(false)} />}
+            <div style={{ visibility: loading ? 'hidden' : 'visible' }}>
                 {children}
             </div>
+            <FloatingWhatsApp />
         </>
     );
 }
