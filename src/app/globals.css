@@ -519,3 +519,50 @@
 .shake-cart-btn {
   animation: shakeHorizontal 5s ease-in-out infinite;
 }
+
+/* ═══ Uniform Product Cards ═══ */
+.product-title {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-height: 2.6em;
+  /* reserve exactly 2 lines */
+}
+
+.product-info {
+  min-height: 130px;
+  /* ensures price + button stay aligned */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* ═══ Small Screen Button Fix (320px-365px) ═══ */
+@media (max-width: 365px) {
+  .product-card .btn {
+    font-size: 10px;
+    height: 36px;
+    padding: 0 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .product-card .btn .fa-cart-plus {
+    font-size: 10px;
+    margin-right: 4px;
+  }
+
+  .product-card .product-price {
+    font-size: 14px;
+  }
+
+  .product-card .product-info {
+    padding: 8px;
+    gap: 6px;
+    min-height: 110px;
+  }
+}

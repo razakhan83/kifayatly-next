@@ -18,21 +18,23 @@ export default function CategoryProductSlider({ categoryId, categoryLabel, produ
         return pCat === categoryId;
     });
 
-    // Smooth auto-scroll: +1px every 30ms, resets at end
+    // Step-scroll: advance by one card every 5 seconds
     useEffect(() => {
         const container = scrollContainerRef.current;
         if (!container || isHovered || categoryProducts.length <= 4) return;
 
         const intervalId = setInterval(() => {
+            const card = container.querySelector('.product-card');
+            if (!card) return;
+            const step = card.clientWidth + 16; // card width + gap
             const maxScroll = container.scrollWidth - container.clientWidth;
-            if (maxScroll <= 0) return;
 
-            if (container.scrollLeft >= maxScroll - 2) {
-                container.scrollLeft = 0;
+            if (container.scrollLeft >= maxScroll - 10) {
+                container.scrollTo({ left: 0, behavior: 'smooth' });
             } else {
-                container.scrollLeft += 1;
+                container.scrollBy({ left: step, behavior: 'smooth' });
             }
-        }, 30);
+        }, 5000);
 
         return () => clearInterval(intervalId);
     }, [isHovered, categoryProducts.length]);
@@ -104,13 +106,13 @@ export default function CategoryProductSlider({ categoryId, categoryLabel, produ
                 {/* Slider Container */}
                 <div
                     ref={scrollContainerRef}
-                    className="flex gap-4 overflow-x-auto pb-4 px-2"
+                    className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 px-2"
                     style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
                 >
                     {categoryProducts.map((p, idx) => (
                         <div
                             key={`slider-${p.slug || p.Name || p.name}-${idx}`}
-                            className="product-card shrink-0 w-[42vw] md:w-[22vw] max-w-[280px] bg-white rounded-xl overflow-hidden shadow-[0_2px_10px_-3px_rgba(0,0,0,0.07)] border border-gray-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl flex flex-col group h-full"
+                            className="product-card snap-start shrink-0 w-[42vw] md:w-[22vw] max-w-[280px] bg-white rounded-xl overflow-hidden shadow-[0_2px_10px_-3px_rgba(0,0,0,0.07)] border border-gray-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl flex flex-col group h-full"
                         >
                             <Link href={`/products/${p.slug || p._id || p.id}`} className="block relative pt-[100%] bg-gray-50 cursor-pointer w-full overflow-hidden">
                                 {(p.Image || p.image) && (
