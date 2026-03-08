@@ -270,8 +270,8 @@ function ProductGridContent({ initialProducts }) {
                                     <p className="col-span-full text-center text-gray-500 py-4 w-full">No products found matching your criteria.</p>
                                 ) : (
                                     displayedProducts.map((p, idx) => (
-                                        <div key={p.slug || `${p.Name || p.name}-${idx}`} className="product-card bg-white rounded-xl overflow-hidden shadow-[0_2px_10px_-3px_rgba(0,0,0,0.07)] border border-gray-100 transition-transform hover:-translate-y-1 hover:shadow-xl flex flex-col group h-full">
-                                            <Link href={`/product/${p.slug}`} className="block relative pt-[100%] bg-gray-50 cursor-pointer w-full overflow-hidden">
+                                        <div key={p._id || p.id || p.slug || `${p.Name || p.name}-${idx}`} className="product-card bg-white rounded-xl overflow-hidden shadow-[0_2px_10px_-3px_rgba(0,0,0,0.07)] border border-gray-100 transition-transform hover:-translate-y-1 hover:shadow-xl flex flex-col group h-full">
+                                            <Link href={`/products/${p._id || p.id || p.slug}`} className="block relative pt-[100%] bg-gray-50 cursor-pointer w-full overflow-hidden">
                                                 {(p.Image || p.image) && (
                                                     <Image
                                                         src={p.Image || p.image}
@@ -284,7 +284,7 @@ function ProductGridContent({ initialProducts }) {
                                                 )}
                                             </Link>
                                             <div className="product-info p-3 flex flex-col flex-grow justify-between gap-3">
-                                                <Link href={`/product/${p.slug}`} className="block cursor-pointer">
+                                                <Link href={`/products/${p._id || p.id || p.slug}`} className="block cursor-pointer">
                                                     <h3 className="product-title text-sm font-medium text-gray-800 mb-1 leading-[1.3] hover:text-[#10b981] transition-colors rounded" title={p.Name || p.name}>
                                                         {p.Name || p.name || 'Unknown'}
                                                     </h3>

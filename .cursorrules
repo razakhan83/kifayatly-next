@@ -1,0 +1,21 @@
+# China Unique Items - Project Identity & Coding Rules
+
+## 1. Project Identity
+- **Brand Name:** "China Unique Items" (always use Bold in UI).
+- **Theme Color:** Emerald Green (`#10b981`) for all Primary buttons and active states.
+- **Typography:** Clean, modern sans-serif.
+
+## 2. Next.js 15/16 Specific Skills
+- **Dynamic Routes:** Always use `await params` in dynamic routes `[id]`.
+- **ID Matching:** Use `String()` conversion for comparing and matching IDs (e.g., `String(p.id) === String(id)`) to prevent 404 type-mismatch errors.
+- **Data Fetching:** Use `Suspense` borders and `Skeleton Screens` for all data fetching and asynchronous UI loading states.
+
+## 3. UI Consistency Skills
+- **Product Titles:** Must always be wrapped in a container with classes `h-12 line-clamp-2 overflow-hidden` to ensure completely uniform card heights across all grids and sliders.
+- **Buttons (Add to Cart / Actions):**
+  - **Mobile:** Full width (`w-full`).
+  - **Desktop:** Maximum width 200px and centered (`md:max-w-[200px] md:mx-auto`).
+- **Layout:** All main pages must render children within the context that respects the 2-second `SplashScreen` entrance wrapper.
+
+## 4. Integration Skills
+- **WhatsApp Integration:** Always provide an "Order on WhatsApp" button on product pages. This button must deep-link to the WhatsApp chat, pre-filled with a message containing the specific product name and current URL.

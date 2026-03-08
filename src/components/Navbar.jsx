@@ -64,7 +64,10 @@ function NavbarContent({ categories }) {
                             </Link>
                         </div>
 
-                        <div className="header-right flex-1 flex items-center justify-end gap-5">
+                        <div className="header-right flex-1 flex items-center justify-end gap-4 md:gap-5">
+                            <Link href="/products" className="hidden md:block text-white font-semibold text-sm hover:text-[#10b981] transition-colors">
+                                Products
+                            </Link>
                             <button
                                 className="icon-btn search-trigger bg-transparent border-none text-xl text-white cursor-pointer hover:scale-110 transition-transform"
                                 aria-label="Search"

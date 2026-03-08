@@ -18,39 +18,33 @@ export default function CategoryProductSlider({ categoryId, categoryLabel, produ
         return pCat === categoryId;
     });
 
-    // Auto-scroll logic
+    // Smooth auto-scroll: +1px every 30ms, resets at end
     useEffect(() => {
-        if (!scrollContainerRef.current || isHovered || categoryProducts.length <= 4) return;
+        const container = scrollContainerRef.current;
+        if (!container || isHovered || categoryProducts.length <= 4) return;
 
         const intervalId = setInterval(() => {
-            if (scrollContainerRef.current) {
-                const container = scrollContainerRef.current;
-                const scrollWidth = container.scrollWidth;
-                const clientWidth = container.clientWidth;
-                const maxScrollLeft = scrollWidth - clientWidth;
+            const maxScroll = container.scrollWidth - container.clientWidth;
+            if (maxScroll <= 0) return;
 
-                // If we've reached the end, smoothly scroll back to start, otherwise scroll right by one item approx
-                if (container.scrollLeft >= maxScrollLeft - 10) {
-                    container.scrollTo({ left: 0, behavior: 'smooth' });
-                } else {
-                    // Scroll by approx one item width
-                    const itemWidth = container.querySelector('.product-card')?.clientWidth || 250;
-                    container.scrollBy({ left: itemWidth + 16, behavior: 'smooth' }); // 16px gap
-                }
+            if (container.scrollLeft >= maxScroll - 2) {
+                container.scrollLeft = 0;
+            } else {
+                container.scrollLeft += 1;
             }
-        }, 5000);
+        }, 30);
 
         return () => clearInterval(intervalId);
     }, [isHovered, categoryProducts.length]);
 
-    const scrollLeft = () => {
+    const handleScrollLeft = () => {
         if (scrollContainerRef.current) {
             const itemWidth = scrollContainerRef.current.querySelector('.product-card')?.clientWidth || 250;
             scrollContainerRef.current.scrollBy({ left: -(itemWidth + 16), behavior: 'smooth' });
         }
     };
 
-    const scrollRight = () => {
+    const handleScrollRight = () => {
         if (scrollContainerRef.current) {
             const itemWidth = scrollContainerRef.current.querySelector('.product-card')?.clientWidth || 250;
             scrollContainerRef.current.scrollBy({ left: itemWidth + 16, behavior: 'smooth' });
@@ -59,7 +53,6 @@ export default function CategoryProductSlider({ categoryId, categoryLabel, produ
 
     if (categoryProducts.length === 0) return null;
 
-    // Helper formats
     const formatPrice = (raw) => {
         let cleanNumbers = String(raw).replace(/[^\d.]/g, '');
         if (!cleanNumbers) return 'Rs. 0';
@@ -87,10 +80,12 @@ export default function CategoryProductSlider({ categoryId, categoryLabel, produ
                 className="relative group/slider"
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
+                onTouchStart={() => setIsHovered(true)}
+                onTouchEnd={() => setIsHovered(false)}
             >
                 {/* Left Arrow */}
                 <button
-                    onClick={scrollLeft}
+                    onClick={handleScrollLeft}
                     className="absolute left-0 top-1/2 -translate-y-1/2 -ml-2 md:-ml-4 z-10 bg-white/90 hover:bg-white text-gray-800 w-10 h-10 rounded-full shadow-md border border-gray-100 flex items-center justify-center opacity-0 group-hover/slider:opacity-100 transition-all duration-300 transform group-hover/slider:translate-x-2 focus:outline-none"
                     aria-label="Previous products"
                 >
@@ -99,7 +94,7 @@ export default function CategoryProductSlider({ categoryId, categoryLabel, produ
 
                 {/* Right Arrow */}
                 <button
-                    onClick={scrollRight}
+                    onClick={handleScrollRight}
                     className="absolute right-0 top-1/2 -translate-y-1/2 -mr-2 md:-mr-4 z-10 bg-white/90 hover:bg-white text-gray-800 w-10 h-10 rounded-full shadow-md border border-gray-100 flex items-center justify-center opacity-0 group-hover/slider:opacity-100 transition-all duration-300 transform group-hover/slider:-translate-x-2 focus:outline-none"
                     aria-label="Next products"
                 >
@@ -109,15 +104,15 @@ export default function CategoryProductSlider({ categoryId, categoryLabel, produ
                 {/* Slider Container */}
                 <div
                     ref={scrollContainerRef}
-                    className="flex gap-4 overflow-x-auto snap-x snap-mandatory hide-scrollbar pb-4 px-2"
-                    style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                    className="flex gap-4 overflow-x-auto pb-4 px-2"
+                    style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
                 >
                     {categoryProducts.map((p, idx) => (
                         <div
-                            key={p.slug || `${p.Name || p.name}-${idx}`}
-                            className="product-card snap-start shrink-0 w-[42vw] md:w-[22vw] max-w-[280px] bg-white rounded-xl overflow-hidden shadow-[0_2px_10px_-3px_rgba(0,0,0,0.07)] border border-gray-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl flex flex-col group h-full"
+                            key={`slider-${p.slug || p.Name || p.name}-${idx}`}
+                            className="product-card shrink-0 w-[42vw] md:w-[22vw] max-w-[280px] bg-white rounded-xl overflow-hidden shadow-[0_2px_10px_-3px_rgba(0,0,0,0.07)] border border-gray-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl flex flex-col group h-full"
                         >
-                            <Link href={`/product/${p.slug}`} className="block relative pt-[100%] bg-gray-50 cursor-pointer w-full overflow-hidden">
+                            <Link href={`/products/${p.slug || p._id || p.id}`} className="block relative pt-[100%] bg-gray-50 cursor-pointer w-full overflow-hidden">
                                 {(p.Image || p.image) && (
                                     <Image
                                         src={p.Image || p.image}
@@ -130,7 +125,7 @@ export default function CategoryProductSlider({ categoryId, categoryLabel, produ
                                 )}
                             </Link>
                             <div className="product-info p-3 flex flex-col flex-grow justify-between gap-3">
-                                <Link href={`/product/${p.slug}`} className="block cursor-pointer">
+                                <Link href={`/products/${p.slug || p._id || p.id}`} className="block cursor-pointer">
                                     <h3 className="product-title text-sm font-medium text-gray-800 mb-1 leading-[1.3] hover:text-[#10b981] transition-colors rounded" title={p.Name || p.name}>
                                         {p.Name || p.name || 'Unknown'}
                                     </h3>
@@ -149,7 +144,6 @@ export default function CategoryProductSlider({ categoryId, categoryLabel, produ
                     ))}
                 </div>
             </div>
-
         </div>
     );
 }

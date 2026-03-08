@@ -20,6 +20,8 @@ import Navbar from "@/components/Navbar";
 import { getCategories } from "@/lib/data";
 import { CartProvider } from "@/context/CartContext";
 
+import AuthProvider from "@/components/AuthProvider";
+
 export default async function RootLayout({ children }) {
   const categories = await getCategories();
 
@@ -34,7 +36,9 @@ export default async function RootLayout({ children }) {
           <Navbar categories={categories} />
 
           <main className="flex-grow">
-            {children}
+            <AuthProvider>
+              {children}
+            </AuthProvider>
           </main>
 
           {/* Emerald Professional Footer */}
