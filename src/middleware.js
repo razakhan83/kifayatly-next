@@ -1,9 +1,10 @@
-import { NextResponse } from "next/server";
+import { withAuth } from "next-auth/middleware";
 
-export function middleware(req) {
-    // Middleware redirects have been removed to prevent loops.
-    // The /admin route now handles unauthorized access directly via its own UI.
-    return NextResponse.next();
-}
+export default withAuth({
+  pages: { signIn: "/admin/login" },
+});
 
-export const config = { matcher: ["/admin/:path*"] };
+export const config = { 
+  // Iska matlab: /admin ke andar sab ko protect karo, lekin /admin/login ko chorr do
+  matcher: ["/admin/:path*", "/admin/((?!login).*)"] 
+};

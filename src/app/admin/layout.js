@@ -1,124 +1,172 @@
 'use client';
-
 import { useState } from 'react';
-import Link from 'next/link';
+import { useSession, signIn, signOut } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
-import { useSession, signOut } from 'next-auth/react';
-
-const navItems = [
-    { href: '/admin', label: 'Dashboard', icon: 'fa-chart-line' },
-    { href: '/admin/products', label: 'Products', icon: 'fa-box-open' },
-    { href: '/admin/orders', label: 'Orders', icon: 'fa-receipt' },
-    { href: '/admin/settings', label: 'Settings', icon: 'fa-gear' },
-];
+import NextTopLoader from 'nextjs-toploader';
 
 export default function AdminLayout({ children }) {
-    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const { data: session, status } = useSession();
     const pathname = usePathname();
-    const { data: session } = useSession();
+    const [sidebarOpen, setSidebarOpen] = useState(false);
 
-    return (
-        <div className="flex min-h-screen bg-gray-100">
-            {/* Mobile overlay */}
-            {sidebarOpen && (
-                <div
-                    className="fixed inset-0 bg-black/40 z-40 md:hidden"
-                    onClick={() => setSidebarOpen(false)}
-                />
-            )}
+    // Exclude login page
+    if (pathname === '/admin/login') return <>{children}</>;
 
-            {/* Sidebar */}
-            <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#111827] text-white flex flex-col transition-transform duration-300 md:relative md:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-                {/* Brand */}
-                <div className="h-16 flex items-center gap-3 px-5 border-b border-white/10">
-                    <div className="w-9 h-9 rounded-lg bg-[#10b981] flex items-center justify-center">
-                        <i className="fa-solid fa-store text-white text-sm"></i>
+    // Loading
+    if (status === 'loading') {
+        return <div className="min-h-screen flex items-center justify-center bg-gray-50">
+            <p className="text-xl text-gray-500 font-semibold animate-pulse">Loading Dashboard...</p>
+        </div>;
+    }
+
+    // Not authenticated or not admin
+    if (!session || session.user?.email !== '123raza83@gmail.com') {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+                <div className="bg-white p-8 md:p-12 rounded-2xl shadow-xl w-full max-w-md border border-gray-100 text-center">
+                    <div className="w-16 h-16 bg-[#10b981]/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i className="fa-solid fa-lock text-2xl text-[#10b981]"></i>
                     </div>
-                    <span className="text-lg font-bold tracking-tight">Admin Panel</span>
-                </div>
-
-                {/* Navigation */}
-                <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto">
-                    {navItems.map((item) => {
-                        const isActive = pathname === item.href;
-                        return (
-                            <Link
-                                key={item.href}
-                                href={item.href}
-                                onClick={() => setSidebarOpen(false)}
-                                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${isActive
-                                        ? 'bg-[#10b981] text-white shadow-lg shadow-emerald-500/20'
-                                        : 'text-gray-400 hover:bg-white/5 hover:text-white'
-                                    }`}
-                            >
-                                <i className={`fa-solid ${item.icon} w-5 text-center`}></i>
-                                {item.label}
-                            </Link>
-                        );
-                    })}
-                </nav>
-
-                {/* Back to Store */}
-                <div className="p-3 border-t border-white/10">
-                    <Link
-                        href="/"
-                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-gray-400 hover:bg-white/5 hover:text-white transition-all"
-                    >
-                        <i className="fa-solid fa-arrow-left w-5 text-center"></i>
-                        Back to Store
-                    </Link>
-                </div>
-
-                {/* User Info */}
-                {session?.user && (
-                    <div className="p-4 border-t border-white/10">
-                        <div className="flex items-center gap-3 mb-3">
-                            {session.user.image ? (
-                                <img src={session.user.image} alt="Admin" className="w-9 h-9 rounded-full object-cover ring-2 ring-emerald-500/30" />
-                            ) : (
-                                <div className="w-9 h-9 rounded-full bg-[#10b981] flex items-center justify-center text-sm font-bold">A</div>
-                            )}
-                            <div className="flex flex-col min-w-0">
-                                <span className="text-sm font-bold truncate">{session.user.name || 'Admin'}</span>
-                                <span className="text-xs text-gray-500 truncate">{session.user.email}</span>
-                            </div>
-                        </div>
-                        <button
-                            onClick={() => signOut({ callbackUrl: '/' })}
-                            className="w-full flex items-center justify-center gap-2 py-2.5 bg-red-500/10 text-red-400 border border-red-500/20 rounded-xl text-sm font-semibold hover:bg-red-500/20 transition-colors"
-                        >
-                            <i className="fa-solid fa-right-from-bracket"></i>
-                            Logout
-                        </button>
-                    </div>
-                )}
-            </aside>
-
-            {/* Main Content */}
-            <div className="flex-1 flex flex-col min-w-0">
-                {/* Top Bar */}
-                <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 md:px-8 sticky top-0 z-30 shadow-sm">
+                    <h1 className="text-2xl font-black text-gray-900 mb-2">Admin Access Only</h1>
+                    <p className="text-gray-500 mb-8 text-sm">Please login with your authorized store manager account.</p>
                     <button
-                        onClick={() => setSidebarOpen(true)}
-                        className="md:hidden w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors"
-                        aria-label="Open menu"
+                        onClick={() => signIn('google')}
+                        className="w-full min-w-[140px] h-[45px] bg-white border border-gray-200 text-gray-700 font-bold rounded-xl flex items-center justify-center gap-3 hover:bg-gray-50 shadow-sm transition-all active:scale-95"
                     >
-                        <i className="fa-solid fa-bars"></i>
+                        <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="w-5 h-5" />
+                        Continue with Google
                     </button>
-                    <h1 className="text-lg font-bold text-gray-900 hidden md:block">
-                        <i className="fa-solid fa-shield-halved text-[#10b981] mr-2"></i>
-                        Store Management
-                    </h1>
-                    <div className="flex items-center gap-3">
-                        <span className="text-xs font-semibold bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-full">
-                            <i className="fa-solid fa-circle text-[6px] mr-1.5 animate-pulse"></i>
-                            Live
-                        </span>
-                    </div>
-                </header>
+                </div>
+            </div>
+        );
+    }
 
-                {/* Page Content */}
-                <main className="flex-1 p-4 md:p-8 overflow-y-auto">
+    // Authenticated admin layout
+    return (
+        <div className="min-h-screen flex flex-col bg-gray-50">
+            {/* Top Progress Loader */}
+            <NextTopLoader
+                color="#10b981"
+                initialPosition={0.08}
+                crawlSpeed={200}
+                height={3}
+                crawl={true}
+                showSpinner={false}
+                easing="ease"
+                speed={200}
+                shadow="0 0 10px #10b981,0 0 5px #10b981"
+            />
+
+            {/* Top Header */}
+            <header className="h-16 bg-white border-b border-gray-200 px-4 md:px-6 flex justify-between items-center shadow-sm sticky top-0 z-40">
+                <div className="flex items-center gap-3">
+                    {/* Hamburger Menu - Mobile Only */}
+                    <button
+                        onClick={() => setSidebarOpen(!sidebarOpen)}
+                        className="md:hidden min-w-[45px] h-[45px] bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl flex flex-col justify-center items-center transition-all duration-200 active:scale-95 shadow-sm"
+                    >
+                        <span className={`block w-5 h-0.5 bg-current transition-all duration-300 ${sidebarOpen ? 'rotate-45 translate-y-1' : '-translate-y-1'}`}></span>
+                        <span className={`block w-5 h-0.5 bg-current transition-all duration-300 ${sidebarOpen ? 'opacity-0' : 'opacity-100'}`}></span>
+                        <span className={`block w-5 h-0.5 bg-current transition-all duration-300 ${sidebarOpen ? '-rotate-45 -translate-y-1' : 'translate-y-1'}`}></span>
+                    </button>
+                    <i className="fa-solid fa-store text-[#10b981] text-xl hidden md:inline"></i>
+                    <span className="font-bold text-gray-900 text-sm md:text-lg">China Unique Store Admin</span>
+                </div>
+                <div className="flex items-center gap-2 md:gap-4">
+                    <span className="text-xs md:text-sm text-gray-600 hidden md:block">Welcome, {session?.user?.name || 'Admin'}</span>
+                    <button
+                        onClick={() => signOut({ callbackUrl: '/admin/login' })}
+                        className="min-w-[140px] h-[45px] bg-red-500 text-white hover:bg-red-600 rounded-xl font-bold flex items-center justify-center gap-2 transition-all active:scale-95 shadow-sm"
+                    >
+                        <i className="fa-solid fa-arrow-right-from-bracket"></i>
+                        <span className="hidden sm:inline">Logout</span>
+                    </button>
+                </div>
+            </header>
+
+            {/* Main Layout */}
+            <div className="flex flex-1 relative">
+                {/* Mobile Sidebar Overlay */}
+                {sidebarOpen && (
+                    <div
+                        className="fixed inset-0 bg-black/50 md:hidden z-30"
+                        onClick={() => setSidebarOpen(false)}
+                    ></div>
+                )}
+
+                {/* Sidebar */}
+                <aside className={`
+                    fixed md:static top-16 left-0 bottom-0 w-64 bg-gray-900 text-white p-5 
+                    overflow-y-auto transition-transform duration-300 ease-in-out z-40
+                    ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+                `}>
+                    <h2 className="text-xl font-bold mb-10 text-emerald-500">China Unique</h2>
+                    <nav className="space-y-2">
+                        <a
+                            href="/admin"
+                            onClick={() => setSidebarOpen(false)}
+                            className={`group relative flex items-center px-4 py-3 rounded-xl font-bold transition-all duration-200 ${
+                                pathname === '/admin'
+                                    ? 'bg-emerald-600 text-white shadow-lg'
+                                    : 'text-gray-300 hover:bg-white/10 hover:text-white'
+                            }`}
+                        >
+                            {pathname === '/admin' && (
+                                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-white rounded-r-full"></div>
+                            )}
+                            <i className="fa-solid fa-chart-line mr-3 text-lg"></i>
+                            Dashboard
+                        </a>
+                        <a
+                            href="/admin/products"
+                            onClick={() => setSidebarOpen(false)}
+                            className={`group relative flex items-center px-4 py-3 rounded-xl font-bold transition-all duration-200 ${
+                                pathname.startsWith('/admin/products')
+                                    ? 'bg-emerald-600 text-white shadow-lg'
+                                    : 'text-gray-300 hover:bg-white/10 hover:text-white'
+                            }`}
+                        >
+                            {pathname.startsWith('/admin/products') && (
+                                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-white rounded-r-full"></div>
+                            )}
+                            <i className="fa-solid fa-box mr-3 text-lg"></i>
+                            Products
+                        </a>
+                        <a
+                            href="/admin/orders"
+                            onClick={() => setSidebarOpen(false)}
+                            className={`group relative flex items-center px-4 py-3 rounded-xl font-bold transition-all duration-200 ${
+                                pathname.startsWith('/admin/orders')
+                                    ? 'bg-emerald-600 text-white shadow-lg'
+                                    : 'text-gray-300 hover:bg-white/10 hover:text-white'
+                            }`}
+                        >
+                            {pathname.startsWith('/admin/orders') && (
+                                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-white rounded-r-full"></div>
+                            )}
+                            <i className="fa-solid fa-shopping-cart mr-3 text-lg"></i>
+                            Orders
+                        </a>
+                        <a
+                            href="/admin/settings"
+                            onClick={() => setSidebarOpen(false)}
+                            className={`group relative flex items-center px-4 py-3 rounded-xl font-bold transition-all duration-200 ${
+                                pathname.startsWith('/admin/settings')
+                                    ? 'bg-emerald-600 text-white shadow-lg'
+                                    : 'text-gray-300 hover:bg-white/10 hover:text-white'
+                            }`}
+                        >
+                            {pathname.startsWith('/admin/settings') && (
+                                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-white rounded-r-full"></div>
+                            )}
+                            <i className="fa-solid fa-cog mr-3 text-lg"></i>
+                            Settings
+                        </a>
+                    </nav>
+                </aside>
+
+                {/* Main Content */}
+                <main className="flex-1 p-4 md:p-8 bg-gray-50 overflow-y-auto w-full">
                     {children}
                 </main>
             </div>

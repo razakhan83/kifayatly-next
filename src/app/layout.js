@@ -25,11 +25,16 @@ export default async function RootLayout({ children }) {
   const categories = await getCategories();
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning={true}>
       <head>
+        <meta name="google" content="notranslate" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      {/* Humne niche body tag mein suppressHydrationWarning add kiya hai */}
+      <body 
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        suppressHydrationWarning={true}
+      >
         <CartProvider>
           <AuthProvider>
             <LayoutWrapper categories={categories}>
