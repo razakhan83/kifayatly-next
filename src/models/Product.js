@@ -27,10 +27,17 @@ const ProductSchema = new mongoose.Schema(
             type: String,
             required: [true, 'Please provide a category.'],
         },
+        stockQuantity: {
+            type: Number,
+            default: 0,
+            min: 0,
+        },
         StockStatus: {
             type: String,
             enum: ['In Stock', 'Out of Stock'], // Only allow these two values
-            default: 'In Stock',
+            default: function() {
+                return this.stockQuantity > 0 ? 'In Stock' : 'Out of Stock';
+            },
         },
         slug: {
             type: String,

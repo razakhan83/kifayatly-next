@@ -36,18 +36,28 @@ export async function GET() {
 // POST new product - Protected Admin Route
 export async function POST(req) {
     try {
+        console.log('[API] POST /api/products - Received request');
+
         // Validation: Verify if the requester is the authorized Admin
         const session = await getServerSession(authOptions);
+        console.log('[API] Session check:', session?.user?.email || 'No session');
+
         if (!session || session.user?.email !== process.env.ADMIN_EMAIL) {
+            console.log('[API] ❌ Unauthorized access attempt');
             return NextResponse.json({ success: false, message: 'Unauthorized Access' }, { status: 401 });
         }
 
+        console.log('[API] ✅ Admin verified, connecting to database...');
         await dbConnect();
+        console.log('[API] ✅ Database connected');
 
         const body = await req.json();
-        const { Name, Description, Price, ImageURL, Category, StockStatus } = body;
+        console.log('[API] Body received:', { Name: body.Name, Category: body.Category, Price: body.Price });
+
+        const { Name, Description, Price, ImageURL, Category, stockQuantity } = body;
 
         if (!Name || !Price || !Category) {
+            console.log('[API] ❌ Validation failed: Missing required fields');
             return NextResponse.json({ success: false, message: 'Please provide Name, Price, and Category' }, { status: 400 });
         }
 
@@ -61,6 +71,8 @@ export async function POST(req) {
             counter++;
         }
 
+        console.log('[API] 🔗 Generated slug:', uniqueSlug);
+
         const product = await Product.create({
             Name,
             Description,
@@ -68,12 +80,15 @@ export async function POST(req) {
             ImageURL,
             Image: ImageURL, // Map ImageURL broadly for legacy data bindings
             Category,
-            StockStatus: StockStatus || 'In Stock',
-            slug: uniqueSlug
+            stockQuantity: stockQuantity || 0,
+            // StockStatus will be computed automatically based on stockQuantity
         });
+
+        console.log('[API] ✅ Product saved:', product._id);
 
         return NextResponse.json({ success: true, data: product }, { status: 201 });
     } catch (error) {
-        return NextResponse.json({ success: false, error: error.message }, { status: 400 });
+        console.error('[API] ❌ Error:', error.message);
+        return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 }

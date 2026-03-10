@@ -6,7 +6,7 @@ export default function AddProduct() {
   const [Description, setDescription] = useState('');
   const [Price, setPrice] = useState('');
   const [Category, setCategory] = useState('');
-  const [StockStatus, setStockStatus] = useState('In Stock');
+  const [stockQuantity, setStockQuantity] = useState('');
   const [ImageURL, setImageURL] = useState('');
 
   const [imagePreview, setImagePreview] = useState(null);
@@ -61,7 +61,7 @@ export default function AddProduct() {
     setDescription('');
     setPrice('');
     setCategory('');
-    setStockStatus('In Stock');
+    setStockQuantity('');
     setImageURL('');
     setImagePreview(null);
     // Also reset the form element
@@ -80,9 +80,9 @@ export default function AddProduct() {
     const description = formData.get('description');
     const price = formData.get('price');
     const category = formData.get('category');
-    const stockStatus = formData.get('stockStatus') || 'In Stock';
+    const stockQuantity = formData.get('stockQuantity') || '0';
 
-    console.log('FormData captured:', { name, description, price, category, stockStatus, imageURL: ImageURL });
+    console.log('FormData captured:', { name, description, price, category, stockQuantity, imageURL: ImageURL });
 
     // Basic validation
     if (!name || !price || !category) {
@@ -97,7 +97,7 @@ export default function AddProduct() {
       Price: Number(price),
       ImageURL: ImageURL, // From drag & drop
       Category: category,
-      StockStatus: stockStatus
+      stockQuantity: Number(stockQuantity) || 0,
     };
 
     console.log('Sending POST request to /api/products with payload:', payload);
@@ -256,19 +256,19 @@ export default function AddProduct() {
             ></textarea>
           </div>
 
-          {/* Stock Status */}
+          {/* Stock Quantity */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Stock Status</label>
-            <select
-              name="stockStatus"
-              value={StockStatus}
-              onChange={(e) => setStockStatus(e.target.value)}
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Stock Quantity</label>
+            <input
+              type="number"
+              name="stockQuantity"
+              value={stockQuantity}
+              onChange={(e) => setStockQuantity(e.target.value)}
               className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#10b981]/50"
+              placeholder="0"
+              min="0"
               required
-            >
-              <option value="In Stock">In Stock</option>
-              <option value="Out of Stock">Out of Stock</option>
-            </select>
+            />
           </div>
 
           {/* Buttons */}
