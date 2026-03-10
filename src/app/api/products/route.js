@@ -73,6 +73,10 @@ export async function POST(req) {
 
         console.log('[API] 🔗 Generated slug:', uniqueSlug);
 
+        // Compute stock status from quantity
+        const stockStatus = (stockQuantity || 0) > 0 ? 'In Stock' : 'Out of Stock';
+        console.log('[API] 📦 Stock Quantity:', stockQuantity, '-> Status:', stockStatus);
+
         const product = await Product.create({
             Name,
             Description,
@@ -81,7 +85,7 @@ export async function POST(req) {
             Image: ImageURL, // Map ImageURL broadly for legacy data bindings
             Category,
             stockQuantity: stockQuantity || 0,
-            // StockStatus will be computed automatically based on stockQuantity
+            StockStatus: stockStatus,
         });
 
         console.log('[API] ✅ Product saved:', product._id);

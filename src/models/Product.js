@@ -35,9 +35,7 @@ const ProductSchema = new mongoose.Schema(
         StockStatus: {
             type: String,
             enum: ['In Stock', 'Out of Stock'], // Only allow these two values
-            default: function() {
-                return this.stockQuantity > 0 ? 'In Stock' : 'Out of Stock';
-            },
+            required: true,
         },
         slug: {
             type: String,
