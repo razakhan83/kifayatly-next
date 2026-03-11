@@ -1,9 +1,11 @@
+import { cacheLife, cacheTag } from 'next/cache';
 import dbConnect from './dbConnect';
 import Product from '@/models/Product';
 
-export const revalidate = 60; // Cache for 60 seconds
-
 export async function getProducts() {
+    'use cache';
+    cacheLife('minutes');
+    cacheTag('products');
     try {
         console.log('[DATA] getProducts: Initiating DB connection...');
         await dbConnect();
@@ -22,6 +24,8 @@ export async function getProducts() {
 }
 
 export async function getCategories() {
+    'use cache';
+    cacheTag('categories');
     try {
         const products = await getProducts();
         const cats = new Set();

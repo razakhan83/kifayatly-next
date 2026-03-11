@@ -1,6 +1,8 @@
-export const dynamic = 'force-dynamic';
+'use cache';
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { getCategories } from "@/lib/data";
+import { cacheLife, cacheTag } from 'next/cache';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -17,12 +19,13 @@ export const metadata = {
   description: "Premium kitchenware, home decor and lifestyle products",
 };
 
-import { getCategories } from "@/lib/data";
 import { CartProvider } from "@/context/CartContext";
 import AuthProvider from "@/components/AuthProvider";
 import LayoutWrapper from "@/components/LayoutWrapper";
 
 export default async function RootLayout({ children }) {
+  cacheLife('minutes');
+  cacheTag('shell');
   const categories = await getCategories();
 
   return (

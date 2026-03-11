@@ -8,6 +8,11 @@ import Navbar from '@/components/Navbar';
 
 export default function LayoutWrapper({ children, categories = [] }) {
     const [loading, setLoading] = useState(true);
+    const [year, setYear] = useState(2025);
+
+    useEffect(() => {
+        setYear(new Date().getFullYear());
+    }, []);
     const pathname = usePathname();
     const isAdminPage = pathname.startsWith('/admin');
 
@@ -89,7 +94,7 @@ export default function LayoutWrapper({ children, categories = [] }) {
                             </div>
                         </div>
                         <div className="pt-6 border-t border-white/10 flex flex-col md:flex-row items-center justify-between text-white/60 text-xs">
-                            <p>&copy; {new Date().getFullYear()} China Unique Store. All rights reserved.</p>
+                            <p>&copy; {year} China Unique Store. All rights reserved.</p>
                             <div className="flex gap-4 mt-4 md:mt-0">
                                 <i className="fa-brands fa-cc-visa text-3xl opacity-50 hover:opacity-100 transition-opacity"></i>
                                 <i className="fa-brands fa-cc-mastercard text-3xl opacity-50 hover:opacity-100 transition-opacity"></i>
