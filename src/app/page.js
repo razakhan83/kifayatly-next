@@ -1,24 +1,11 @@
-export const dynamic = 'force-dynamic';
 import HeroSlider from '@/components/HeroSlider';
 import ProductGridClient from '@/components/ProductGridClient';
+import { getProducts } from '@/lib/data';
+
+export const dynamic = 'force-dynamic';
 
 export default async function Home() {
-  let products = [];
-  try {
-    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
-    const res = await fetch(`${baseUrl}/api/products`, {
-      next: { revalidate: 60 }
-    });
-
-    if (res.ok) {
-      const json = await res.json();
-      if (json.success) {
-        products = json.data;
-      }
-    }
-  } catch (error) {
-    console.error('Home page fetch error:', error);
-  }
+  const products = await getProducts();
 
   // Hero slides derived from old assets exactly as initially coded 
   const heroSlides = [

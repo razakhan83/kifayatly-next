@@ -20,7 +20,7 @@ function ProductGridContent({ initialProducts }) {
     const itemsPerPage = 24;
     const categoryNavRef = useRef(null);
 
-    // Extract precise dynamic categories natively from CSV data
+    // Extract precise dynamic categories natively from MongoDB data
     const dynamicCategories = useMemo(() => {
         const cats = new Set();
         initialProducts.forEach(p => {
