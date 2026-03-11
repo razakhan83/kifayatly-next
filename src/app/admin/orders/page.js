@@ -113,21 +113,21 @@ export default function AdminOrdersPage() {
                                 orders.map((order) => (
                                     <tr key={order._id} className="hover:bg-gray-50/80 transition-colors">
                                         {/* Order ID — hidden on small screens */}
-                                        <td className="hidden sm:table-cell px-4 py-4">
+                                        <td className="hidden sm:table-cell px-5 py-4">
                                             <span className="text-sm font-mono font-semibold text-gray-900">{order.orderId}</span>
                                         </td>
 
                                         {/* Customer — always visible, on mobile also shows date below */}
-                                        <td className="px-4 py-4">
+                                        <td className="px-5 py-4">
                                             <div>
-                                                <span className="text-sm font-medium text-gray-700">{order.customerName}</span>
+                                                <span className="text-sm font-semibold text-gray-700">{order.customerName}</span>
                                                 {/* Show date inline on mobile */}
-                                                <span className="sm:hidden block text-[11px] text-gray-400 mt-0.5">{formatDate(order.createdAt)}</span>
+                                                <span className="sm:hidden block text-[11px] text-gray-400 mt-1">{formatDate(order.createdAt)}</span>
                                             </div>
                                         </td>
 
                                         {/* Date & Time — hidden on small screens */}
-                                        <td className="hidden sm:table-cell px-4 py-4">
+                                        <td className="hidden sm:table-cell px-5 py-4">
                                             <div className="flex flex-col">
                                                 <span className="text-sm font-medium text-gray-800">{formatDate(order.createdAt)}</span>
                                                 <span className="text-xs text-gray-400">{formatTime(order.createdAt)}</span>
@@ -135,14 +135,14 @@ export default function AdminOrdersPage() {
                                         </td>
 
                                         {/* Total — always visible */}
-                                        <td className="px-4 py-4">
-                                            <span className="text-sm font-semibold text-gray-900">{formatPrice(order.totalAmount)}</span>
+                                        <td className="px-5 py-4">
+                                            <span className="text-sm font-bold text-emerald-600">{formatPrice(order.totalAmount)}</span>
                                         </td>
 
                                         {/* Status — always visible, tappable on mobile to view details */}
-                                        <td className="px-4 py-4">
+                                        <td className="px-5 py-4">
                                             <Link href={`/admin/orders/${order._id}`} className="sm:pointer-events-none">
-                                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full border ${statusStyles[order.status] || statusStyles.Pending}`}>
+                                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold rounded-full border ${statusStyles[order.status] || statusStyles.Pending}`}>
                                                     <i className={`fa-solid fa-circle text-[5px] ${statusDots[order.status] || statusDots.Pending}`}></i>
                                                     {order.status}
                                                 </span>
@@ -150,14 +150,14 @@ export default function AdminOrdersPage() {
                                         </td>
 
                                         {/* Action — hidden on small screens */}
-                                        <td className="hidden sm:table-cell px-4 py-4">
+                                        <td className="hidden sm:table-cell px-5 py-4">
                                             <div className="flex items-center justify-center">
                                                 <Link
                                                     href={`/admin/orders/${order._id}`}
-                                                    className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-gray-100 text-gray-700 text-xs font-semibold rounded-lg hover:bg-gray-200 transition-colors"
+                                                    className="w-10 h-10 rounded-xl bg-gray-50 text-gray-600 flex items-center justify-center hover:bg-gray-100 transition-all hover:scale-105"
+                                                    title="View Details"
                                                 >
-                                                    <i className="fa-solid fa-eye text-[11px]"></i>
-                                                    View Details
+                                                    <i className="fa-solid fa-eye"></i>
                                                 </Link>
                                             </div>
                                         </td>

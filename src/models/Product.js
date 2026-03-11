@@ -39,8 +39,12 @@ const ProductSchema = new mongoose.Schema(
         },
         slug: {
             type: String,
-            required: true,
+            required: false,
             unique: true,
+        },
+        cloudinary_id: {
+            type: String,
+            required: false,
         }
     },
     {

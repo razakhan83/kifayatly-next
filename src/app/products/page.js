@@ -1,6 +1,4 @@
-import { parse } from 'papaparse';
 import ProductGridClient from '@/components/ProductGridClient';
-
 import { getProducts } from '@/lib/data';
 
 export default async function Products() {

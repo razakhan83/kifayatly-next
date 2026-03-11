@@ -54,16 +54,16 @@ export async function POST(req) {
         const body = await req.json();
         console.log('[API] Body received:', { Name: body.Name, Category: body.Category, Price: body.Price });
 
-        const { Name, Description, Price, ImageURL, Category, stockQuantity } = body;
+        let { Name, Description, Price, ImageURL, cloudinary_id, Category, stockQuantity, slug } = body;
 
         if (!Name || !Price || !Category) {
             console.log('[API] ❌ Validation failed: Missing required fields');
             return NextResponse.json({ success: false, message: 'Please provide Name, Price, and Category' }, { status: 400 });
         }
 
-        // Auto-generate unique slug
+        // Auto-generate slug if missing or empty
+        let uniqueSlug = slug || slugify(Name);
         const baseSlug = slugify(Name);
-        let uniqueSlug = baseSlug;
         let counter = 1;
 
         while (await Product.exists({ slug: uniqueSlug })) {
@@ -83,9 +83,11 @@ export async function POST(req) {
             Price,
             ImageURL,
             Image: ImageURL, // Map ImageURL broadly for legacy data bindings
+            cloudinary_id,
             Category,
             stockQuantity: stockQuantity || 0,
             StockStatus: stockStatus,
+            slug: uniqueSlug, // Ensure slug is saved
         });
 
         console.log('[API] ✅ Product saved:', product._id);

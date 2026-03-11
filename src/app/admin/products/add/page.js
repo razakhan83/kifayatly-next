@@ -1,6 +1,8 @@
 'use client';
 import { useState, useCallback } from 'react';
 
+import Toast from '@/components/Toast';
+
 export default function AddProduct() {
   const [Name, setName] = useState('');
   const [Description, setDescription] = useState('');
@@ -8,11 +10,11 @@ export default function AddProduct() {
   const [Category, setCategory] = useState('');
   const [stockQuantity, setStockQuantity] = useState('');
   const [ImageURL, setImageURL] = useState('');
+  const [cloudinaryId, setCloudinaryId] = useState('');
 
   const [imagePreview, setImagePreview] = useState(null);
   const [isDragOver, setIsDragOver] = useState(false);
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
+  const [toast, setToast] = useState({ visible: false, message: '', type: 'success' });
 
   const handleDragOver = useCallback((e) => {
     e.preventDefault();
@@ -56,6 +58,10 @@ export default function AddProduct() {
     }
   };
 
+  const showToast = (message, type = 'success') => {
+    setToast({ visible: true, message, type });
+  };
+
   const clearForm = () => {
     setName('');
     setDescription('');
@@ -64,43 +70,78 @@ export default function AddProduct() {
     setStockQuantity('');
     setImageURL('');
     setImagePreview(null);
-    // Also reset the form element
-    document.querySelector('form').reset();
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setMessage('');
-    setError('');
 
     const formData = new FormData(e.target);
-
-    // Get values from formData
     const name = formData.get('name');
     const description = formData.get('description');
     const price = formData.get('price');
     const category = formData.get('category');
     const stockQuantity = formData.get('stockQuantity') || '0';
 
-    console.log('FormData captured:', { name, description, price, category, stockQuantity, imageURL: ImageURL });
-
-    // Basic validation
     if (!name || !price || !category) {
-      setError('Name, Price and Category are required.');
+      showToast('Name, Price and Category are required.', 'error');
       return;
     }
 
-    // Prepare JSON payload (since API expects JSON)
+    let finalImageURL = ImageURL;
+    let finalCloudinaryId = cloudinaryId;
+
+    // If we have an image preview (selected file) but no uploaded URL yet, or we want to re-upload
+    // Note: In the current logic, imagePreview holds the base64. 
+    // We only upload if it's a base64 string (starts with data:)
+    if (ImageURL && ImageURL.startsWith('data:')) {
+      try {
+        console.log('[UPLOAD] Getting upload signature...');
+        const signRes = await fetch('/api/cloudinary-sign');
+        const signData = await signRes.json();
+        
+        if (!signRes.ok) throw new Error(signData.error || 'Failed to get signature');
+
+        const { signature, timestamp, cloudName, apiKey } = signData;
+
+        console.log('[UPLOAD] Uploading directly to Cloudinary to bypass Vercel limits...');
+        const uploadFormData = new FormData();
+        uploadFormData.append('file', ImageURL);
+        uploadFormData.append('api_key', apiKey);
+        uploadFormData.append('timestamp', timestamp);
+        uploadFormData.append('signature', signature);
+        uploadFormData.append('folder', 'kifayatly_products');
+
+        const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+          method: 'POST',
+          body: uploadFormData,
+        });
+        
+        const uploadData = await uploadRes.json();
+        
+        if (uploadData.secure_url) {
+          finalImageURL = uploadData.secure_url;
+          finalCloudinaryId = uploadData.public_id;
+          console.log('[UPLOAD] Success:', finalImageURL);
+        } else {
+          showToast('Image upload failed: ' + (uploadData.error?.message || 'Upload error'), 'error');
+          return;
+        }
+      } catch (err) {
+        console.error('Upload error:', err);
+        showToast('Error uploading image: ' + err.message, 'error');
+        return;
+      }
+    }
+
     const payload = {
       Name: name,
       Description: description,
       Price: Number(price),
-      ImageURL: ImageURL, // From drag & drop
+      ImageURL: finalImageURL,
+      cloudinary_id: finalCloudinaryId,
       Category: category,
       stockQuantity: Number(stockQuantity) || 0,
     };
-
-    console.log('Sending POST request to /api/products with payload:', payload);
 
     try {
       const res = await fetch('/api/products', {
@@ -109,25 +150,30 @@ export default function AddProduct() {
         body: JSON.stringify(payload),
       });
 
-      console.log('Response status:', res.status);
       const data = await res.json();
-      console.log('Response data:', data);
 
       if (res.ok && data.success) {
-        alert('Product saved successfully!');
-        setMessage('Product published successfully!');
+        showToast('Product published successfully!', 'success');
         clearForm();
       } else {
-        setError(data.message || data.error || 'Failed to save product');
+        showToast(data.message || data.error || 'Failed to save product', 'error');
       }
     } catch (err) {
       console.error('Network error:', err);
-      setError('Network error');
+      showToast('Network error while saving product.', 'error');
     }
   };
 
   return (
-    <div className="w-full">
+    <div className="w-full pb-10">
+      {/* Toast Component */}
+      <Toast 
+        isVisible={toast.visible} 
+        message={toast.message} 
+        type={toast.type}
+        onClose={() => setToast(prev => ({ ...prev, visible: false }))} 
+      />
+
       {/* Page Header */}
       <div className="mb-6 md:mb-8">
         <h1 className="text-2xl md:text-3xl font-black text-gray-900">Add New Product</h1>
@@ -136,8 +182,6 @@ export default function AddProduct() {
 
       {/* Form Card */}
       <div className="bg-white p-4 md:p-8 rounded-2xl shadow-sm border border-gray-100 max-w-2xl">
-        {message && <p className="text-green-600 mb-4">{message}</p>}
-        {error && <p className="text-red-600 mb-4">{error}</p>}
         <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
           {/* Product Name */}
           <div>

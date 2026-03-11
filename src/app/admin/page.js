@@ -126,13 +126,13 @@ export default function AdminDashboard() {
         </div>
 
         {/* Add Product Button */}
-        <div className="mt-6 pt-6 border-t border-gray-100 flex gap-3">
+        <div className="mt-6 pt-6 border-t border-gray-100">
           <a
             href="/admin/products/add"
-            className="flex-1 min-w-[140px] h-[45px] bg-emerald-600 text-white font-bold rounded-xl flex items-center justify-center hover:bg-emerald-700 shadow-sm transition-all active:scale-95"
+            className="inline-flex w-full sm:w-auto items-center justify-center gap-2 px-6 py-3 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 shadow-sm transition-all active:scale-95"
           >
-            <i className="fa-solid fa-plus mr-2"></i>
-            Add New Product
+            <i className="fa-solid fa-plus text-xs"></i>
+            <span className="sm:inline">Add New Product</span>
           </a>
         </div>
       </div>
