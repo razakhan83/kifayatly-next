@@ -248,29 +248,44 @@ export default function AdminProductsPage() {
 
             {/* Confirmation Modal */}
             {deleteModal.open && (
-                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[150] flex items-center justify-center p-4">
-                    <div className="bg-white rounded-3xl shadow-2xl w-[90%] max-w-md p-8 animate-[scaleIn_0.2s_ease-out] overflow-hidden">
-                        <div className="w-16 h-16 rounded-2xl bg-red-50 flex items-center justify-center mx-auto mb-6">
-                            <i className="fa-solid fa-trash-can text-red-500 text-2xl"></i>
-                        </div>
-                        <h3 className="text-xl font-bold text-gray-900 text-center mb-2 px-6">Delete Product?</h3>
-                        <p className="text-sm text-gray-500 text-center mb-8 leading-relaxed px-6">
-                            Are you sure you want to delete <span className="font-bold text-gray-800">{deleteModal.product?.Name}</span>? This item will be permanently removed.
-                        </p>
-                        <div className="flex flex-col-reverse md:flex-row gap-3 md:gap-4">
-                            <button 
-                                onClick={() => setDeleteModal({ open: false, product: null })} 
-                                className="w-full md:w-auto md:flex-1 py-3 md:py-3.5 rounded-2xl border border-gray-200 text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors"
-                            >
-                                Cancel
-                            </button>
-                            <button 
-                                onClick={handleDelete} 
-                                disabled={deleting} 
-                                className="w-full md:w-auto md:flex-1 py-3 md:py-3.5 rounded-2xl bg-red-500 text-white text-sm font-bold hover:bg-red-600 shadow-lg shadow-red-500/25 transition-all active:scale-95 disabled:opacity-50"
-                            >
-                                {deleting ? 'Deleting...' : 'Delete'}
-                            </button>
+                <div className="fixed inset-0 z-[1000] flex items-center justify-center">
+                    {/* Backdrop Overlay */}
+                    <div 
+                        className="fixed inset-0 bg-black/60 backdrop-blur-sm" 
+                        onClick={() => !deleting && setDeleteModal({ open: false, product: null })}
+                    ></div>
+                    
+                    {/* Modal Box */}
+                    <div className="relative bg-white w-[90%] max-w-[400px] p-6 rounded-2xl shadow-2xl z-[1001]">
+                        <div className="flex flex-col items-center text-center">
+                            {/* Icon */}
+                            <div className="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                                <i className="fa-solid fa-trash-can text-red-500 text-xl"></i>
+                            </div>
+
+                            <h3 className="text-lg font-bold text-gray-900 mb-2 block w-full text-center">Are you sure?</h3>
+                            <p className="text-sm text-gray-500 w-full text-center">
+                                You are about to delete{' '}
+                                <span className="font-semibold text-gray-700">{deleteModal.product?.Name}</span>.
+                                <br />This action cannot be undone.
+                            </p>
+                            
+                            <div className="flex flex-row justify-center gap-4 mt-6 w-full">
+                                <button 
+                                    onClick={() => setDeleteModal({ open: false, product: null })} 
+                                    disabled={deleting}
+                                    className="flex-1 px-6 py-3 text-sm font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all active:scale-95 disabled:opacity-50"
+                                >
+                                    Cancel
+                                </button>
+                                <button 
+                                    onClick={handleDelete} 
+                                    disabled={deleting} 
+                                    className="flex-1 px-6 py-3 bg-red-600 hover:bg-red-700 text-white text-sm font-bold rounded-xl shadow-lg shadow-red-600/20 transition-all active:scale-95 disabled:opacity-50"
+                                >
+                                    {deleting ? 'Deleting...' : 'Delete'}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
