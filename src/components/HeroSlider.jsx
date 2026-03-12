@@ -64,10 +64,13 @@ export default function HeroSlider({ slides = [] }) {
         }
     };
 
-    if (totalOriginalSlides === 0) return null;
+    // if (totalOriginalSlides === 0) return null; // Removed for debug
 
     return (
-        <section className="slider-container relative w-full h-[60vh] min-h-[300px] max-h-[600px] overflow-hidden bg-gray-100 mb-6">
+        <section 
+            data-testid="hero-main-slider"
+            className="hero-main-slider relative w-full h-[60vh] min-h-[300px] md:h-[400px] lg:h-[550px] mb-6 md:mb-0 overflow-hidden bg-white shadow-lg rounded-2xl md:rounded-3xl"
+        >
             <div
                 ref={trackRef}
                 className="slider-track flex w-full h-full"
@@ -78,47 +81,65 @@ export default function HeroSlider({ slides = [] }) {
                 onTransitionEnd={handleTransitionEnd}
             >
                 {displaySlides.map((slide, index) => (
-                    <div key={`${slide.src}-${index}`} className="slide relative flex-[0_0_100%] w-full h-full block">
-                        {slide.src && (
-                            <Image
-                                src={slide.src}
-                                alt={slide.alt || `Slide ${index}`}
-                                fill
-                                priority={index === 0}
-                                className="object-cover"
-                            />
+                    <div key={index} className="slide relative flex-[0_0_100%] w-full h-full block overflow-hidden bg-white">
+                        {/* Shadow Overlay for Premium Look */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent z-[1] pointer-events-none"></div>
+                        {slide?.mobileSrc && (
+                            <div className="relative w-full h-full md:hidden">
+                                <Image
+                                    src={slide.mobileSrc}
+                                    alt={slide.alt || `Mobile Slide ${index}`}
+                                    fill
+                                    sizes="100vw"
+                                    priority={index === 0}
+                                    className="object-cover"
+                                    unoptimized
+                                />
+                            </div>
+                        )}
+                        {slide?.pcSrc && (
+                            <div className="relative w-full h-full hidden md:block">
+                                <Image
+                                    src={slide.pcSrc}
+                                    alt={slide.alt || `PC Slide ${index}`}
+                                    fill
+                                    sizes="100vw"
+                                    priority={index === 0}
+                                    className="object-cover"
+                                    unoptimized
+                                />
+                            </div>
                         )}
                     </div>
                 ))}
             </div>
 
-            {/* Slider Navigation Dots */}
-            <div className="slider-nav absolute bottom-[20px] left-1/2 -translate-x-1/2 flex gap-[10px] z-10">
+            {/* Slider Navigation Dots - Glassmorphism */}
+            <div className="slider-nav absolute bottom-[30px] left-1/2 -translate-x-1/2 flex gap-[12px] z-10 px-4 py-2 bg-white/20 backdrop-blur-md rounded-full border border-white/30">
                 {slides.map((_, index) => {
-                    // If we are showing the clone (index === totalOriginal), active dot should be the first one (0)
                     const isActive = currentSlide === totalOriginalSlides ? index === 0 : currentSlide === index;
                     return (
                         <button
                             key={index}
                             onClick={() => goToSlide(index)}
-                            className={`w-[12px] h-[12px] rounded-full cursor-pointer p-0 transition-all duration-300 border-2 ${isActive ? 'bg-white border-[#0A3D2E] scale-125' : 'bg-white/50 border-transparent hover:bg-white/80'}`}
+                            className={`w-[10px] h-[10px] rounded-full cursor-pointer p-0 transition-all duration-300 ${isActive ? 'bg-white scale-125 shadow-[0_0_10px_rgba(255,255,255,0.8)]' : 'bg-white/40 hover:bg-white/60'}`}
                             aria-label={`Go to slide ${index + 1}`}
                         />
                     );
                 })}
             </div>
 
-            {/* Navigation Arrows */}
+            {/* Navigation Arrows - Glassmorphism */}
             <button
                 onClick={handlePrev}
-                className="slider-arrow prev absolute top-1/2 -translate-y-1/2 left-[10px] bg-white/70 border-none w-[40px] h-[40px] rounded-full flex items-center justify-center text-[#0A3D2E] text-xl cursor-pointer z-10 transition-all duration-300 shadow-md hover:bg-white hover:scale-110"
+                className="slider-arrow prev absolute top-1/2 -translate-y-1/2 left-[20px] bg-white/20 backdrop-blur-lg border border-white/30 w-[45px] h-[45px] rounded-full flex items-center justify-center text-white text-xl cursor-pointer z-10 transition-all duration-300 shadow-xl hover:bg-white/40 hover:scale-110 active:scale-95"
                 aria-label="Previous Slide"
             >
                 <i className="fa-solid fa-chevron-left"></i>
             </button>
             <button
                 onClick={handleNext}
-                className="slider-arrow next absolute top-1/2 -translate-y-1/2 right-[10px] bg-white/70 border-none w-[40px] h-[40px] rounded-full flex items-center justify-center text-[#0A3D2E] text-xl cursor-pointer z-10 transition-all duration-300 shadow-md hover:bg-white hover:scale-110"
+                className="slider-arrow next absolute top-1/2 -translate-y-1/2 right-[20px] bg-white/20 backdrop-blur-lg border border-white/30 w-[45px] h-[45px] rounded-full flex items-center justify-center text-white text-xl cursor-pointer z-10 transition-all duration-300 shadow-xl hover:bg-white/40 hover:scale-110 active:scale-95"
                 aria-label="Next Slide"
             >
                 <i className="fa-solid fa-chevron-right"></i>

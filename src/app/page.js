@@ -1,34 +1,17 @@
-import HeroSlider from '@/components/HeroSlider';
-import ProductGridClient from '@/components/ProductGridClient';
+import HomeClientWrapper from '@/components/HomeClientWrapper';
 import { getProducts } from '@/lib/data';
-import { Suspense } from 'react';
-import ProductSkeleton from '@/components/ProductSkeleton';
 
-export default function Home() {
+export default async function Home() {
   const heroSlides = [
-    { src: '/hero1.webp', alt: 'Kitchen Promotion 1' },
-    { src: '/hero2.webp', alt: 'Kitchen Promotion 2' },
-    { src: '/hero3.webp', alt: 'Home Decor Promotion 3' },
-    { src: '/hero4.webp', alt: 'Home Decor Promotion 4' },
+    { mobileSrc: '/hero1.webp', pcSrc: '/hero1pc.webp', alt: 'Kitchen Promotion 1' },
+    { mobileSrc: '/hero2.webp', pcSrc: '/hero2pc.webp', alt: 'Kitchen Promotion 2' },
+    { mobileSrc: '/hero3.webp', pcSrc: '/hero3pc.webp', alt: 'Home Decor Promotion 3' },
+    { mobileSrc: '/hero4.webp', pcSrc: '/hero4pc.webp', alt: 'Home Decor Promotion 4' },
   ];
 
-  return (
-    <>
-      <HeroSlider slides={heroSlides} />
-      <Suspense fallback={
-        <div className="container mx-auto px-4 py-8">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {[...Array(8)].map((_, i) => <ProductSkeleton key={i} />)}
-          </div>
-        </div>
-      }>
-        <ProductList />
-      </Suspense>
-    </>
-  );
-}
-
-async function ProductList() {
   const products = await getProducts();
-  return <ProductGridClient initialProducts={products} />;
+
+  return (
+    <HomeClientWrapper products={products} heroSlides={heroSlides} />
+  );
 }

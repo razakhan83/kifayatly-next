@@ -49,25 +49,24 @@ export default function ProductActions({ product }) {
         <>
             {/* ═══ INLINE SECTION (inside the details column) ═══ */}
             <div className="flex flex-col gap-4">
-                {/* Share Button + Quantity Selector Row */}
+                {/* Top Row: Qty (Mobile Friendly) + Share */}
                 <div className="flex items-center justify-between">
-                    {/* Quantity Selector */}
                     <div className="flex items-center gap-3">
-                        <span className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Qty</span>
-                        <div className="flex items-center border-2 border-gray-200 rounded-lg overflow-hidden bg-white h-11 w-32">
+                        <span className="text-xs font-bold text-gray-400 uppercase tracking-tighter">Quantity</span>
+                        <div className="flex items-center border-2 border-gray-100 rounded-xl overflow-hidden bg-gray-50/50 h-10 w-28">
                             <button
                                 onClick={handleMinus}
-                                className="w-11 h-full flex items-center justify-center text-gray-500 hover:bg-gray-100 hover:text-emerald-700 transition-colors text-lg font-bold"
+                                className="w-10 h-full flex items-center justify-center text-gray-400 hover:text-emerald-600 transition-colors text-lg font-bold"
                                 aria-label="Decrease quantity"
                             >
                                 −
                             </button>
-                            <div className="flex-1 h-full flex items-center justify-center font-bold text-gray-900 text-lg border-x-2 border-gray-200">
+                            <div className="flex-1 h-full flex items-center justify-center font-bold text-gray-800 text-base border-x border-gray-100">
                                 {quantity}
                             </div>
                             <button
                                 onClick={handlePlus}
-                                className="w-11 h-full flex items-center justify-center text-gray-500 hover:bg-gray-100 hover:text-emerald-700 transition-colors text-lg font-bold"
+                                className="w-10 h-full flex items-center justify-center text-gray-400 hover:text-emerald-600 transition-colors text-lg font-bold"
                                 aria-label="Increase quantity"
                             >
                                 +
@@ -75,22 +74,21 @@ export default function ProductActions({ product }) {
                         </div>
                     </div>
 
-                    {/* Share Button */}
                     <button
                         onClick={handleShare}
-                        className="relative flex items-center gap-2 px-4 py-2.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-800 transition-colors text-sm font-semibold"
+                        className="relative flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-100 bg-white hover:bg-gray-50 text-gray-400 hover:text-gray-800 transition-all text-xs font-bold"
                         aria-label="Share product"
                     >
-                        <Share2 size={16} />
-                        <span className="hidden sm:inline">Share</span>
+                        <Share2 size={14} />
+                        <span>Share</span>
                     </button>
                 </div>
 
-                {/* Desktop-only buttons (hidden on mobile, shown via md:flex) */}
-                <div className="hidden md:flex flex-col gap-3 mt-2">
+                {/* Primary Actions (Desktop Layout) */}
+                <div className="hidden md:flex flex-col gap-3">
                     <button
                         onClick={handleAddToCart}
-                        className="shake-cart-btn w-full py-4 bg-[#064e3b] text-white rounded-xl font-bold text-lg tracking-wide hover:bg-[#065f46] transition-colors shadow-lg hover:shadow-xl flex items-center justify-center gap-3"
+                        className="shake-cart-btn w-full h-[56px] bg-[#064e3b] text-white rounded-xl font-bold text-lg tracking-wide hover:bg-[#065f46] transition-colors shadow-lg hover:shadow-xl flex items-center justify-center gap-3"
                     >
                         <i className="fa-solid fa-cart-shopping text-xl"></i>
                         ADD TO CART
@@ -99,7 +97,7 @@ export default function ProductActions({ product }) {
                         href={`https://wa.me/923001234567?text=${whatsappMessage}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="w-full py-4 bg-white border-2 border-gray-200 text-gray-700 rounded-xl font-bold text-lg tracking-wide hover:border-[#25D366] hover:text-[#25D366] transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-3"
+                        className="w-full h-[56px] bg-white border-2 border-gray-100 text-gray-700 rounded-xl font-bold text-lg tracking-wide hover:border-[#25D366] hover:text-[#25D366] transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-3"
                     >
                         <i className="fa-brands fa-whatsapp text-2xl text-[#25D366]"></i>
                         Order via WhatsApp

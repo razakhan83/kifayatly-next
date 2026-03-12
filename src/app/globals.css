@@ -193,12 +193,7 @@
   outline: none;
 }
 
-/* Custom Hide Hero Desktop Query matching old CSS */
-@media (min-width: 769px) {
-  .slider-container {
-    display: none !important;
-  }
-}
+
 
 .slider-dot.active {
   background-color: var(--color-white);

@@ -13,6 +13,19 @@ export function CartProvider({ children }) {
     const [toastMessage, setToastMessage] = useState(null);
     const [isToastVisible, setIsToastVisible] = useState(false);
     const [activeCategory, setActiveCategory] = useState('all');
+    const [isCartOpen, setIsCartOpen] = useState(false);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+    // Provide robust exclusive setters to prevent both opening
+    const openCart = () => {
+        setIsSidebarOpen(false);
+        setIsCartOpen(true);
+    };
+
+    const openSidebar = () => {
+        setIsCartOpen(false);
+        setIsSidebarOpen(true);
+    };
 
     // Load from LocalStorage purely on client-side mount
     useEffect(() => {
@@ -34,26 +47,25 @@ export function CartProvider({ children }) {
 
     const cartCount = cart.reduce((total, item) => total + (item.quantity || 1), 0);
 
-    const addToCart = (product) => {
+    const addToCart = (product, qtyToAdd = 1) => {
+        const qtyNumber = Number(qtyToAdd) || 1;
         setCart(prev => {
-            const existing = prev.findIndex(item => (item.Name || item.name) === (product.Name || product.name));
+            const existing = prev.findIndex(item => (item.slug || item._id) === (product.slug || product._id));
             if (existing > -1) {
                 const updated = [...prev];
-                updated[existing].quantity = (updated[existing].quantity || 1) + 1;
+                // User requirement: Reset/Set to selected qty rather than totalizing exponentially
+                updated[existing] = { ...updated[existing], quantity: qtyNumber };
                 return updated;
             }
-            return [...prev, { ...product, quantity: 1 }];
+            return [...prev, { ...product, quantity: qtyNumber }];
         });
 
-        // Globally trigger Toast component
-        setIsToastVisible(false); // Reset animation if spam clicking
+        // Trigger Toast Pop-up safely avoiding immediate overlaps
+        setIsToastVisible(false); // Unmount actively running ones first
         setTimeout(() => {
-            setToastMessage({
-                title: product.Name || product.name || 'Item',
-                onViewCart: () => router.push('/cart')
-            });
+            setToastMessage({ title: `${product.Name || product.name} added to cart`, _trigger: Date.now() });
             setIsToastVisible(true);
-        }, 50);
+        }, 50); // slight debounce for framer motion exit map
     };
 
     const removeFromCart = (product) => {
@@ -73,14 +85,24 @@ export function CartProvider({ children }) {
     };
 
     return (
-        <CartContext.Provider value={{ cart, cartCount, addToCart, activeCategory, setActiveCategory, updateQuantity, removeFromCart, isInitialized }}>
+        <CartContext.Provider value={{ 
+            cart, cartCount, addToCart, 
+            activeCategory, setActiveCategory, 
+            updateQuantity, removeFromCart, 
+            isInitialized, 
+            isCartOpen, setIsCartOpen, openCart,
+            isSidebarOpen, setIsSidebarOpen, openSidebar
+        }}>
             {children}
 
-            {/* Global Add to Cart Popup */}
             <Toast
                 message={toastMessage}
                 isVisible={isToastVisible}
                 onClose={() => setIsToastVisible(false)}
+                action={{
+                    label: 'View Cart',
+                    onClick: openCart
+                }}
             />
         </CartContext.Provider>
     );

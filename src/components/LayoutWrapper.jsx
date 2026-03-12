@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import SplashScreen from '@/components/SplashScreen';
 import FloatingWhatsApp from '@/components/FloatingWhatsApp';
 import Navbar from '@/components/Navbar';
+import CartDrawer from '@/components/CartDrawer';
 
 export default function LayoutWrapper({ children, categories = [] }) {
     const [loading, setLoading] = useState(true);
@@ -104,6 +105,7 @@ export default function LayoutWrapper({ children, categories = [] }) {
                 </footer>
             </div>
             <FloatingWhatsApp />
+            <CartDrawer />
         </>
     );
 }

@@ -3,6 +3,13 @@
 import { usePathname } from 'next/navigation';
 
 export default function FloatingWhatsApp() {
+    const pathname = usePathname();
+
+    // Hide on product detail pages and checkout to avoid duplicate buttons
+    if ((pathname?.startsWith('/products/') && pathname !== '/products') || pathname?.startsWith('/product/') || pathname === '/checkout') {
+        return null;
+    }
+
     return (
         <a
             href="https://wa.me/923001234567?text=Hello%20China%20Unique%20Store!"
