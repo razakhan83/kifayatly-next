@@ -1,8 +1,7 @@
-'use cache';
+import { Suspense } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { getCategories } from "@/lib/data";
-import { cacheLife, cacheTag } from 'next/cache';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -24,8 +23,6 @@ import AuthProvider from "@/components/AuthProvider";
 import LayoutWrapper from "@/components/LayoutWrapper";
 
 export default async function RootLayout({ children }) {
-  cacheLife('minutes');
-  cacheTag('shell');
   const categories = await getCategories();
 
   return (
@@ -42,7 +39,9 @@ export default async function RootLayout({ children }) {
         <CartProvider>
           <AuthProvider>
             <LayoutWrapper categories={categories}>
-              {children}
+              <Suspense fallback={<div>Loading...</div>}>
+                {children}
+              </Suspense>
             </LayoutWrapper>
           </AuthProvider>
         </CartProvider>

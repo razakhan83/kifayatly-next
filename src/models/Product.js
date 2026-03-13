@@ -24,12 +24,8 @@ const ProductSchema = new mongoose.Schema(
             required: false,
         },
         Category: {
-            type: [String],
-            default: [],
-        },
-        isLive: {
-            type: Boolean,
-            default: false,
+            type: String,
+            required: [true, 'Please provide a category.'],
         },
         stockQuantity: {
             type: Number,
@@ -45,10 +41,6 @@ const ProductSchema = new mongoose.Schema(
             type: String,
             required: false,
             unique: true,
-        },
-        cloudinary_id: {
-            type: String,
-            required: false,
         }
     },
     {

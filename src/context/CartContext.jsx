@@ -1,12 +1,12 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import Toast from '@/components/Toast';
 
 const CartContext = createContext();
 
-export function CartProvider({ children }) {
+function CartProviderContent({ children }) {
     const router = useRouter();
     const [cart, setCart] = useState([]);
     const [isInitialized, setIsInitialized] = useState(false);
@@ -53,19 +53,17 @@ export function CartProvider({ children }) {
             const existing = prev.findIndex(item => (item.slug || item._id) === (product.slug || product._id));
             if (existing > -1) {
                 const updated = [...prev];
-                // User requirement: Reset/Set to selected qty rather than totalizing exponentially
                 updated[existing] = { ...updated[existing], quantity: qtyNumber };
                 return updated;
             }
             return [...prev, { ...product, quantity: qtyNumber }];
         });
 
-        // Trigger Toast Pop-up safely avoiding immediate overlaps
-        setIsToastVisible(false); // Unmount actively running ones first
+        setIsToastVisible(false);
         setTimeout(() => {
             setToastMessage({ title: `${product.Name || product.name} added to cart`, _trigger: Date.now() });
             setIsToastVisible(true);
-        }, 50); // slight debounce for framer motion exit map
+        }, 50);
     };
 
     const removeFromCart = (product) => {
@@ -105,6 +103,14 @@ export function CartProvider({ children }) {
                 }}
             />
         </CartContext.Provider>
+    );
+}
+
+export function CartProvider({ children }) {
+    return (
+        <Suspense fallback={null}>
+            <CartProviderContent>{children}</CartProviderContent>
+        </Suspense>
     );
 }
 

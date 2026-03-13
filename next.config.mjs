@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  cacheComponents: true,
+  cacheComponents: false,
   reactCompiler: true,
   turbopack: {
     debugIds: true,

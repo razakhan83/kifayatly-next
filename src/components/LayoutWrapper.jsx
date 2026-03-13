@@ -1,21 +1,20 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { usePathname } from 'next/navigation';
 import SplashScreen from '@/components/SplashScreen';
 import FloatingWhatsApp from '@/components/FloatingWhatsApp';
 import Navbar from '@/components/Navbar';
 import CartDrawer from '@/components/CartDrawer';
 
-export default function LayoutWrapper({ children, categories = [] }) {
+function LayoutContent({ children, categories }) {
+    const pathname = usePathname();
     const [loading, setLoading] = useState(true);
     const [year, setYear] = useState(2025);
 
     useEffect(() => {
         setYear(new Date().getFullYear());
     }, []);
-    const pathname = usePathname();
-    const isAdminPage = pathname.startsWith('/admin');
 
     useEffect(() => {
         const handleLoad = () => setLoading(false);
@@ -33,7 +32,8 @@ export default function LayoutWrapper({ children, categories = [] }) {
         }
     }, []);
 
-    // Admin routes: render children directly — no store chrome
+    const isAdminPage = pathname?.startsWith('/admin');
+
     if (isAdminPage) {
         return <>{children}</>;
     }
@@ -107,5 +107,13 @@ export default function LayoutWrapper({ children, categories = [] }) {
             <FloatingWhatsApp />
             <CartDrawer />
         </>
+    );
+}
+
+export default function LayoutWrapper(props) {
+    return (
+        <Suspense fallback={null}>
+            <LayoutContent {...props} />
+        </Suspense>
     );
 }
