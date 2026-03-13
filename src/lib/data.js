@@ -10,12 +10,14 @@ export async function getProducts() {
         console.log('[DATA] getProducts: Initiating DB connection...');
         await dbConnect();
         console.log('[DATA] getProducts: Fetching from Product model...');
-        const products = await Product.find({}).sort({ createdAt: -1 }).lean();
+        const products = await Product.find({ isLive: true }).sort({ createdAt: -1 }).lean();
         console.log('[DATA] getProducts: Successfully fetched', products.length, 'items');
         return products.map(p => ({
             ...p,
             _id: p._id.toString(),
             id: p.slug || p._id.toString(),
+            // Normalize Category to always be an array
+            Category: Array.isArray(p.Category) ? p.Category : (p.Category ? [p.Category] : []),
         }));
     } catch (err) {
         console.error('[DATA] getProducts Error:', err.message);
@@ -31,8 +33,11 @@ export async function getCategories() {
         const cats = new Set();
 
         products.forEach(p => {
-            const cat = (p.Category || p.category || '').trim();
-            if (cat) cats.add(cat);
+            const categories = Array.isArray(p.Category) ? p.Category : (p.Category ? [p.Category] : []);
+            categories.forEach(cat => {
+                const trimmed = (cat || '').trim();
+                if (trimmed) cats.add(trimmed);
+            });
         });
 
         return Array.from(cats).sort().map(cat => ({

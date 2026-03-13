@@ -12,6 +12,12 @@ export default function HomeClientWrapper({ products, heroSlides }) {
     const [isFocused, setIsFocused] = useState(false);
     const [hasSearched, setHasSearched] = useState(false);
     const wrapperRef = useRef(null);
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
     // Debounce logic for live search autocomplete
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -36,8 +42,9 @@ export default function HomeClientWrapper({ products, heroSlides }) {
         if (!debouncedSearch.trim()) return [];
         return products.filter(p => {
             const name = (p.Name || p.name || '').toLowerCase();
-            const cat = (p.Category || p.category || '').toLowerCase();
-            return name.includes(debouncedSearch.toLowerCase()) || cat.includes(debouncedSearch.toLowerCase());
+            const categories = Array.isArray(p.Category) ? p.Category : (p.Category ? [p.Category] : []);
+            const term = debouncedSearch.toLowerCase();
+            return name.includes(term) || categories.some(c => (c || '').toLowerCase().includes(term));
         }).slice(0, 5); // Limit to top 5 suggestions
     }, [debouncedSearch, products]);
 
@@ -67,8 +74,8 @@ export default function HomeClientWrapper({ products, heroSlides }) {
     return (
         <>
             {/* Hero Slider - Toggles between Mobile/PC images inside the component */}
-            <div className="w-full relative overflow-hidden mb-6 h-[60vh] min-h-[300px] md:h-[400px] lg:h-[500px]">
-                 <HeroSlider slides={heroSlides} />
+            <div className="w-full relative overflow-hidden">
+                 {mounted && <HeroSlider slides={heroSlides} />}
             </div>
 
             {/* Live Search Bar */}
@@ -104,7 +111,7 @@ export default function HomeClientWrapper({ products, heroSlides }) {
                         {suggestions.length > 0 ? (
                             <ul>
                                 {suggestions.map((p, idx) => (
-                                    <li key={p._id || p.id || idx}>
+                                    <li key={`${p._id || p.id || 'sugg'}-${idx}`}>
                                         <button 
                                             type="button"
                                             onClick={() => handleSuggestionClick(p)}
@@ -117,7 +124,9 @@ export default function HomeClientWrapper({ products, heroSlides }) {
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <p className="text-sm font-semibold text-gray-900 truncate">{p.Name || p.name}</p>
-                                                <p className="text-xs text-gray-500 truncate">{p.Category || p.category}</p>
+                                                <p className="text-xs text-gray-500 truncate">
+                                                    {Array.isArray(p.Category) ? p.Category.join(', ') : (p.Category || 'Uncategorized')}
+                                                </p>
                                             </div>
                                             <i className="fa-solid fa-arrow-right text-[#10b981] opacity-0 group-hover:opacity-100 transition-opacity"></i>
                                         </button>

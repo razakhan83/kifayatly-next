@@ -69,9 +69,9 @@ export default function LayoutWrapper({ children, categories = [] }) {
                                 <h3 className="text-lg font-bold mb-4 border-b border-white/10 pb-2">Quick Links</h3>
                                 <ul className="space-y-3 text-white/80">
                                     <li><a href="#" className="hover:text-[#10b981] transition-colors flex items-center gap-2"><i className="fa-solid fa-angle-right text-xs"></i> About Us</a></li>
-                                    <li><a href="#" className="hover:text-[#10b981] transition-colors flex items-center gap-2"><i className="fa-solid fa-angle-right text-xs"></i> Refund Policy</a></li>
-                                    <li><a href="#" className="hover:text-[#10b981] transition-colors flex items-center gap-2"><i className="fa-solid fa-angle-right text-xs"></i> Privacy Policy</a></li>
-                                    <li><a href="#" className="hover:text-[#10b981] transition-colors flex items-center gap-2"><i className="fa-solid fa-angle-right text-xs"></i> Shipping Policy</a></li>
+                                    <li><a href="/refund-policy" className="hover:text-[#10b981] transition-colors flex items-center gap-2"><i className="fa-solid fa-angle-right text-xs"></i> Refund Policy</a></li>
+                                    <li><a href="/privacy-policy" className="hover:text-[#10b981] transition-colors flex items-center gap-2"><i className="fa-solid fa-angle-right text-xs"></i> Privacy Policy</a></li>
+                                    <li><a href="/shipping-policy" className="hover:text-[#10b981] transition-colors flex items-center gap-2"><i className="fa-solid fa-angle-right text-xs"></i> Shipping Policy</a></li>
                                 </ul>
                             </div>
                             <div>

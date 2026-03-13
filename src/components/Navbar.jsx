@@ -140,7 +140,7 @@ function NavbarContent({ categories }) {
                                             <i className="fa-solid fa-circle-xmark text-xl"></i>
                                         </button>
                                     )}
-                                    <button type="submit" className="absolute right-2 bg-[#0A3D2E] hover:bg-[#10b981] text-white px-4 py-1.5 rounded-full text-sm font-semibold transition-colors">
+                                    <button type="submit" className="absolute right-2 bg-[#0A3D2E] hover:bg-[#10b981] text-white px-4 py-1.5 rounded-full text-sm font-semibold transition-colors shadow-md">
                                         Search
                                     </button>
                                 </form>
@@ -182,7 +182,7 @@ function NavbarContent({ categories }) {
                                     <i className="fa-solid fa-xmark text-lg"></i>
                                 </button>
                             </div>
-                <div className="sidebar-content p-4 flex flex-col gap-2">
+                <div className="sidebar-content flex-1 overflow-y-auto p-4 flex flex-col gap-2">
                     <button
                         onClick={() => {
                             setIsSidebarOpen(false);

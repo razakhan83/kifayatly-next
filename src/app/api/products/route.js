@@ -25,6 +25,7 @@ export async function GET() {
             ...p,
             _id: p._id.toString(),
             id: p.slug || p._id.toString(),
+            Category: Array.isArray(p.Category) ? p.Category : (p.Category ? [p.Category] : []),
         }));
 
         return NextResponse.json({ success: true, data: safeProducts });
@@ -54,12 +55,15 @@ export async function POST(req) {
         const body = await req.json();
         console.log('[API] Body received:', { Name: body.Name, Category: body.Category, Price: body.Price });
 
-        let { Name, Description, Price, ImageURL, cloudinary_id, Category, stockQuantity, slug } = body;
+        let { Name, Description, Price, ImageURL, cloudinary_id, Category, stockQuantity, slug, isLive } = body;
 
         if (!Name || !Price || !Category) {
             console.log('[API] ❌ Validation failed: Missing required fields');
             return NextResponse.json({ success: false, message: 'Please provide Name, Price, and Category' }, { status: 400 });
         }
+
+        // Normalize Category to always be an array
+        const categoryArray = Array.isArray(Category) ? Category : [Category].filter(Boolean);
 
         // Auto-generate slug if missing or empty
         let uniqueSlug = slug || slugify(Name);
@@ -84,10 +88,11 @@ export async function POST(req) {
             ImageURL,
             Image: ImageURL, // Map ImageURL broadly for legacy data bindings
             cloudinary_id,
-            Category,
+            Category: categoryArray,
             stockQuantity: stockQuantity || 0,
             StockStatus: stockStatus,
             slug: uniqueSlug, // Ensure slug is saved
+            isLive: isLive === true || isLive === 'true' ? true : false,
         });
 
         console.log('[API] ✅ Product saved:', product._id);

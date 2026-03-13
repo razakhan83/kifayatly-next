@@ -25,7 +25,10 @@ export default async function ProductPage({ params }) {
         return `Rs. ${Number(cleanNumbers).toLocaleString('en-PK')}`;
     };
 
-    const categorySlug = (product.Category || product.category || '')
+    const rawCategory = product.Category || product.category || '';
+    const categoryToSlug = Array.isArray(rawCategory) ? (rawCategory[0] || '') : rawCategory;
+
+    const categorySlug = String(categoryToSlug)
         .toLowerCase()
         .replace(/&/g, 'and')
         .replace(/\s+/g, '-')

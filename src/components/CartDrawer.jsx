@@ -149,7 +149,7 @@ export default function CartDrawer() {
                                             </div>
                                             <div className="flex-1 flex flex-col justify-between py-1">
                                                 <div className="pr-6">
-                                                    <h3 className="text-sm font-semibold text-gray-900 line-clamp-2 leading-tight">{item.Name || item.name}</h3>
+                                                    <h3 className="text-sm font-bold text-gray-900 line-clamp-2 leading-tight mb-1">{item.Name || item.name}</h3>
                                                 </div>
                                                 <div className="flex items-center justify-between mt-2">
                                                     <div className="text-[#0A3D2E] font-bold text-sm shrink-0">

@@ -30,10 +30,10 @@ export default function Toast({ message, isVisible, onClose, type = 'success', a
                         className={`
                             pointer-events-auto
                             flex items-center gap-4 p-4 rounded-2xl border
-                            backdrop-blur-md bg-white/70 shadow-2xl
+                            bg-white shadow-[0_20px_50px_rgba(0,0,0,0.1)]
                             ${isSuccess 
-                                ? 'border-gray-200/50 text-gray-800 shadow-emerald-500/10' 
-                                : 'border-gray-200/50 text-gray-800 shadow-red-500/10'}
+                                ? 'border-emerald-100 text-gray-800' 
+                                : 'border-red-100 text-gray-800'}
                         `}
                     >
                         <div className={`

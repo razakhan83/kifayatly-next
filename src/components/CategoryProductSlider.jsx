@@ -12,15 +12,17 @@ export default function CategoryProductSlider({ categoryId, categoryLabel, produ
     const [isHovered, setIsHovered] = useState(false);
     const [itemWidth, setItemWidth] = useState(0);
 
-    // Filter products for this category
+    // Filter products for this category — supports both string and array Category
     const categoryProducts = products.filter(p => {
-        const rawCat = (p.Category || p.category || '').trim();
-        const pCat = rawCat.toLowerCase().replace(/&/g, 'and').replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-');
-        return pCat === categoryId;
+        const cats = Array.isArray(p.Category) ? p.Category : (p.Category ? [p.Category] : []);
+        return cats.some(cat => {
+            const pCat = (cat || '').trim().toLowerCase().replace(/&/g, 'and').replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-');
+            return pCat === categoryId;
+        });
     });
 
-    // Display products without manual duplication to prevent triplication confusion
-    const displayProducts = categoryProducts;
+    // Display products with duplication for a seamless loop effect
+    const displayProducts = [...categoryProducts, ...categoryProducts, ...categoryProducts];
     const totalOriginal = categoryProducts.length;
 
     useEffect(() => {
@@ -130,14 +132,14 @@ export default function CategoryProductSlider({ categoryId, categoryLabel, produ
                 {/* Slider Track via Native Scroll */}
                 <div
                     ref={scrollContainerRef}
-                    className="flex gap-4 w-full overflow-x-auto snap-x snap-mandatory pb-4 pt-1"
-                    style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
+                    className="flex gap-4 w-full overflow-x-auto snap-x snap-mandatory pb-4 pt-1 scroller-container hide-scrollbar"
+                    style={{ WebkitOverflowScrolling: 'touch' }}
                 >
                     {displayProducts.map((p, idx) => (
                         <div
-                            key={p._id || p.id || p.slug || `slider-item-${idx}`}
+                            key={`${p.slug || p._id || p.id || 'item'}-${idx}`}
                             ref={idx === 0 ? cardRef : null}
-                            className="product-card snap-start shrink-0 w-[42vw] md:w-[22vw] max-w-[280px] bg-white/70 backdrop-blur-md rounded-xl overflow-hidden shadow-[0_2px_10px_-3px_rgba(0,0,0,0.07)] border border-white/40 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl flex flex-col group h-auto min-h-[380px]"
+                            className="product-card scroller-item shrink-0 w-[42vw] md:w-[22vw] max-w-[280px] bg-white/70 backdrop-blur-md rounded-xl overflow-hidden shadow-[0_2px_10px_-3px_rgba(0,0,0,0.07)] border border-white/40 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl flex flex-col group h-auto min-h-[380px]"
                         >
                             <Link href={`/products/${p.slug || p._id || p.id}`} className="block relative pt-[100%] bg-gray-50 cursor-pointer w-full overflow-hidden shrink-0">
                                 {(p.Image || p.image) && (
@@ -153,7 +155,7 @@ export default function CategoryProductSlider({ categoryId, categoryLabel, produ
                             </Link>
                             <div className="product-info p-3 flex flex-col flex-grow justify-between gap-3 z-10">
                                 <Link href={`/products/${p.slug || p._id || p.id}`} className="block cursor-pointer">
-                                    <h3 className="product-title text-sm font-medium text-gray-800 mb-1 leading-[1.3] hover:text-[#10b981] transition-colors rounded" title={p.Name || p.name}>
+                                    <h3 className="product-title text-sm font-medium text-gray-800 mb-1 leading-[1.3] hover:text-[#10b981] transition-colors rounded line-clamp-2" title={p.Name || p.name}>
                                         {p.Name || p.name || 'Unknown'}
                                     </h3>
                                 </Link>

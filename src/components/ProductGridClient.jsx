@@ -12,11 +12,13 @@ function ProductGridContent({ initialProducts, forceSearchTerm, hideSearch }) {
     const { activeCategory, setActiveCategory, addToCart } = useCart();
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState(forceSearchTerm || searchParams?.get('search') || '');
+    const [sortBy, setSortBy] = useState('newest'); // 'price-low', 'price-high', 'az', 'za', 'newest'
     const [currentPage, setCurrentPage] = useState(1);
     const [fadeState, setFadeState] = useState('opacity-100');
-    const itemsPerPage = 24;
-    const categoryNavRef = useRef(null);
+    const itemsPerPage = 12;
+
     const loadMoreRef = useRef(null);
+    const categoryNavRef = useRef(null);
 
     // 1. First Pass: Filter strictly by Search Term to compute available categories
     const searchFilteredProducts = useMemo(() => {
@@ -25,9 +27,9 @@ function ProductGridContent({ initialProducts, forceSearchTerm, hideSearch }) {
 
         return base.filter(p => {
             const name = (p.Name || p.name || '').toLowerCase();
-            const rawCat = (p.Category || p.category || '').toLowerCase();
+            const categories = Array.isArray(p.Category) ? p.Category : (p.Category ? [p.Category] : (p.category ? [p.category] : []));
             const term = searchTerm.toLowerCase();
-            return name.includes(term) || rawCat.includes(term);
+            return name.includes(term) || categories.some(c => c.toLowerCase().includes(term));
         });
     }, [initialProducts, searchTerm]);
 
@@ -35,10 +37,13 @@ function ProductGridContent({ initialProducts, forceSearchTerm, hideSearch }) {
     const dynamicCategories = useMemo(() => {
         const cats = new Map();
         searchFilteredProducts.forEach(p => {
-            const cat = (p.Category || p.category || '').trim();
-            if (cat && !cats.has(cat.toLowerCase())) {
-                cats.set(cat.toLowerCase(), cat);
-            }
+            const categories = Array.isArray(p.Category) ? p.Category : (p.Category ? [p.Category] : (p.category ? [p.category] : []));
+            categories.forEach(cat => {
+                const trimmed = (cat || '').trim();
+                if (trimmed && !cats.has(trimmed.toLowerCase())) {
+                    cats.set(trimmed.toLowerCase(), trimmed);
+                }
+            });
         });
         return Array.from(cats.values()).sort().map(cat => ({
             id: cat.toLowerCase().replace(/&/g, 'and').replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-'),
@@ -62,14 +67,29 @@ function ProductGridContent({ initialProducts, forceSearchTerm, hideSearch }) {
 
         if (activeCategory !== 'all') {
             base = base.filter(p => {
-                const rawCat = (p.Category || p.category || '').trim();
-                const pCat = rawCat.toLowerCase().replace(/&/g, 'and').replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-');
-                return pCat === activeCategory;
+                const categories = Array.isArray(p.Category) ? p.Category : (p.Category ? [p.Category] : (p.category ? [p.category] : []));
+                return categories.some(cat => {
+                    const pCat = cat.trim().toLowerCase().replace(/&/g, 'and').replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-');
+                    return pCat === activeCategory;
+                });
             });
         }
 
+        // Apply Sorting
+        if (sortBy === 'price-low') {
+            base.sort((a, b) => (a.Price || a.price || 0) - (b.Price || b.price || 0));
+        } else if (sortBy === 'price-high') {
+            base.sort((a, b) => (b.Price || b.price || 0) - (a.Price || a.price || 0));
+        } else if (sortBy === 'az') {
+            base.sort((a, b) => (a.Name || a.name || '').localeCompare(b.Name || b.name || ''));
+        } else if (sortBy === 'za') {
+            base.sort((a, b) => (b.Name || b.name || '').localeCompare(a.Name || a.name || ''));
+        } else if (sortBy === 'newest') {
+            base.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+        }
+
         return base;
-    }, [searchFilteredProducts, activeCategory]);
+    }, [searchFilteredProducts, activeCategory, sortBy]);
 
     const displayedProducts = filteredProducts.slice(0, currentPage * itemsPerPage);
     const hasMore = displayedProducts.length < filteredProducts.length;
@@ -200,17 +220,34 @@ function ProductGridContent({ initialProducts, forceSearchTerm, hideSearch }) {
             </div>
 
             {!hideSearch && (
-                <div className="container mx-auto max-w-[600px] px-4 pt-6 mb-4">
-                    <div className="search-container relative flex items-center w-full">
-                        <i className="fa-solid fa-magnifying-glass search-icon absolute left-4 text-[#0A3D2E] text-[1.1rem]"></i>
-                        <input
-                            id="product-search"
-                            type="text"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="search-input w-full py-3 px-4 pl-12 border-2 border-[#145e46] rounded-full text-base outline-none transition-all shadow-sm focus:border-[#0A3D2E] focus:ring-4 focus:ring-[#0A3D2E]/20"
-                            placeholder="Search for premium products..."
-                        />
+                <div className="container mx-auto px-4 max-w-7xl pt-4">
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white/50 backdrop-blur-sm p-4 rounded-2xl border border-gray-100 shadow-sm">
+                        <div className="search-container relative flex items-center w-full max-w-md">
+                            <i className="fa-solid fa-magnifying-glass search-icon absolute left-4 text-[#0A3D2E] text-[1.1rem]"></i>
+                            <input
+                                id="product-search"
+                                type="text"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="search-input w-full py-2.5 px-4 pl-12 border-2 border-[#145e46] rounded-full text-sm outline-none transition-all shadow-sm focus:border-[#0A3D2E] focus:ring-4 focus:ring-[#0A3D2E]/20"
+                                placeholder="Search products..."
+                            />
+                        </div>
+
+                        <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 overflow-x-auto pb-1 sm:pb-0 scrollbar-hide">
+                            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider mr-2 hidden md:block">Sort By:</span>
+                            <select 
+                                value={sortBy} 
+                                onChange={(e) => setSortBy(e.target.value)}
+                                className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-700 outline-none focus:ring-2 focus:ring-emerald-500/20 cursor-pointer hover:border-emerald-500 transition-all shrink-0"
+                            >
+                                <option value="newest">Newest First</option>
+                                <option value="price-low">Price: Low to High</option>
+                                <option value="price-high">Price: High to Low</option>
+                                <option value="az">Alphabetical: A-Z</option>
+                                <option value="za">Alphabetical: Z-A</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
             )}
@@ -231,8 +268,8 @@ function ProductGridContent({ initialProducts, forceSearchTerm, hideSearch }) {
                                 <p className="col-span-full text-center text-gray-500 py-4 w-full">No products found matching your criteria.</p>
                             ) : (
                                 displayedProducts.map((p, idx) => (
-                                    <div key={p._id || p.id || p.slug || `${p.Name || p.name}-${idx}`} className="product-card bg-white/70 backdrop-blur-md rounded-xl overflow-hidden shadow-[0_2px_10px_-3px_rgba(0,0,0,0.07)] border border-white/40 transition-transform hover:-translate-y-1 hover:shadow-xl flex flex-col group h-auto min-h-[380px] h-full">
-                                        <Link href={`/products/${p._id || p.id || p.slug}`} className="block relative pt-[100%] bg-gray-50 cursor-pointer w-full overflow-hidden">
+                                    <div key={`${p.slug || p._id || p.id || 'product'}-${idx}`} className="product-card bg-white/70 backdrop-blur-md rounded-xl overflow-hidden shadow-[0_2px_10px_-3px_rgba(0,0,0,0.07)] border border-white/40 transition-transform hover:-translate-y-1 hover:shadow-xl flex flex-col group h-auto min-h-[380px] h-full">
+                                        <Link href={`/products/${p.slug || p._id || p.id}`} className="block relative pt-[100%] bg-gray-50 cursor-pointer w-full overflow-hidden">
                                             {(p.Image || p.image) && (
                                                 <Image
                                                     src={p.Image || p.image}
@@ -245,8 +282,8 @@ function ProductGridContent({ initialProducts, forceSearchTerm, hideSearch }) {
                                             )}
                                         </Link>
                                         <div className="product-info p-3 flex flex-col flex-grow justify-between gap-3">
-                                            <Link href={`/products/${p._id || p.id || p.slug}`} className="block cursor-pointer">
-                                                <h3 className="product-title text-sm font-medium text-gray-800 mb-1 leading-[1.3] hover:text-[#10b981] transition-colors rounded" title={p.Name || p.name}>
+                                            <Link href={`/products/${p.slug || p._id || p.id}`} className="block cursor-pointer">
+                                                <h3 className="product-title text-sm font-bold text-gray-800 mb-1 leading-tight hover:text-[#10b981] transition-colors line-clamp-2 h-10 overflow-hidden" title={p.Name || p.name}>
                                                     {p.Name || p.name || 'Unknown'}
                                                 </h3>
                                             </Link>

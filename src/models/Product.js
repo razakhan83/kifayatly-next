@@ -24,8 +24,12 @@ const ProductSchema = new mongoose.Schema(
             required: false,
         },
         Category: {
-            type: String,
-            required: [true, 'Please provide a category.'],
+            type: [String],
+            default: [],
+        },
+        isLive: {
+            type: Boolean,
+            default: false,
         },
         stockQuantity: {
             type: Number,

@@ -1,12 +1,17 @@
 'use client';
 import { useState, useCallback, useEffect } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import Toast from '@/components/Toast';
+import Link from 'next/link';
 
-export default function AddProduct() {
+export default function EditProduct() {
+  const { id } = useParams();
+  const router = useRouter();
+
   const [Name, setName] = useState('');
   const [Description, setDescription] = useState('');
   const [Price, setPrice] = useState('');
-  const [Categories, setCategories] = useState([]); // array of selected category names
+  const [Categories, setCategories] = useState([]); // array
   const [stockQuantity, setStockQuantity] = useState('');
   const [ImageURL, setImageURL] = useState('');
   const [cloudinaryId, setCloudinaryId] = useState('');
@@ -14,11 +19,17 @@ export default function AddProduct() {
 
   const [imagePreview, setImagePreview] = useState(null);
   const [isDragOver, setIsDragOver] = useState(false);
-  const [toast, setToast] = useState({ visible: false, message: '', type: 'success' });
   const [allCategories, setAllCategories] = useState([]);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [newCatName, setNewCatName] = useState('');
   const [isAddingCat, setIsAddingCat] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState({ visible: false, message: '', type: 'success' });
+
+  const showToast = (message, type = 'success') => {
+    setToast({ visible: true, message, type });
+  };
 
   const fetchCategories = useCallback(async () => {
     try {
@@ -30,7 +41,36 @@ export default function AddProduct() {
     }
   }, []);
 
-  useEffect(() => { fetchCategories(); }, [fetchCategories]);
+  // Fetch product data
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch(`/api/products/${id}`);
+        const data = await res.json();
+        if (data.success) {
+          const p = data.data;
+          setName(p.Name || '');
+          setDescription(p.Description || '');
+          setPrice(p.Price || '');
+          setCategories(Array.isArray(p.Category) ? p.Category : (p.Category ? [p.Category] : []));
+          setStockQuantity(p.stockQuantity ?? '');
+          setImageURL(p.ImageURL || p.Image || '');
+          setImagePreview(p.ImageURL || p.Image || null);
+          setCloudinaryId(p.cloudinary_id || '');
+          setIsLive(p.isLive ?? false);
+        } else {
+          showToast('Product not found', 'error');
+        }
+      } catch (err) {
+        showToast('Error loading product', 'error');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProduct();
+    fetchCategories();
+  }, [id, fetchCategories]);
 
   const handleAddCategory = async (e) => {
     e.preventDefault();
@@ -86,32 +126,18 @@ export default function AddProduct() {
     }
   };
 
-  const showToast = (message, type = 'success') => {
-    setToast({ visible: true, message, type });
-  };
-
-  const clearForm = () => {
-    setName('');
-    setDescription('');
-    setPrice('');
-    setCategories([]);
-    setStockQuantity('');
-    setImageURL('');
-    setImagePreview(null);
-    setIsLive(false);
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!Name || !Price || Categories.length === 0) {
       showToast('Name, Price and at least one Category are required.', 'error');
       return;
     }
 
+    setSaving(true);
     let finalImageURL = ImageURL;
     let finalCloudinaryId = cloudinaryId;
 
+    // Upload to Cloudinary if base64
     if (ImageURL && ImageURL.startsWith('data:')) {
       try {
         const signRes = await fetch('/api/cloudinary-sign');
@@ -136,52 +162,72 @@ export default function AddProduct() {
           finalCloudinaryId = uploadData.public_id;
         } else {
           showToast('Image upload failed: ' + (uploadData.error?.message || 'Upload error'), 'error');
+          setSaving(false);
           return;
         }
       } catch (err) {
         showToast('Error uploading image: ' + err.message, 'error');
+        setSaving(false);
         return;
       }
     }
 
-    const payload = {
-      Name,
-      Description,
-      Price: Number(Price),
-      ImageURL: finalImageURL,
-      cloudinary_id: finalCloudinaryId,
-      Category: Categories,
-      stockQuantity: Number(stockQuantity) || 0,
-      isLive,
-    };
-
     try {
-      const res = await fetch('/api/products', {
-        method: 'POST',
+      const res = await fetch(`/api/products/${id}`, {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          Name,
+          Description,
+          Price: Number(Price),
+          ImageURL: finalImageURL,
+          cloudinary_id: finalCloudinaryId,
+          Category: Categories,
+          stockQuantity: Number(stockQuantity) || 0,
+          isLive,
+        }),
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        showToast('Product saved! Toggle it Live when ready.', 'success');
-        clearForm();
+        showToast('Product updated successfully!', 'success');
+        setTimeout(() => router.push('/admin/products'), 1500);
       } else {
-        showToast(data.message || data.error || 'Failed to save product', 'error');
+        showToast(data.message || data.error || 'Failed to update product', 'error');
       }
     } catch (err) {
       showToast('Network error while saving product.', 'error');
+    } finally {
+      setSaving(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="w-full pb-10 flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <i className="fa-solid fa-circle-notch fa-spin text-4xl text-emerald-500 mb-4 block"></i>
+          <p className="text-gray-500 font-medium">Loading product...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full pb-10">
       <Toast isVisible={toast.visible} message={toast.message} type={toast.type} onClose={() => setToast(prev => ({ ...prev, visible: false }))} />
 
-      <div className="mb-6 md:mb-8">
-        <h1 className="text-2xl md:text-3xl font-black text-gray-900">Add New Product</h1>
-        <p className="text-sm md:text-base text-gray-500 mt-1">Create a new product. Toggle it Live when ready to publish.</p>
+      {/* Page Header */}
+      <div className="mb-6 md:mb-8 flex items-center gap-4">
+        <Link href="/admin/products" className="flex items-center justify-center w-9 h-9 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all">
+          <i className="fa-solid fa-arrow-left text-gray-600"></i>
+        </Link>
+        <div>
+          <h1 className="text-2xl md:text-3xl font-black text-gray-900">Edit Product</h1>
+          <p className="text-sm text-gray-500 mt-1">Update product details.</p>
+        </div>
       </div>
 
+      {/* Form Card */}
       <div className="bg-white p-4 md:p-8 rounded-2xl shadow-sm border border-gray-100 max-w-2xl">
         <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
           {/* Product Name */}
@@ -225,7 +271,7 @@ export default function AddProduct() {
             </div>
             <div className="flex flex-wrap gap-2 p-3 bg-gray-50 border border-gray-200 rounded-lg min-h-[52px]">
               {allCategories.length === 0 ? (
-                <p className="text-xs text-gray-400 self-center">No categories yet. Click "Manage Categories" to add one.</p>
+                <p className="text-xs text-gray-400 self-center">No categories found. Add one →</p>
               ) : (
                 allCategories.map((cat) => {
                   const selected = Categories.includes(cat.name);
@@ -243,17 +289,17 @@ export default function AddProduct() {
                 })
               )}
             </div>
-            {Categories.length === 0 && allCategories.length > 0 && (
-              <p className="text-xs text-orange-400 mt-1">Select at least one category above.</p>
+            {Categories.length === 0 && (
+              <p className="text-xs text-red-400 mt-1">Please select at least one category.</p>
             )}
           </div>
 
           {/* isLive Toggle */}
           <div className="flex items-center justify-between p-4 bg-gray-50 border border-gray-200 rounded-xl">
             <div>
-              <p className="text-sm font-semibold text-gray-700">Publish as Live</p>
+              <p className="text-sm font-semibold text-gray-700">Visibility</p>
               <p className="text-xs text-gray-500 mt-0.5">
-                {isLive ? '🟢 Will be visible to customers immediately' : '🔴 Draft — hidden from store until toggled Live'}
+                {isLive ? '🟢 Live — visible to customers' : '🔴 Draft — hidden from store'}
               </p>
             </div>
             <button
@@ -321,18 +367,24 @@ export default function AddProduct() {
               className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#10b981]/50"
               placeholder="0"
               min="0"
-              required
             />
           </div>
 
           {/* Buttons */}
           <div className="flex gap-4 mt-6 md:mt-8">
-            <button type="submit" className="flex-1 min-w-[140px] h-[45px] bg-emerald-600 text-white font-bold rounded-xl flex items-center justify-center hover:bg-emerald-700 shadow-sm transition-all active:scale-95">
-              Save Product
+            <button
+              type="submit"
+              disabled={saving}
+              className="flex-1 min-w-[140px] h-[45px] bg-emerald-600 text-white font-bold rounded-xl flex items-center justify-center hover:bg-emerald-700 shadow-sm transition-all active:scale-95 disabled:opacity-60"
+            >
+              {saving ? <><i className="fa-solid fa-spinner fa-spin mr-2"></i>Saving...</> : 'Save Changes'}
             </button>
-            <button type="button" onClick={clearForm} className="flex-1 min-w-[140px] h-[45px] bg-gray-200 text-gray-700 font-bold rounded-xl flex items-center justify-center hover:bg-gray-300 shadow-sm transition-all active:scale-95">
-              Clear
-            </button>
+            <Link
+              href="/admin/products"
+              className="flex-1 min-w-[140px] h-[45px] bg-gray-200 text-gray-700 font-bold rounded-xl flex items-center justify-center hover:bg-gray-300 shadow-sm transition-all active:scale-95 text-center"
+            >
+              Cancel
+            </Link>
           </div>
         </form>
       </div>
@@ -341,50 +393,35 @@ export default function AddProduct() {
       {isCategoryModalOpen && (
         <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setIsCategoryModalOpen(false)}></div>
-          <div className="relative bg-white w-[92%] sm:w-[512px] rounded-3xl shadow-2xl animate-in fade-in zoom-in duration-200 max-h-[85vh] flex flex-col overflow-hidden">
-            <div className="flex items-center justify-between p-5 md:p-6 border-b bg-gray-50/50 shrink-0">
-              <h2 className="text-xl font-bold text-gray-900 truncate pr-4">Manage Categories</h2>
-              <button type="button" onClick={() => setIsCategoryModalOpen(false)} className="w-10 h-10 flex flex-shrink-0 items-center justify-center rounded-full hover:bg-gray-200 text-gray-400 hover:text-gray-600 transition-all active:scale-90">
+          <div className="relative bg-white w-[92%] sm:w-[512px] rounded-3xl shadow-2xl max-h-[85vh] flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between p-5 border-b bg-gray-50/50">
+              <h2 className="text-xl font-bold text-gray-900">Manage Categories</h2>
+              <button type="button" onClick={() => setIsCategoryModalOpen(false)} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-200 text-gray-400 hover:text-gray-600 transition-all">
                 <i className="fa-solid fa-xmark text-lg"></i>
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto p-5 md:p-8">
+            <div className="flex-1 overflow-y-auto p-5">
               <form onSubmit={handleAddCategory} className="space-y-4">
                 <div className="bg-emerald-50/30 p-4 rounded-2xl border border-emerald-100/50">
                   <label className="block text-sm font-bold text-emerald-900 mb-2">New Category Name</label>
                   <div className="flex flex-col sm:flex-row gap-3">
-                    <input type="text" value={newCatName} onChange={(e) => setNewCatName(e.target.value)} className="w-full sm:flex-1 bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 font-medium" placeholder="e.g. Health & Beauty" required />
-                    <button type="submit" disabled={isAddingCat} className="w-full sm:w-auto bg-[#0EB981] text-white px-6 py-3 rounded-xl font-black text-sm hover:bg-[#0da874] shadow-lg shadow-emerald-500/20 disabled:opacity-50 transition-all flex items-center justify-center gap-2 shrink-0 active:scale-95">
+                    <input type="text" value={newCatName} onChange={(e) => setNewCatName(e.target.value)} className="w-full sm:flex-1 bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50" placeholder="e.g. Health & Beauty" required />
+                    <button type="submit" disabled={isAddingCat} className="w-full sm:w-auto bg-[#0EB981] text-white px-6 py-3 rounded-xl font-black text-sm hover:bg-[#0da874] disabled:opacity-50 transition-all flex items-center justify-center gap-2">
                       {isAddingCat ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-plus"></i>} Add
                     </button>
                   </div>
                 </div>
               </form>
-              <div className="mt-8">
-                <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Current Catalog Categories</h3>
-                <div className="grid grid-cols-1 gap-2">
-                  {allCategories.length === 0 ? (
-                    <div className="text-center py-10 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
-                      <i className="fa-solid fa-layer-group text-3xl text-gray-200 mb-2 block"></i>
-                      <p className="text-sm text-gray-400">No categories found.</p>
-                    </div>
-                  ) : (
-                    allCategories.map((cat) => (
-                      <div key={cat._id} className="flex items-center justify-between bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:border-emerald-200 transition-all group overflow-hidden">
-                        <span className="text-sm font-semibold text-gray-700 break-words pr-4 min-w-0 flex-1 leading-tight">{cat.name}</span>
-                        <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                          <i className="fa-solid fa-check text-xs"></i>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
+              <div className="mt-6 grid grid-cols-1 gap-2">
+                {allCategories.map((cat) => (
+                  <div key={cat._id} className="flex items-center justify-between bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
+                    <span className="text-sm font-semibold text-gray-700">{cat.name}</span>
+                  </div>
+                ))}
               </div>
             </div>
-            <div className="p-4 md:p-6 bg-gray-50 border-t flex justify-center shrink-0">
-              <button type="button" onClick={() => setIsCategoryModalOpen(false)} className="w-full sm:w-auto px-12 py-3.5 bg-black text-white text-sm font-black rounded-xl hover:bg-gray-900 transition-all shadow-xl active:scale-95">
-                DONE & CLOSE
-              </button>
+            <div className="p-4 bg-gray-50 border-t">
+              <button type="button" onClick={() => setIsCategoryModalOpen(false)} className="w-full px-12 py-3 bg-black text-white text-sm font-black rounded-xl hover:bg-gray-900 transition-all">DONE & CLOSE</button>
             </div>
           </div>
         </div>

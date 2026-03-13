@@ -26,7 +26,7 @@ export default function HomeSearch() {
                     className="search-input w-full py-3 px-4 pl-12 border-2 border-[#145e46] rounded-full text-base outline-none transition-all shadow-sm focus:border-[#0A3D2E] focus:ring-4 focus:ring-[#0A3D2E]/20"
                     placeholder="Search for premium products..."
                 />
-                <button type="submit" className="absolute right-2 bg-[#0A3D2E] hover:bg-[#10b981] text-white px-4 py-1.5 rounded-full text-sm font-semibold transition-colors">
+                <button type="submit" className="absolute right-2 bg-[#0A3D2E] hover:bg-[#10b981] text-white px-4 py-1.5 rounded-full text-sm font-semibold transition-colors shadow-md">
                     Search
                 </button>
             </form>
