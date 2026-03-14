@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import useEmblaCarousel from 'embla-carousel-react';
 import Autoplay from 'embla-carousel-autoplay';
+import { getBlurPlaceholderProps } from '@/lib/imagePlaceholder';
 
 export default function HeroSlider({ slides = [] }) {
     const [selectedIndex, setSelectedIndex] = useState(0);
@@ -53,6 +54,7 @@ export default function HeroSlider({ slides = [] }) {
                                         sizes="100vw"
                                         priority={index === 0}
                                         className="object-cover"
+                                        {...getBlurPlaceholderProps()}
                                         unoptimized
                                     />
                                 </div>
@@ -67,6 +69,7 @@ export default function HeroSlider({ slides = [] }) {
                                         sizes="100vw"
                                         priority={index === 0}
                                         className="object-cover"
+                                        {...getBlurPlaceholderProps()}
                                         unoptimized
                                     />
                                 </div>

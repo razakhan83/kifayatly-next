@@ -20,6 +20,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
+import { getPrimaryProductImage } from '@/lib/productImages';
+import { getBlurPlaceholderProps } from '@/lib/imagePlaceholder';
 
 const formatPrice = (raw) => {
   const clean = String(raw).replace(/[^\d.]/g, '');
@@ -221,8 +223,15 @@ export default function CheckoutPage() {
                 {cart.map((item, index) => (
                   <div key={index} className="flex gap-4">
                     <div className="relative size-16 overflow-hidden rounded-lg border border-border bg-muted">
-                      {(item.Image || item.image) ? (
-                        <Image src={item.Image || item.image} alt={item.Name || item.name} fill className="object-cover" unoptimized />
+                      {getPrimaryProductImage(item)?.url ? (
+                        <Image
+                          src={getPrimaryProductImage(item).url}
+                          alt={item.Name || item.name}
+                          fill
+                          className="object-cover"
+                          {...getBlurPlaceholderProps(getPrimaryProductImage(item).blurDataURL)}
+                          unoptimized
+                        />
                       ) : null}
                     </div>
                     <div className="flex-1">

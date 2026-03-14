@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getPrimaryProductImage } from "@/lib/productImages";
+import { getBlurPlaceholderProps } from "@/lib/imagePlaceholder";
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState([]);
@@ -163,8 +164,7 @@ export default function AdminProductsPage() {
                       alt={product.Name}
                       fill
                       className="object-cover"
-                      placeholder={product.primaryImage.blurDataURL ? "blur" : "empty"}
-                      blurDataURL={product.primaryImage.blurDataURL || undefined}
+                      {...getBlurPlaceholderProps(product.primaryImage.blurDataURL)}
                       unoptimized
                     />
                   ) : (
@@ -244,8 +244,7 @@ export default function AdminProductsPage() {
                               alt={product.Name}
                               fill
                               className="object-cover"
-                              placeholder={product.primaryImage.blurDataURL ? "blur" : "empty"}
-                              blurDataURL={product.primaryImage.blurDataURL || undefined}
+                              {...getBlurPlaceholderProps(product.primaryImage.blurDataURL)}
                               unoptimized
                             />
                           ) : (

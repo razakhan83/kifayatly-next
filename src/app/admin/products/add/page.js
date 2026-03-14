@@ -1,7 +1,9 @@
 "use client";
+import Image from "next/image";
 import { useState, useCallback, useEffect } from "react";
 import { toast } from "sonner";
 import { uploadImageDataUrl } from "@/lib/cloudinaryUpload";
+import { getBlurPlaceholderProps } from "@/lib/imagePlaceholder";
 
 export default function AddProduct() {
   const [Name, setName] = useState("");
@@ -345,10 +347,14 @@ export default function AddProduct() {
                   key={idx}
                   className="relative aspect-square rounded-xl border border-gray-200 overflow-hidden group bg-gray-50"
                 >
-                  <img
+                  <Image
                     src={img.url}
                     alt="Preview"
-                    className="w-full h-full object-cover"
+                    fill
+                    sizes="(max-width: 640px) 50vw, 25vw"
+                    className="object-cover"
+                    {...getBlurPlaceholderProps(img.blurDataURL)}
+                    unoptimized
                   />
                   <button
                     type="button"
@@ -495,7 +501,17 @@ export default function AddProduct() {
                         <input type="file" accept="image/*" onChange={handleCategoryImageSelect} className="hidden" />
                       </label>
                       {newCatImage ? (
-                        <img src={newCatImage} alt="Category preview" className="h-12 w-12 rounded-xl object-cover border border-emerald-100" />
+                        <div className="relative h-12 w-12 overflow-hidden rounded-xl border border-emerald-100">
+                          <Image
+                            src={newCatImage}
+                            alt="Category preview"
+                            fill
+                            sizes="48px"
+                            className="object-cover"
+                            {...getBlurPlaceholderProps()}
+                            unoptimized
+                          />
+                        </div>
                       ) : null}
                       <button
                         type="submit"
@@ -533,7 +549,17 @@ export default function AddProduct() {
                       >
                         <div className="flex min-w-0 flex-1 items-center gap-3 pr-4">
                           {cat.image ? (
-                            <img src={cat.image} alt={cat.name} className="h-10 w-10 rounded-full object-cover border border-gray-100" />
+                            <div className="relative h-10 w-10 overflow-hidden rounded-full border border-gray-100">
+                              <Image
+                                src={cat.image}
+                                alt={cat.name}
+                                fill
+                                sizes="40px"
+                                className="object-cover"
+                                {...getBlurPlaceholderProps()}
+                                unoptimized
+                              />
+                            </div>
                           ) : (
                             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-sm font-bold text-emerald-700">
                               {cat.name?.charAt(0) || "?"}

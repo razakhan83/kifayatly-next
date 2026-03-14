@@ -4,6 +4,7 @@ import Image from 'next/image';
 import useEmblaCarousel from 'embla-carousel-react';
 import { ImageIcon } from 'lucide-react';
 import { normalizeProductImage } from '@/lib/productImages';
+import { getBlurPlaceholderProps } from '@/lib/imagePlaceholder';
 
 export default function ProductGallery({ images }) {
     const [selectedIndex, setSelectedIndex] = useState(0);
@@ -59,8 +60,7 @@ export default function ProductGallery({ images }) {
                                 alt={`Product Image ${index + 1}`}
                                 fill
                                 className="object-cover transition-transform duration-[700ms] ease-[cubic-bezier(0.25,1,0.5,1)] hover:scale-105"
-                                placeholder={image.blurDataURL ? 'blur' : 'empty'}
-                                blurDataURL={image.blurDataURL || undefined}
+                                {...getBlurPlaceholderProps(image.blurDataURL)}
                                 unoptimized
                                 preload={index === 0}
                             />
@@ -87,8 +87,7 @@ export default function ProductGallery({ images }) {
                                     alt={`Thumbnail ${index + 1}`}
                                     fill
                                     className="object-cover"
-                                    placeholder={image.blurDataURL ? 'blur' : 'empty'}
-                                    blurDataURL={image.blurDataURL || undefined}
+                                    {...getBlurPlaceholderProps(image.blurDataURL)}
                                     unoptimized
                                 />
                             </div>

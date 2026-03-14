@@ -1,10 +1,12 @@
 'use client';
+import Image from 'next/image';
 import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { uploadImageDataUrl } from '@/lib/cloudinaryUpload';
 import { normalizeProductImages } from '@/lib/productImages';
+import { getBlurPlaceholderProps } from '@/lib/imagePlaceholder';
 
 export default function EditProduct({ id }) {
   const router = useRouter();
@@ -343,7 +345,15 @@ export default function EditProduct({ id }) {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
                 {images.map((img, idx) => (
                     <div key={idx} className="relative aspect-square rounded-xl border border-gray-200 overflow-hidden group bg-gray-50">
-                        <img src={img.url} alt="Preview" className="w-full h-full object-cover" />
+                        <Image
+                          src={img.url}
+                          alt="Preview"
+                          fill
+                          sizes="(max-width: 640px) 50vw, 25vw"
+                          className="object-cover"
+                          {...getBlurPlaceholderProps(img.blurDataURL)}
+                          unoptimized
+                        />
                         <button 
                             type="button" 
                             onClick={() => removeImage(idx)} 
@@ -443,7 +453,17 @@ export default function EditProduct({ id }) {
                         <input type="file" accept="image/*" onChange={handleCategoryImageSelect} className="hidden" />
                       </label>
                       {newCatImage ? (
-                        <img src={newCatImage} alt="Category preview" className="h-12 w-12 rounded-xl object-cover border border-emerald-100" />
+                        <div className="relative h-12 w-12 overflow-hidden rounded-xl border border-emerald-100">
+                          <Image
+                            src={newCatImage}
+                            alt="Category preview"
+                            fill
+                            sizes="48px"
+                            className="object-cover"
+                            {...getBlurPlaceholderProps()}
+                            unoptimized
+                          />
+                        </div>
                       ) : null}
                       <button type="submit" disabled={isAddingCat} className="w-full sm:w-auto bg-[#0EB981] text-white px-6 py-3 rounded-xl font-black text-sm hover:bg-[#0da874] disabled:opacity-50 transition-all flex items-center justify-center gap-2">
                         {isAddingCat ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-plus"></i>} Add
@@ -457,7 +477,17 @@ export default function EditProduct({ id }) {
                   <div key={cat._id} className="flex items-center justify-between bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
                     <div className="flex min-w-0 flex-1 items-center gap-3">
                       {cat.image ? (
-                        <img src={cat.image} alt={cat.name} className="h-10 w-10 rounded-full object-cover border border-gray-100" />
+                        <div className="relative h-10 w-10 overflow-hidden rounded-full border border-gray-100">
+                          <Image
+                            src={cat.image}
+                            alt={cat.name}
+                            fill
+                            sizes="40px"
+                            className="object-cover"
+                            {...getBlurPlaceholderProps()}
+                            unoptimized
+                          />
+                        </div>
                       ) : (
                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-sm font-bold text-emerald-700">
                           {cat.name?.charAt(0) || '?'}

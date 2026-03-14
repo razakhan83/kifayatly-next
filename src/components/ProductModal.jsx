@@ -4,6 +4,8 @@ import Image from 'next/image';
 import { useCart } from '@/context/CartContext';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { getPrimaryProductImage } from '@/lib/productImages';
+import { getBlurPlaceholderProps } from '@/lib/imagePlaceholder';
 
 export default function ProductModal({ product, onClose }) {
     const { addToCart } = useCart();
@@ -23,6 +25,7 @@ export default function ProductModal({ product, onClose }) {
             : product.category
                 ? [product.category]
                 : [];
+    const primaryImage = getPrimaryProductImage(product);
 
     return (
         <>
@@ -46,12 +49,13 @@ export default function ProductModal({ product, onClose }) {
 
                     <div className="flex flex-col md:flex-row">
                         <div className="w-full md:w-1/2 relative bg-gray-50 aspect-square md:aspect-auto md:min-h-[300px] overflow-hidden group">
-                            {(product.Image || product.image) ? (
+                            {primaryImage?.url ? (
                                 <Image
-                                    src={product.Image || product.image}
+                                    src={primaryImage.url}
                                     alt={product.Name || product.name || 'Product'}
                                     fill
                                     className="object-cover transition-transform duration-500 group-hover:scale-105"
+                                    {...getBlurPlaceholderProps(primaryImage.blurDataURL)}
                                     unoptimized
                                 />
                             ) : (

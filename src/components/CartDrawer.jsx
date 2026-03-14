@@ -14,6 +14,8 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
+import { getPrimaryProductImage } from '@/lib/productImages';
+import { getBlurPlaceholderProps } from '@/lib/imagePlaceholder';
 
 const formatPrice = (raw) => {
   const clean = String(raw).replace(/[^\d.]/g, '');
@@ -52,13 +54,14 @@ export default function CartDrawer() {
               <div key={`${item.id || item._id || item.Name || index}`} className="surface-card rounded-xl p-3">
                 <div className="flex gap-3">
                   <div className="relative size-20 overflow-hidden rounded-lg border border-border bg-muted">
-                    {(item.Image || item.image) ? (
+                    {getPrimaryProductImage(item)?.url ? (
                       <Image
-                        src={item.Image || item.image}
+                        src={getPrimaryProductImage(item).url}
                         alt={item.Name || item.name || 'product'}
                         fill
                         sizes="80px"
                         className="object-cover"
+                        {...getBlurPlaceholderProps(getPrimaryProductImage(item).blurDataURL)}
                         unoptimized
                       />
                     ) : null}
