@@ -1,5 +1,5 @@
 import HomeClientWrapper from '@/components/HomeClientWrapper';
-import { getProducts } from '@/lib/data';
+import { getCategories, getProducts } from '@/lib/data';
 
 export default async function Home() {
   const heroSlides = [
@@ -10,8 +10,9 @@ export default async function Home() {
   ];
 
   const products = await getProducts();
+  const categories = await getCategories();
 
   return (
-    <HomeClientWrapper products={products} heroSlides={heroSlides} />
+    <HomeClientWrapper products={products} heroSlides={heroSlides} categories={categories} />
   );
 }

@@ -1,44 +1,56 @@
 "use client";
 
-import { useCallback, useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import AutoScroll from "embla-carousel-auto-scroll";
-import { getCategoryColor } from "@/lib/categoryColors";
+import Image from "next/image";
+import {
+  Armchair,
+  Beef,
+  Bolt,
+  Car,
+  Dumbbell,
+  Flame,
+  Gamepad2,
+  Heart,
+  PawPrint,
+  PenTool,
+  Shirt,
+  Tag,
+  UtensilsCrossed,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 
-// Icons for categories (FontAwesome)
+import { getCategoryColor } from "@/lib/categoryColors";
+
 const CATEGORY_ICONS = {
-  "kitchen accessories": "fa-spoon",
-  kitchen: "fa-fire-burner",
-  knives: "fa-utensils", // Fallback if fa-knife is pro only
-  pots: "fa-bowl-food",
-  "home decor": "fa-couch",
-  "health & beauty": "fa-heart",
-  stationery: "fa-pen",
-  "toys & games": "fa-gamepad",
-  electronics: "fa-bolt",
-  fashion: "fa-shirt",
-  "sports & fitness": "fa-dumbbell",
-  "pet supplies": "fa-paw",
-  automotive: "fa-car",
+  "kitchen accessories": UtensilsCrossed,
+  kitchen: Flame,
+  knives: UtensilsCrossed,
+  pots: Beef,
+  "home decor": Armchair,
+  "health & beauty": Heart,
+  stationery: PenTool,
+  "toys & games": Gamepad2,
+  electronics: Bolt,
+  fashion: Shirt,
+  "sports & fitness": Dumbbell,
+  "pet supplies": PawPrint,
+  automotive: Car,
 };
 
 function getCategoryIcon(name) {
-  const key = (name || "").toLowerCase().trim();
-  return CATEGORY_ICONS[key] || "fa-tag";
+  return CATEGORY_ICONS[(name || "").toLowerCase().trim()] || Tag;
 }
 
 export default function CategoryIconCarousel({ categories }) {
   const router = useRouter();
-
-  // Duplicate categories for seamless infinite loop
   const displayCategories = useMemo(() => {
-    if (!categories || categories.length === 0) return [];
-    // Triple the list for smooth infinite illusion
+    if (!categories?.length) return [];
     return [...categories, ...categories, ...categories];
   }, [categories]);
 
-  const [emblaRef, emblaApi] = useEmblaCarousel(
+  const [emblaRef] = useEmblaCarousel(
     {
       loop: true,
       align: "start",
@@ -55,31 +67,42 @@ export default function CategoryIconCarousel({ categories }) {
     ],
   );
 
-  if (!categories || categories.length === 0) return null;
+  if (!categories?.length) return null;
 
   return (
-    <div className="w-full bg-white py-4 md:py-6 border-b border-gray-100">
-      <div className="container mx-auto max-w-7xl px-4">
+    <div className="w-full border-b border-border bg-card/70 py-4 md:py-5">
+      <div className="mx-auto w-full max-w-[1240px] px-4">
         <div ref={emblaRef} className="overflow-hidden">
           <div className="flex gap-4 md:gap-6">
-            {displayCategories.map((cat, idx) => {
-              const colors = getCategoryColor(cat.label);
-              const icon = getCategoryIcon(cat.label);
+            {displayCategories.map((category, index) => {
+              const colors = getCategoryColor(category.label);
+              const Icon = getCategoryIcon(category.label);
               return (
                 <button
-                  key={`${cat.id}-${idx}`}
-                  onClick={() => router.push(`/products?category=${cat.id}`)}
-                  className="flex flex-col items-center gap-2 flex-[0_0_auto] min-w-[80px] md:min-w-[100px] group cursor-pointer"
+                  key={`${category.id}-${index}`}
+                  onClick={() => router.push(`/products?category=${category.id}`)}
+                  className="group flex min-w-[110px] flex-[0_0_auto] flex-col items-center gap-3 rounded-xl px-1 py-1 text-center md:min-w-[140px]"
                 >
                   <div
-                    className={`w-16 h-16 md:w-20 md:h-20 rounded-full ${colors.bg} ${colors.border} border-2 flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:shadow-md will-change-transform`}
+                    className={`relative flex h-20 w-20 items-center justify-center overflow-hidden rounded-full border ${colors.border} bg-white transition-all duration-300 group-hover:-translate-y-0.5 group-hover:shadow-md md:h-28 md:w-28`}
                   >
-                    <i
-                      className={`fa-solid ${icon} ${colors.text} text-2xl md:text-3xl`}
-                    ></i>
+                    {category.image ? (
+                      <Image
+                        src={category.image}
+                        alt={category.label}
+                        fill
+                        sizes="112px"
+                        className="object-cover"
+                        unoptimized
+                      />
+                    ) : (
+                      <div className={`flex size-full items-center justify-center rounded-full ${colors.bg}`}>
+                        <Icon className={`${colors.text} size-7 md:size-9`} />
+                      </div>
+                    )}
                   </div>
-                  <span className="text-xs md:text-sm font-semibold text-gray-600 text-center leading-tight line-clamp-2 max-w-[80px] md:max-w-[100px] group-hover:text-gray-900 transition-colors">
-                    {cat.label}
+                  <span className="line-clamp-2 max-w-[110px] text-sm font-medium leading-tight text-muted-foreground transition-colors group-hover:text-foreground md:max-w-[140px]">
+                    {category.label}
                   </span>
                 </button>
               );

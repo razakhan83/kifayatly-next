@@ -1,6 +1,7 @@
 import { cacheLife, cacheTag } from 'next/cache';
 import dbConnect from './dbConnect';
 import Product from '@/models/Product';
+import Category from '@/models/Category';
 
 export async function getProducts() {
     try {
@@ -24,20 +25,35 @@ export async function getProducts() {
 
 export async function getCategories() {
     try {
+        await dbConnect();
+        const dbCategories = await Category.find({}).sort({ name: 1 }).lean();
+        const normalizedDbCategories = dbCategories.map((category) => ({
+            _id: category._id.toString(),
+            id: category.slug || category.name.toLowerCase().replace(/&/g, 'and').replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-'),
+            label: category.name,
+            image: category.image || '',
+            imagePublicId: category.imagePublicId || '',
+        }));
+
+        if (normalizedDbCategories.length > 0) {
+            return normalizedDbCategories;
+        }
+
         const products = await getProducts();
         const cats = new Set();
-
-        products.forEach(p => {
-            const categories = Array.isArray(p.Category) ? p.Category : (p.Category ? [p.Category] : []);
-            categories.forEach(cat => {
+        products.forEach((product) => {
+            const categories = Array.isArray(product.Category) ? product.Category : (product.Category ? [product.Category] : []);
+            categories.forEach((cat) => {
                 const trimmed = (cat || '').trim();
                 if (trimmed) cats.add(trimmed);
             });
         });
 
-        return Array.from(cats).sort().map(cat => ({
+        return Array.from(cats).sort().map((cat) => ({
             id: cat.toLowerCase().replace(/&/g, 'and').replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-'),
             label: cat,
+            image: '',
+            imagePublicId: '',
         }));
     } catch (err) {
         console.error('Error getting categories:', err);

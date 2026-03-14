@@ -33,16 +33,17 @@ export default function HeroSlider({ slides = [] }) {
     return (
         <section
             data-testid="hero-main-slider"
-            className="hero-main-slider relative w-full h-[60vh] min-h-[300px] md:h-[400px] lg:h-[550px] mb-6 md:mb-0 overflow-hidden bg-white shadow-lg"
+            className="relative mb-4 w-full overflow-hidden border-b border-border bg-card md:mb-0"
         >
-            <div ref={emblaRef} className="w-full h-full overflow-hidden">
+            <div
+                ref={emblaRef}
+                className="h-[54vh] min-h-[320px] w-full overflow-hidden bg-card md:h-[460px] lg:h-[560px]"
+            >
                 <div className="flex h-full">
                     {slides.map((slide, index) => (
-                        <div key={index} className="relative flex-[0_0_100%] min-w-0 h-full bg-white overflow-hidden transition-transform duration-700 ease-[cubic-bezier(0.25,1,0.5,1)]">
-                            {/* No Shadow Overlay for brighter look */}
-                            <div className="absolute inset-0 bg-transparent z-[1] pointer-events-none"></div>
+                        <div key={index} className="relative h-full min-w-0 flex-[0_0_100%] overflow-hidden bg-card transition-transform duration-700 ease-[cubic-bezier(0.25,1,0.5,1)]">
+                            <div className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-r from-primary/18 via-transparent to-transparent"></div>
 
-                            {/* Mobile Image */}
                             {slide?.mobileSrc && (
                                 <div className="relative w-full h-full md:hidden">
                                     <Image
@@ -57,7 +58,6 @@ export default function HeroSlider({ slides = [] }) {
                                 </div>
                             )}
 
-                            {/* Desktop Image */}
                             {slide?.pcSrc && (
                                 <div className="relative w-full h-full hidden md:block">
                                     <Image
@@ -76,15 +76,14 @@ export default function HeroSlider({ slides = [] }) {
                 </div>
             </div>
 
-            {/* Pagination Dots */}
-            <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-10 flex gap-2">
+            <div className="absolute bottom-5 left-1/2 z-10 flex -translate-x-1/2 gap-2">
                 {slides.map((_, index) => (
                     <button
                         key={index}
                         onClick={() => scrollTo(index)}
-                        className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+                        className={`h-2.5 w-7 rounded-md transition-all duration-300 ${
                             selectedIndex === index
-                                ? 'bg-white scale-130 shadow-[0_0_10px_rgba(255,255,255,0.8)]'
+                                ? 'bg-white shadow-[0_0_14px_rgba(255,255,255,0.75)]'
                                 : 'bg-white/50'
                         }`}
                         aria-label={`Go to slide ${index + 1}`}

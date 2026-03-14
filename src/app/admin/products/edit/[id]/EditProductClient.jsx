@@ -3,6 +3,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import { uploadImageDataUrl } from '@/lib/cloudinaryUpload';
 
 export default function EditProduct({ id }) {
   const router = useRouter();
@@ -19,6 +20,7 @@ export default function EditProduct({ id }) {
   const [allCategories, setAllCategories] = useState([]);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [newCatName, setNewCatName] = useState('');
+  const [newCatImage, setNewCatImage] = useState('');
   const [isAddingCat, setIsAddingCat] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -81,15 +83,27 @@ export default function EditProduct({ id }) {
     if (!newCatName.trim()) return;
     setIsAddingCat(true);
     try {
+      let uploadedCategoryImage = '';
+      let uploadedCategoryImagePublicId = '';
+      if (newCatImage) {
+        const uploaded = await uploadImageDataUrl(newCatImage, 'kifayatly_products');
+        uploadedCategoryImage = uploaded.url;
+        uploadedCategoryImagePublicId = uploaded.publicId;
+      }
       const res = await fetch('/api/categories', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newCatName.trim() }),
+        body: JSON.stringify({
+          name: newCatName.trim(),
+          image: uploadedCategoryImage,
+          imagePublicId: uploadedCategoryImagePublicId,
+        }),
       });
       const data = await res.json();
       if (data.success) {
         showToast('Category added!', 'success');
         setNewCatName('');
+        setNewCatImage('');
         setIsCategoryModalOpen(false);
         fetchCategories();
       } else {
@@ -100,6 +114,14 @@ export default function EditProduct({ id }) {
     } finally {
       setIsAddingCat(false);
     }
+  };
+
+  const handleCategoryImageSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (!file || !file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => setNewCatImage(ev.target?.result || '');
+    reader.readAsDataURL(file);
   };
 
   const toggleCategory = (catName) => {
@@ -298,7 +320,7 @@ export default function EditProduct({ id }) {
                       key={cat._id}
                       type="button"
                       onClick={() => toggleCategory(cat.name)}
-                      className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${selected ? 'bg-emerald-500 text-white border-emerald-500 shadow-sm' : 'bg-white text-gray-600 border-gray-200 hover:border-emerald-300 hover:text-emerald-600'}`}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${selected ? 'bg-emerald-500 text-white border-emerald-500 shadow-sm' : 'bg-white text-gray-600 border-gray-200 hover:border-emerald-300 hover:text-emerald-600'}`}
                     >
                       {selected && <i className="fa-solid fa-check mr-1 text-[10px]"></i>}
                       {cat.name}
@@ -323,10 +345,10 @@ export default function EditProduct({ id }) {
             <button
               type="button"
               onClick={() => setIsLive(!isLive)}
-              className={`relative w-12 h-6 rounded-full transition-colors duration-300 focus:outline-none ${isLive ? 'bg-emerald-500' : 'bg-gray-300'}`}
+              className={`relative w-12 h-6 rounded-lg transition-colors duration-300 focus:outline-none ${isLive ? 'bg-emerald-500' : 'bg-gray-300'}`}
               aria-label="Toggle Live"
             >
-              <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-300 ${isLive ? 'translate-x-6' : 'translate-x-0'}`} />
+              <span className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-md bg-white shadow transition-transform duration-300 ${isLive ? 'translate-x-6' : 'translate-x-0'}`} />
             </button>
           </div>
 
@@ -347,11 +369,11 @@ export default function EditProduct({ id }) {
                         <button 
                             type="button" 
                             onClick={() => removeImage(idx)} 
-                            className="absolute top-2 right-2 w-7 h-7 bg-white/90 text-red-500 rounded-full flex items-center justify-center shadow-md hover:bg-red-500 hover:text-white transition-colors opacity-0 group-hover:opacity-100"
+                            className="absolute top-2 right-2 flex h-7 w-7 items-center justify-center rounded-lg bg-white/90 text-red-500 shadow-md transition-colors hover:bg-red-500 hover:text-white opacity-0 group-hover:opacity-100"
                         >
                             <i className="fa-solid fa-trash text-xs"></i>
                         </button>
-                        {idx === 0 && <span className="absolute bottom-2 left-2 text-[10px] bg-black/60 text-white px-2 py-0.5 rounded-full font-bold shadow-sm">Primary</span>}
+                        {idx === 0 && <span className="absolute bottom-2 left-2 rounded-md bg-black/60 px-2 py-0.5 text-[10px] font-bold text-white shadow-sm">Primary</span>}
                     </div>
                 ))}
             </div>
@@ -364,7 +386,7 @@ export default function EditProduct({ id }) {
             >
               <input type="file" multiple accept="image/*" onChange={handleFileSelect} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
               <div className="space-y-3">
-                <div className="w-14 h-14 mx-auto bg-emerald-100 rounded-full flex items-center justify-center">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-emerald-100">
                   <i className="fa-solid fa-cloud-upload-alt text-xl text-emerald-600"></i>
                 </div>
                 <div>
@@ -427,7 +449,7 @@ export default function EditProduct({ id }) {
           <div className="relative bg-white w-[92%] sm:w-[512px] rounded-3xl shadow-2xl max-h-[85vh] flex flex-col overflow-hidden">
             <div className="flex items-center justify-between p-5 border-b bg-gray-50/50">
               <h2 className="text-xl font-bold text-gray-900">Manage Categories</h2>
-              <button type="button" onClick={() => setIsCategoryModalOpen(false)} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-200 text-gray-400 hover:text-gray-600 transition-all">
+              <button type="button" onClick={() => setIsCategoryModalOpen(false)} className="flex h-10 w-10 items-center justify-center rounded-lg text-gray-400 transition-all hover:bg-gray-200 hover:text-gray-600">
                 <i className="fa-solid fa-xmark text-lg"></i>
               </button>
             </div>
@@ -435,18 +457,36 @@ export default function EditProduct({ id }) {
               <form onSubmit={handleAddCategory} className="space-y-4">
                 <div className="bg-emerald-50/30 p-4 rounded-2xl border border-emerald-100/50">
                   <label className="block text-sm font-bold text-emerald-900 mb-2">New Category Name</label>
-                  <div className="flex flex-col sm:flex-row gap-3">
+                  <div className="flex flex-col gap-3">
                     <input type="text" value={newCatName} onChange={(e) => setNewCatName(e.target.value)} className="w-full sm:flex-1 bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50" placeholder="e.g. Health & Beauty" required />
-                    <button type="submit" disabled={isAddingCat} className="w-full sm:w-auto bg-[#0EB981] text-white px-6 py-3 rounded-xl font-black text-sm hover:bg-[#0da874] disabled:opacity-50 transition-all flex items-center justify-center gap-2">
-                      {isAddingCat ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-plus"></i>} Add
-                    </button>
+                    <div className="flex items-center gap-3">
+                      <label className="flex h-12 cursor-pointer items-center justify-center rounded-xl border border-emerald-200 bg-white px-4 text-sm font-semibold text-emerald-700 transition-colors hover:bg-emerald-50">
+                        Category Image
+                        <input type="file" accept="image/*" onChange={handleCategoryImageSelect} className="hidden" />
+                      </label>
+                      {newCatImage ? (
+                        <img src={newCatImage} alt="Category preview" className="h-12 w-12 rounded-xl object-cover border border-emerald-100" />
+                      ) : null}
+                      <button type="submit" disabled={isAddingCat} className="w-full sm:w-auto bg-[#0EB981] text-white px-6 py-3 rounded-xl font-black text-sm hover:bg-[#0da874] disabled:opacity-50 transition-all flex items-center justify-center gap-2">
+                        {isAddingCat ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-plus"></i>} Add
+                      </button>
+                    </div>
                   </div>
                 </div>
               </form>
               <div className="mt-6 grid grid-cols-1 gap-2">
                 {allCategories.map((cat) => (
                   <div key={cat._id} className="flex items-center justify-between bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
-                    <span className="text-sm font-semibold text-gray-700">{cat.name}</span>
+                    <div className="flex min-w-0 flex-1 items-center gap-3">
+                      {cat.image ? (
+                        <img src={cat.image} alt={cat.name} className="h-10 w-10 rounded-full object-cover border border-gray-100" />
+                      ) : (
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-sm font-bold text-emerald-700">
+                          {cat.name?.charAt(0) || '?'}
+                        </div>
+                      )}
+                      <span className="text-sm font-semibold text-gray-700">{cat.name}</span>
+                    </div>
                   </div>
                 ))}
               </div>

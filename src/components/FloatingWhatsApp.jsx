@@ -1,6 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
+import { MessageCircle } from 'lucide-react';
 
 export default function FloatingWhatsApp() {
     const pathname = usePathname();
@@ -15,10 +16,10 @@ export default function FloatingWhatsApp() {
             href="https://wa.me/923001234567?text=Hello%20China%20Unique%20Store!"
             target="_blank"
             rel="noopener noreferrer"
-            className="whatsapp-float fixed right-6 bottom-8 z-50 bg-[#25D366] hover:bg-[#20bd5a] text-white w-14 h-14 rounded-lg flex items-center justify-center shadow-2xl hover:scale-110 transition-all duration-300"
+            className="whatsapp-float fixed bottom-8 right-6 z-50 inline-flex h-14 w-14 items-center justify-center rounded-xl border border-success/20 bg-success text-success-foreground shadow-[0_18px_45px_rgba(28,142,95,0.28)] transition-transform duration-300 hover:-translate-y-1"
             aria-label="Contact us on WhatsApp"
         >
-            <i className="fa-brands fa-whatsapp text-3xl"></i>
+            <MessageCircle className="size-6" />
         </a>
     );
 }

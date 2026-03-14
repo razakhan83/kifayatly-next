@@ -2,6 +2,7 @@
 
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
+import { ShoppingCart } from 'lucide-react';
 
 export default function AddToCartBtn({ product, className }) {
     const { addToCart } = useCart();
@@ -10,7 +11,8 @@ export default function AddToCartBtn({ product, className }) {
             onClick={() => addToCart(product)}
             className={`w-full ${className || ''}`}
         >
-            <i className="fa-solid fa-cart-plus mr-2"></i> Add to Cart
+            <ShoppingCart data-icon="inline-start" />
+            Add to Cart
         </Button>
     );
 }

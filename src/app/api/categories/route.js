@@ -2,6 +2,15 @@ import { NextResponse } from "next/server";
 import dbConnect from "@/lib/dbConnect";
 import Category from "@/models/Category";
 
+function slugifyCategory(name = "") {
+  return String(name)
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "")
+    .replace(/-+/g, "-");
+}
+
 // GET all categories
 export async function GET() {
   try {
@@ -33,7 +42,12 @@ export async function POST(req) {
       );
     }
 
-    const category = await Category.create({ name: body.name });
+    const category = await Category.create({
+      name: body.name.trim(),
+      slug: slugifyCategory(body.name),
+      image: body.image || "",
+      imagePublicId: body.imagePublicId || "",
+    });
     return NextResponse.json(
       { success: true, data: category },
       { status: 201 },

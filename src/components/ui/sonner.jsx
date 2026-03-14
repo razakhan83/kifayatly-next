@@ -7,23 +7,23 @@ function Toaster({ ...props }) {
     <Sonner
       className="toaster group"
       toastOptions={{
-        style: { width: '320px' },
+        style: { width: '320px', backgroundColor: '#ffffff' },
         className: 'max-w-[320px]',
         classNames: {
           toast:
-            "group toast group-[.toaster]:bg-white group-[.toaster]:text-gray-900 group-[.toaster]:border-gray-200 group-[.toaster]:shadow-xl group-[.toaster]:rounded-xl font-sans",
-          title: "group-[.toast]:text-gray-900 group-[.toast]:font-bold",
-          description: "group-[.toast]:text-gray-500",
+            "group toast !bg-white !text-foreground !border-border shadow-[0_18px_50px_rgba(10,61,46,0.12)] rounded-xl font-sans",
+          title: "group-[.toast]:text-foreground group-[.toast]:font-semibold",
+          description: "group-[.toast]:text-muted-foreground",
           actionButton:
-            "group-[.toast]:bg-[#0A3D2E] group-[.toast]:text-white group-[.toast]:rounded-lg group-[.toast]:font-semibold group-[.toast]:px-4 group-[.toast]:py-2 shrink-0 ms-auto",
+            "!bg-primary !text-primary-foreground rounded-lg font-semibold px-4 py-2 shrink-0 ms-auto border border-primary shadow-[0_10px_24px_rgba(10,61,46,0.18)]",
           cancelButton:
-            "group-[.toast]:bg-gray-100 group-[.toast]:text-gray-500 group-[.toast]:rounded-lg",
+            "!bg-secondary !text-muted-foreground rounded-lg border border-border",
           success:
-            "group-[.toaster]:!border-emerald-200 group-[.toaster]:!bg-emerald-50",
+            "!border-success/25 !bg-white",
           error:
-            "group-[.toaster]:!border-red-200 group-[.toaster]:!bg-red-50",
-          icon: "group-[.toast]:text-[#10b981]",
-          closeButton: "group-[.toast]:bg-gray-100 group-[.toast]:text-gray-500 group-[.toast]:border-gray-200 hover:group-[.toast]:bg-gray-200",
+            "!border-destructive/25 !bg-white",
+          icon: "group-[.toast]:text-primary",
+          closeButton: "!bg-white !text-muted-foreground !border-border hover:!bg-muted",
         },
       }}
       richColors

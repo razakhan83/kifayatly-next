@@ -96,9 +96,7 @@ export default function ProductCard({ product, className = "" }) {
   return (
     <Card
       className={cn(
-        "group relative flex flex-col gap-0 overflow-hidden rounded-xl",
-        "bg-card border-0 ring-0 shadow-none transition-shadow duration-300",
-        "hover:shadow-md",
+        "group relative flex flex-col gap-0 overflow-hidden rounded-xl border border-border bg-card transition-shadow duration-300 hover:shadow-md",
         "py-0",
         className
       )}
@@ -114,7 +112,7 @@ export default function ProductCard({ product, className = "" }) {
             className={cn(
               "absolute left-2.5 top-2.5 z-10",
               "rounded-md px-2 py-1 text-[10px] font-bold uppercase tracking-wider",
-              "bg-blue-100 text-blue-700 border-blue-200",
+              "bg-secondary text-secondary-foreground border-border",
               "backdrop-blur-sm shadow-sm"
             )}
           >
@@ -154,7 +152,7 @@ export default function ProductCard({ product, className = "" }) {
       </Link>
 
       {/* Content Section — white background */}
-      <CardContent className="flex flex-col gap-1.5 bg-white p-3 pt-3">
+      <CardContent className="flex flex-col gap-1.5 bg-card p-3 pt-3">
         {/* Product Title */}
         <Link href={productHref} className="block text-left">
           <h3
@@ -186,7 +184,7 @@ export default function ProductCard({ product, className = "" }) {
               e.preventDefault();
               addToCart(product);
             }}
-            className="size-8 rounded-lg cursor-pointer hover:translate-y-0 shadow-none hover:shadow-none"
+            className="size-8 cursor-pointer shadow-none hover:translate-y-0 hover:shadow-none"
           >
             <ShoppingCart className="size-4" />
           </Button>

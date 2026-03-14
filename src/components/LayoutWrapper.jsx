@@ -2,6 +2,8 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { usePathname } from 'next/navigation';
+import Link from 'next/link';
+import { ChevronRight, CreditCard, Instagram, MapPin, MessageCircle, Store, Truck } from 'lucide-react';
 import FloatingWhatsApp from '@/components/FloatingWhatsApp';
 import Navbar from '@/components/Navbar';
 import CartDrawer from '@/components/CartDrawer';
@@ -23,62 +25,87 @@ function LayoutContent({ children, categories }) {
     // Store routes: full chrome with Navbar, Footer, WhatsApp
     return (
         <>
-            <div
-                className="flex flex-col min-h-screen bg-[#f3f4f6]"
-            >
+            <div className="flex min-h-screen flex-col bg-background">
                 <Navbar categories={categories} />
 
-                <main className="flex-grow">
-                    {children}
-                </main>
+                <main className="flex-grow">{children}</main>
 
-                {/* Footer */}
-                <footer className="bg-[#0A3D2E] pt-12 pb-6 text-white text-sm mt-auto">
-                    <div className="container mx-auto px-4 max-w-7xl">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                <footer className="mt-auto border-t border-border bg-primary pt-12 pb-6 text-primary-foreground">
+                    <div className="container mx-auto max-w-7xl px-4">
+                        <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
                             <div>
-                                <h3 className="text-lg font-bold mb-4 flex items-center gap-2"><i className="fa-solid fa-store text-[#10b981]"></i> China Unique Store</h3>
-                                <p className="text-white/80 leading-relaxed mb-4">Your premium destination for high-quality kitchenware, home decor, and lifestyle products imported directly for you.</p>
-                                <div className="flex gap-4">
-                                    <a href="#" className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-[#10b981] transition-colors"><i className="fa-brands fa-facebook-f"></i></a>
-                                    <a href="#" className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-[#10b981] transition-colors"><i className="fa-brands fa-instagram"></i></a>
-                                    <a href="#" className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-[#10b981] transition-colors"><i className="fa-brands fa-tiktok"></i></a>
+                                <div className="mb-4 flex items-center gap-3">
+                                    <div className="flex size-11 items-center justify-center rounded-xl bg-white/10">
+                                        <Store className="size-5" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-lg font-semibold">China Unique Store</h3>
+                                        <p className="text-sm text-primary-foreground/70">Curated kitchenware and home details</p>
+                                    </div>
+                                </div>
+                                <p className="max-w-sm leading-relaxed text-primary-foreground/76">A premium destination for kitchenware, home decor, and lifestyle pieces chosen for everyday elegance.</p>
+                                <div className="mt-5 flex gap-3">
+                                    <a href="#" className="inline-flex size-10 items-center justify-center rounded-lg border border-white/10 bg-white/8 transition-colors hover:bg-white/14" aria-label="Instagram">
+                                        <Instagram className="size-4" />
+                                    </a>
+                                    <a href="https://wa.me/923001234567" className="inline-flex size-10 items-center justify-center rounded-lg border border-white/10 bg-white/8 transition-colors hover:bg-white/14" aria-label="WhatsApp">
+                                        <MessageCircle className="size-4" />
+                                    </a>
                                 </div>
                             </div>
                             <div>
-                                <h3 className="text-lg font-bold mb-4 border-b border-white/10 pb-2">Quick Links</h3>
-                                <ul className="space-y-3 text-white/80">
-                                    <li><a href="#" className="hover:text-[#10b981] transition-colors flex items-center gap-2"><i className="fa-solid fa-angle-right text-xs"></i> About Us</a></li>
-                                    <li><a href="/refund-policy" className="hover:text-[#10b981] transition-colors flex items-center gap-2"><i className="fa-solid fa-angle-right text-xs"></i> Refund Policy</a></li>
-                                    <li><a href="/privacy-policy" className="hover:text-[#10b981] transition-colors flex items-center gap-2"><i className="fa-solid fa-angle-right text-xs"></i> Privacy Policy</a></li>
-                                    <li><a href="/shipping-policy" className="hover:text-[#10b981] transition-colors flex items-center gap-2"><i className="fa-solid fa-angle-right text-xs"></i> Shipping Policy</a></li>
+                                <h3 className="mb-4 text-sm font-semibold uppercase tracking-[0.18em] text-primary-foreground/70">Quick Links</h3>
+                                <ul className="flex flex-col gap-3 text-primary-foreground/78">
+                                    {[
+                                        { href: '/', label: 'Storefront' },
+                                        { href: '/products', label: 'All Products' },
+                                        { href: '/refund-policy', label: 'Refund Policy' },
+                                        { href: '/privacy-policy', label: 'Privacy Policy' },
+                                        { href: '/shipping-policy', label: 'Shipping Policy' },
+                                    ].map((item) => (
+                                        <li key={item.href}>
+                                            <Link href={item.href} className="inline-flex items-center gap-2 transition-colors hover:text-primary-foreground">
+                                                <ChevronRight className="size-4" />
+                                                {item.label}
+                                            </Link>
+                                        </li>
+                                    ))}
                                 </ul>
                             </div>
                             <div>
-                                <h3 className="text-lg font-bold mb-4 border-b border-white/10 pb-2">Contact Us</h3>
-                                <ul className="space-y-4 text-white/80">
+                                <h3 className="mb-4 text-sm font-semibold uppercase tracking-[0.18em] text-primary-foreground/70">Contact</h3>
+                                <ul className="flex flex-col gap-4 text-primary-foreground/78">
                                     <li className="flex items-start gap-3">
-                                        <i className="fa-brands fa-whatsapp mt-1 text-[#10b981] text-lg"></i>
+                                        <MessageCircle className="mt-0.5 size-4" />
                                         <div>
-                                            <span className="block font-semibold text-white">WhatsApp Line</span>
-                                            <a href="https://wa.me/923001234567" className="hover:text-[#10b981] transition-colors">+92 300 1234567</a>
+                                            <span className="block font-semibold text-primary-foreground">WhatsApp</span>
+                                            <a href="https://wa.me/923001234567" className="transition-colors hover:text-primary-foreground">+92 300 1234567</a>
                                         </div>
                                     </li>
                                     <li className="flex items-start gap-3">
-                                        <i className="fa-solid fa-location-dot mt-1 text-[#10b981] text-lg"></i>
+                                        <MapPin className="mt-0.5 size-4" />
                                         <div>
-                                            <span className="block font-semibold text-white">Location</span>
+                                            <span className="block font-semibold text-primary-foreground">Location</span>
                                             <span>Karachi, Pakistan</span>
+                                        </div>
+                                    </li>
+                                    <li className="flex items-start gap-3">
+                                        <Truck className="mt-0.5 size-4" />
+                                        <div>
+                                            <span className="block font-semibold text-primary-foreground">Delivery</span>
+                                            <span>Nationwide shipping and order support via WhatsApp</span>
                                         </div>
                                     </li>
                                 </ul>
                             </div>
                         </div>
-                        <div className="pt-6 border-t border-white/10 flex flex-col md:flex-row items-center justify-between text-white/60 text-xs">
+                        <div className="mt-8 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 text-xs text-primary-foreground/60 md:flex-row">
                             <p>&copy; {year} China Unique Store. All rights reserved.</p>
-                            <div className="flex gap-4 mt-4 md:mt-0">
-                                <i className="fa-brands fa-cc-visa text-3xl opacity-50 hover:opacity-100 transition-opacity"></i>
-                                <i className="fa-brands fa-cc-mastercard text-3xl opacity-50 hover:opacity-100 transition-opacity"></i>
+                            <div className="flex items-center gap-3">
+                                <span className="inline-flex items-center gap-2 rounded-lg border border-white/10 px-3 py-2">
+                                    <CreditCard className="size-4" />
+                                    Secure checkout
+                                </span>
                             </div>
                         </div>
                     </div>

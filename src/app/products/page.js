@@ -1,41 +1,60 @@
 import ProductGridClient from '@/components/ProductGridClient';
+import ProductsPageHeader from '@/components/ProductsPageHeader';
+import ProductsPageSkeleton from '@/components/ProductsPageSkeleton';
 import { getProducts } from '@/lib/data';
 import { Suspense } from 'react';
 
-import {
-    Breadcrumb,
-    BreadcrumbItem,
-    BreadcrumbLink,
-    BreadcrumbList,
-    BreadcrumbPage,
-    BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb';
+function normalizeCategoryId(category) {
+    return category
+        .toLowerCase()
+        .replace(/&/g, 'and')
+        .replace(/\s+/g, '-')
+        .replace(/[^a-z0-9-]/g, '')
+        .replace(/-+/g, '-');
+}
 
-export default function Products() {
+function buildCategoryList(products) {
+    return Array.from(
+        new Map(
+            products
+                .flatMap((product) => (Array.isArray(product.Category) ? product.Category : product.Category ? [product.Category] : []))
+                .filter(Boolean)
+                .map((category) => [normalizeCategoryId(category), { id: normalizeCategoryId(category), label: category }])
+        ).values()
+    ).sort((a, b) => a.label.localeCompare(b.label));
+}
+
+function buildSuspenseKey(searchParams) {
+    return JSON.stringify({
+        category: searchParams?.category || 'all',
+        search: searchParams?.search || '',
+    });
+}
+
+export default async function Products({ searchParams }) {
+    const resolvedSearchParams = (await searchParams) || {};
+
     return (
-        <div className="pt-8">
-            <div className="container mx-auto px-4 max-w-7xl mb-4">
-                <Breadcrumb className="mb-4">
-                    <BreadcrumbList>
-                        <BreadcrumbItem>
-                            <BreadcrumbLink href="/">Home</BreadcrumbLink>
-                        </BreadcrumbItem>
-                        <BreadcrumbSeparator />
-                        <BreadcrumbItem>
-                            <BreadcrumbPage>All Products</BreadcrumbPage>
-                        </BreadcrumbItem>
-                    </BreadcrumbList>
-                </Breadcrumb>
-                <h1 className="text-3xl font-bold text-[#0A3D2E]">All Products</h1>
-            </div>
-            <Suspense fallback={null}>
-                <ProductList />
-            </Suspense>
+        <Suspense key={buildSuspenseKey(resolvedSearchParams)} fallback={<ProductsPageSkeleton />}>
+            <ProductsContent searchParams={resolvedSearchParams} />
+        </Suspense>
+    );
+}
+
+async function ProductsContent({ searchParams }) {
+    const products = await getProducts();
+    const activeCategory = searchParams?.category || 'all';
+    const searchTerm = searchParams?.search || '';
+    const categories = buildCategoryList(products);
+
+    return (
+        <div>
+            <ProductsPageHeader categories={categories} activeCategory={activeCategory} searchTerm={searchTerm} />
+            <ProductList products={products} activeCategory={activeCategory} searchTerm={searchTerm} />
         </div>
     );
 }
 
-async function ProductList() {
-    const products = await getProducts();
-    return <ProductGridClient initialProducts={products} />;
+function ProductList({ products, activeCategory, searchTerm }) {
+    return <ProductGridClient initialProducts={products} hideCategoryBar activeCategoryOverride={activeCategory} forceSearchTerm={searchTerm} />;
 }
