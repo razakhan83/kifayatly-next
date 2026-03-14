@@ -38,7 +38,7 @@ export default function HeroSlider({ slides = [] }) {
             <div ref={emblaRef} className="w-full h-full overflow-hidden">
                 <div className="flex h-full">
                     {slides.map((slide, index) => (
-                        <div key={index} className="relative flex-[0_0_100%] min-w-0 h-full bg-white overflow-hidden">
+                        <div key={index} className="relative flex-[0_0_100%] min-w-0 h-full bg-white overflow-hidden transition-transform duration-700 ease-[cubic-bezier(0.25,1,0.5,1)]">
                             {/* No Shadow Overlay for brighter look */}
                             <div className="absolute inset-0 bg-transparent z-[1] pointer-events-none"></div>
 

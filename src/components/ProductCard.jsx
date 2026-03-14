@@ -21,8 +21,8 @@ export default function ProductCard({ product, className = '' }) {
     const colors = getCategoryColor(categoryLabel);
 
     return (
-        <Card className={`rounded-xl overflow-hidden transition-all duration-300 hover:-translate-y-1 shadow-sm hover:shadow-md border-0 ring-0 hover:ring-0 flex flex-col group h-full will-change-transform ${className}`}>
-            <Link href={`/products/${product.slug || product._id || product.id}`} className="block relative aspect-square bg-gray-50 cursor-pointer w-full overflow-hidden">
+        <Card className={`bg-white min-h-[380px] w-full rounded-2xl overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] hover:-translate-y-2 shadow-[0_4px_12px_rgba(0,0,0,0.03)] hover:shadow-[0_20px_40px_rgba(10,61,46,0.12)] border-0 ring-0 hover:ring-0 flex flex-col justify-between group will-change-transform ${className}`}>
+            <Link href={`/products/${product.slug || product._id || product.id}`} className="block relative aspect-square bg-gray-50/50 cursor-pointer w-full overflow-hidden shrink-0">
                 {categoryLabel && (
                     <Badge
                         variant="outline"
@@ -42,7 +42,7 @@ export default function ProductCard({ product, className = '' }) {
                     />
                 )}
             </Link>
-            <CardContent className="p-3 flex flex-col flex-grow justify-between gap-2">
+            <CardContent className="p-4 flex flex-col flex-grow justify-between relative">
                 <Link href={`/products/${product.slug || product._id || product.id}`} className="block cursor-pointer">
                     <h3 className="text-sm font-semibold text-gray-800 mb-0.5 leading-tight hover:text-[#10b981] transition-colors line-clamp-1 h-5 overflow-hidden" title={product.Name || product.name}>
                         {product.Name || product.name || 'Unknown'}
@@ -55,8 +55,8 @@ export default function ProductCard({ product, className = '' }) {
                 ) : (
                     <div className="h-8 mb-1"></div>
                 )}
-                <div className="mt-auto">
-                    <p className="text-lg font-extrabold text-[#0A3D2E] mb-2">
+                <div className="mt-4 mb-[2px]">
+                    <p className="text-xl font-extrabold text-[#072C21] mb-3 tracking-tight">
                         {formatPrice(product.Price || product.price)}
                     </p>
                     <Button
@@ -64,10 +64,10 @@ export default function ProductCard({ product, className = '' }) {
                             e.preventDefault();
                             addToCart(product);
                         }}
-                        className="w-full font-semibold text-sm h-[44px] md:h-[48px] cursor-pointer shadow-none hover:shadow-sm"
+                        className="w-full text-sm font-semibold rounded-xl bg-[#0A3D2E] hover:bg-[#10b981] text-white transition-colors duration-300"
                         size="default"
                     >
-                        <ShoppingCart className="w-4 h-4 mr-1.5" />
+                        <ShoppingCart className="w-4 h-4 mr-2" />
                         Add to Cart
                     </Button>
                 </div>

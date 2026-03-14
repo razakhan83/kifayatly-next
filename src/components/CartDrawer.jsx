@@ -109,7 +109,7 @@ export default function CartDrawer() {
                             <Button
                                 onClick={() => setIsCartOpen(false)}
                                 variant="default"
-                                className="rounded-full px-6"
+                                className="rounded-full w-fit mx-auto"
                             >
                                 Continue Shopping
                             </Button>
@@ -194,14 +194,14 @@ export default function CartDrawer() {
                             <Button
                                 variant="secondary"
                                 onClick={handleWhatsAppDirectCheckout}
-                                className="w-full h-12 text-base cursor-pointer shadow-sm hover:shadow-md"
+                                className="w-full text-base bg-gray-100 hover:bg-[#25D366] hover:text-white transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] hover:-translate-y-1 shadow-sm hover:shadow-md"
                             >
                                 <i className="fa-brands fa-whatsapp text-xl mr-2"></i> Order on WhatsApp
                             </Button>
                             <Link href="/checkout" onClick={handleCheckoutRoute} className="block">
                                 <Button
                                     variant="default"
-                                    className="w-full h-12 text-base cursor-pointer shadow-sm hover:shadow-md"
+                                    className="w-full text-base"
                                 >
                                     Process to Checkout <i className="fa-solid fa-arrow-right ml-2"></i>
                                 </Button>

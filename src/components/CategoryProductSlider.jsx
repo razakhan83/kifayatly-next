@@ -91,7 +91,7 @@ export default function CategoryProductSlider({ categoryId, categoryLabel, produ
 
                 {/* Embla Slider */}
                 <div ref={emblaRef} className="overflow-hidden px-2">
-                    <div className="flex gap-4">
+                    <div className="flex gap-4 transition-transform duration-500 ease-[cubic-bezier(0.25,1,0.5,1)]">
                         {categoryProducts.map((p, idx) => (
                             <div
                                 key={`${p.slug || p._id || p.id || 'item'}-${idx}`}

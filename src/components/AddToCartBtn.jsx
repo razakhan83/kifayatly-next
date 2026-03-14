@@ -8,7 +8,7 @@ export default function AddToCartBtn({ product, className }) {
     return (
         <Button
             onClick={() => addToCart(product)}
-            className={className}
+            className={`w-full ${className || ''}`}
         >
             <i className="fa-solid fa-cart-plus mr-2"></i> Add to Cart
         </Button>

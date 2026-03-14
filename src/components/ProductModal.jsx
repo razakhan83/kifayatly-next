@@ -90,7 +90,7 @@ export default function ProductModal({ product, onClose }) {
                                         addToCart(product);
                                         onClose();
                                     }}
-                                    className="flex-1 h-12 font-bold cursor-pointer"
+                                    className="flex-1 w-full"
                                 >
                                     <i className="fa-solid fa-cart-plus mr-2"></i> Add to Cart
                                 </Button>
@@ -99,9 +99,9 @@ export default function ProductModal({ product, onClose }) {
                                     href={`https://wa.me/923001234567?text=${encodeURIComponent(`Hi Kifayatly Store, I would like to order:\n\n*${product.Name || product.name || 'Premium Item'}*\nPrice: ${formatPrice(product.Price || product.price)}`)}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="flex-1"
+                                    className="flex-1 w-full"
                                 >
-                                    <Button variant="default" className="w-full bg-[#25D366] hover:bg-[#1ebe5d] h-12 font-bold cursor-pointer">
+                                    <Button variant="default" className="w-full bg-[#25D366] hover:bg-[#1ebe5d] transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] hover:-translate-y-1 shadow-sm hover:shadow-md">
                                         <i className="fa-brands fa-whatsapp text-xl mr-2"></i> Order via WhatsApp
                                     </Button>
                                 </a>

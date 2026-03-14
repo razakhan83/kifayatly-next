@@ -305,7 +305,7 @@ function ProductGridContent({ initialProducts, forceSearchTerm, hideSearch }) {
 
                     <div className={`transition-opacity duration-300 ${fadeState}`}>
                         <div
-                            className="products-grid grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-5 min-h-[400px]"
+                            className="products-grid grid auto-rows-max grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-5"
                         >
                             {initialLoad ? (
                                 Array(12).fill(0).map((_, idx) => (

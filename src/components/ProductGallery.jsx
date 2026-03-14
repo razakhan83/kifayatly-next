@@ -53,7 +53,7 @@ export default function ProductGallery({ images }) {
                                 src={img}
                                 alt={`Product Image ${index + 1}`}
                                 fill
-                                className="object-cover transition-transform duration-700 hover:scale-105"
+                                className="object-cover transition-transform duration-[700ms] ease-[cubic-bezier(0.25,1,0.5,1)] hover:scale-105"
                                 unoptimized
                                 priority={index === 0}
                             />
@@ -70,8 +70,8 @@ export default function ProductGallery({ images }) {
                             <div
                                 key={index}
                                 onClick={() => onThumbClick(index)}
-                                className={`relative aspect-square flex-[0_0_23.5%] min-w-0 rounded-xl overflow-hidden cursor-pointer border-2 transition-all ${
-                                    index === selectedIndex ? 'border-emerald-600 shadow-sm opacity-100' : 'border-transparent opacity-50 hover:opacity-100'
+                                className={`relative aspect-square flex-[0_0_23.5%] min-w-0 rounded-xl overflow-hidden cursor-pointer border-2 transition-all duration-300 ease-out ${
+                                    index === selectedIndex ? 'border-emerald-600 shadow-sm opacity-100' : 'border-transparent opacity-60 hover:opacity-100 hover:scale-[1.02]'
                                 }`}
                             >
                                 <div className="absolute inset-0 bg-gray-100"></div>
