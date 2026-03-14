@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { getCategoryColor } from '@/lib/categoryColors';
 import CategoryProductSlider from '@/components/CategoryProductSlider';
 
 export default function HomeCategories({ products }) {
@@ -36,25 +36,23 @@ export default function HomeCategories({ products }) {
                     </div>
                 </div>
             ) : (
-                dynamicCategories.map((cat, index) => (
-                    <section key={cat.id} className={`py-8 md:py-12 ${index % 2 === 0 ? 'bg-gray-100' : 'bg-gray-50'}`}>
-                        <div className="container mx-auto px-2 max-w-7xl">
-                            <motion.div
-                                initial={{ opacity: 0, y: 30 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true, margin: "-100px" }}
-                                transition={{ duration: 0.5, delay: 0.1 }}
-                            >
-                                <CategoryProductSlider
-                                    categoryId={cat.id}
-                                    categoryLabel={cat.label}
-                                    products={products}
-                                    onViewAll={handleViewAll}
-                                />
-                            </motion.div>
-                        </div>
-                    </section>
-                ))
+                dynamicCategories.map((cat) => {
+                    const colors = getCategoryColor(cat.label);
+                    return (
+                        <section key={cat.id} className={`py-8 md:py-12 ${colors.bg}`}>
+                            <div className="container mx-auto px-2 max-w-7xl">
+                                <div className="animate-fadeInUp">
+                                    <CategoryProductSlider
+                                        categoryId={cat.id}
+                                        categoryLabel={cat.label}
+                                        products={products}
+                                        onViewAll={handleViewAll}
+                                    />
+                                </div>
+                            </div>
+                        </section>
+                    );
+                })
             )}
         </div>
     );

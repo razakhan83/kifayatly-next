@@ -4,7 +4,10 @@ import { useState, useMemo, useEffect, useRef, Suspense, useCallback } from 'rea
 import HeroSlider from '@/components/HeroSlider';
 import HomeCategories from '@/components/HomeCategories';
 import ProductGridClient from '@/components/ProductGridClient';
+import CategoryIconCarousel from '@/components/CategoryIconCarousel';
 import Image from 'next/image';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 export default function HomeClientWrapper({ products, heroSlides }) {
     const [searchTerm, setSearchTerm] = useState('');
@@ -13,6 +16,22 @@ export default function HomeClientWrapper({ products, heroSlides }) {
     const [hasSearched, setHasSearched] = useState(false);
     const wrapperRef = useRef(null);
     const [mounted, setMounted] = useState(false);
+
+    // Compute categories from products for the icon carousel
+    const dynamicCategories = useMemo(() => {
+        const cats = new Set();
+        products.forEach(p => {
+            const categories = Array.isArray(p.Category) ? p.Category : (p.Category ? [p.Category] : (p.category ? [p.category] : []));
+            categories.forEach(cat => {
+                const trimmed = (cat || '').trim();
+                if (trimmed) cats.add(trimmed);
+            });
+        });
+        return Array.from(cats).sort().map(cat => ({
+            id: cat.toLowerCase().replace(/&/g, 'and').replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-'),
+            label: cat,
+        }));
+    }, [products]);
 
     useEffect(() => {
         setMounted(true);
@@ -73,36 +92,39 @@ export default function HomeClientWrapper({ products, heroSlides }) {
 
     return (
         <>
-            {/* Hero Slider - Toggles between Mobile/PC images inside the component */}
+            {/* Hero Slider */}
             <div className="w-full relative overflow-hidden">
                  {mounted && <HeroSlider slides={heroSlides} />}
             </div>
 
-            {/* Live Search Bar */}
-            <div className="container mx-auto max-w-[600px] px-4 pt-6 mb-2 relative" ref={wrapperRef}>
-                <form onSubmit={handleSearchSubmit} className="search-container relative flex items-center w-full">
-                    <i className="fa-solid fa-magnifying-glass search-icon absolute left-4 text-[#0A3D2E] text-[1.1rem]"></i>
-                    <input
-                        type="text"
-                        value={searchTerm}
-                        onChange={(e) => {
-                            setSearchTerm(e.target.value);
-                            setHasSearched(false); // Switch to categories view while hunting
-                        }}
-                        onFocus={() => setIsFocused(true)}
-                        className="search-input w-full py-3 px-4 pl-12 pr-[90px] border-2 border-[#145e46] rounded-full text-base outline-none transition-all shadow-sm focus:border-[#0A3D2E] focus:ring-4 focus:ring-[#0A3D2E]/20"
-                        placeholder="Search for premium products..."
-                    />
-                    
-                    {searchTerm && (
-                        <button type="button" onClick={handleClear} className="absolute right-[85px] text-gray-400 hover:text-gray-600 transition-colors p-1" aria-label="Clear Search">
-                            <i className="fa-solid fa-circle-xmark text-xl"></i>
-                        </button>
-                    )}
+            {/* Category Icon Carousel */}
+            <CategoryIconCarousel categories={dynamicCategories} />
 
-                    <button type="submit" className="absolute right-2 bg-[#0A3D2E] hover:bg-[#10b981] text-white px-4 py-1.5 rounded-full text-sm font-semibold transition-colors">
+            {/* Live Search Bar — mobile only (desktop uses navbar search) */}
+            <div className="md:hidden container mx-auto max-w-[600px] px-4 pt-6 mb-2 relative" ref={wrapperRef}>
+                <form onSubmit={handleSearchSubmit} className="relative flex items-center w-full gap-2">
+                    <div className="relative flex-1 min-w-0">
+                        <i className="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-[#0A3D2E] text-[1.1rem] z-10"></i>
+                        <Input
+                            type="text"
+                            value={searchTerm}
+                            onChange={(e) => {
+                                setSearchTerm(e.target.value);
+                                setHasSearched(false);
+                            }}
+                            onFocus={() => setIsFocused(true)}
+                            className="w-full pl-12 pr-10 h-12 rounded-full border-2 border-[#145e46] text-base focus-visible:ring-[#0A3D2E]/20"
+                            placeholder="Search for premium products..."
+                        />
+                        {searchTerm && (
+                            <button type="button" onClick={handleClear} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors p-1" aria-label="Clear Search">
+                                <i className="fa-solid fa-circle-xmark text-xl"></i>
+                            </button>
+                        )}
+                    </div>
+                    <Button type="submit" className="rounded-full px-4 h-12 shrink-0 min-w-max">
                         Search
-                    </button>
+                    </Button>
                 </form>
 
                 {/* Autocomplete Dropdown */}
@@ -128,7 +150,7 @@ export default function HomeClientWrapper({ products, heroSlides }) {
                                                     {Array.isArray(p.Category) ? p.Category.join(', ') : (p.Category || 'Uncategorized')}
                                                 </p>
                                             </div>
-                                            <i className="fa-solid fa-arrow-right text-[#10b981] opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                                            <i className="fa-solid fa-arrow-right text-[#10b981] text-xs"></i>
                                         </button>
                                     </li>
                                 ))}
@@ -136,7 +158,7 @@ export default function HomeClientWrapper({ products, heroSlides }) {
                         ) : (
                             <div className="p-6 text-center text-sm text-gray-500">
                                 <i className="fa-solid fa-magnifying-glass text-2xl text-gray-300 mb-2 block"></i>
-                                No products found matching "{debouncedSearch}"
+                                No products found matching &quot;{debouncedSearch}&quot;
                             </div>
                         )}
                     </div>
@@ -144,11 +166,11 @@ export default function HomeClientWrapper({ products, heroSlides }) {
             </div>
 
             {hasSearched ? (
-                <div className="mt-4 animate-in fade-in duration-500">
+                <div className="mt-4 animate-fadeIn">
                     <ProductGridClient initialProducts={products} forceSearchTerm={searchTerm} hideSearch={true} />
                 </div>
             ) : (
-                <div className="animate-in fade-in duration-500">
+                <div className="animate-fadeIn">
                     <HomeCategories products={products} />
                 </div>
             )}

@@ -67,7 +67,7 @@
   }
 }
 
-/* --- Core App Layout Components (Extracted from style.css) --- */
+/* --- Core App Layout Components --- */
 
 .sticky-header-wrapper {
   position: sticky;
@@ -103,44 +103,6 @@
   padding: 0 4px;
 }
 
-/* Sidebar Oversight */
-.sidebar {
-  position: fixed;
-  top: 0;
-  left: -300px;
-  width: 280px;
-  height: 100vh;
-  background-color: #ffffff !important;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  z-index: 99999 !important;
-  transition: left 0.3s ease;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-}
-
-.sidebar.open {
-  left: 0;
-}
-
-.sidebar-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 99998 !important;
-  display: none;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.sidebar-overlay.open {
-  display: block;
-  opacity: 1;
-}
-
 .category-nav-container {
   min-height: 50px !important;
   background: #f8f9fa !important;
@@ -156,7 +118,7 @@
   display: none;
 }
 
-/* Hero Slider Utilities */
+/* Hero Slider */
 .slider-container {
   position: relative;
   width: 100%;
@@ -172,7 +134,6 @@
   display: flex;
   width: 100%;
   height: 100%;
-  /* Using JS to toggle transition directly when moving between clone boundaries */
 }
 
 .slide {
@@ -193,326 +154,10 @@
   outline: none;
 }
 
-
-
 .slider-dot.active {
   background-color: var(--color-white);
   border-color: var(--color-primary);
   transform: scale(1.2);
-}
-
-/* Footer Migration */
-.emerald-footer {
-  background-color: #022c22;
-  color: #ffffff;
-  padding: 40px 15px;
-  margin-top: auto;
-}
-
-.emerald-grid-3 {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 25px;
-  padding-bottom: 30px;
-  text-align: center;
-}
-
-.emerald-col {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-@media (min-width: 768px) {
-  .emerald-footer {
-    padding: 80px 20px;
-  }
-
-  .emerald-grid-3 {
-    grid-template-columns: repeat(3, 1fr);
-    text-align: left;
-    gap: 40px;
-    padding-bottom: 40px;
-  }
-
-  .emerald-col {
-    align-items: flex-start;
-  }
-}
-
-.emerald-title {
-  font-size: 1.15rem;
-  font-weight: 800;
-  margin-bottom: 15px;
-  color: #ffffff;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  border-bottom: 2px solid #10b981;
-  padding-bottom: 5px;
-  display: inline-block;
-}
-
-@media (min-width: 768px) {
-  .emerald-title {
-    font-size: 1.3rem;
-    margin-bottom: 25px;
-  }
-}
-
-.emerald-links,
-.emerald-contact {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-.emerald-link {
-  color: #d1d5db;
-  text-decoration: none;
-  font-size: 1rem;
-  font-weight: 500;
-  transition: all 0.2s ease;
-}
-
-.emerald-link:hover {
-  color: #10b981;
-  transform: translateX(4px);
-}
-
-.emerald-bottom {
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  padding-top: 20px;
-  text-align: center;
-  font-size: 0.85rem;
-  color: #d1d5db;
-}
-
-.emerald-bottom p {
-  margin: 0;
-}
-
-/* --- Premium Add to Cart Toast Navigation --- */
-.toast-container {
-  position: fixed;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 999999;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  pointer-events: none;
-}
-
-.toast-card {
-  pointer-events: auto;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  width: 90%;
-  max-width: 380px;
-  min-height: 80px;
-  height: auto;
-  border-radius: 14px;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-  border: 1px solid rgba(229, 231, 235, 0.5);
-  padding: 15px 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 15px;
-  position: relative;
-  overflow: hidden;
-  animation: springSlideDown 0.6s cubic-bezier(0.68, -0.6, 0.32, 1.6) forwards;
-}
-
-.toast-card.slide-out {
-  animation: toastSlideOut 0.4s cubic-bezier(0.55, 0.085, 0.68, 0.53) forwards;
-}
-
-@keyframes springSlideDown {
-  0% {
-    transform: translateY(-120%) scale(0.9);
-    opacity: 0;
-  }
-
-  100% {
-    transform: translateY(0) scale(1);
-    opacity: 1;
-  }
-}
-
-@keyframes toastSlideOut {
-  from {
-    transform: translateY(0) scale(1);
-    opacity: 1;
-  }
-
-  to {
-    transform: translateY(-120%) scale(0.9);
-    opacity: 0;
-  }
-}
-
-.toast-icon-circle {
-  width: 40px;
-  height: 40px;
-  background-color: #10b981;
-  color: white;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.25rem;
-  flex-shrink: 0;
-}
-
-.toast-info {
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  min-width: 0;
-}
-
-.toast-info strong {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: #1f2937;
-  margin-bottom: 2px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.toast-info span {
-  font-size: 0.8rem;
-  color: #6b7280;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.toast-view-cart {
-  color: #10b981;
-  font-size: 0.85rem;
-  font-weight: 600;
-  text-decoration: none;
-  cursor: pointer;
-  background: transparent;
-  border: none;
-  padding: 0;
-  margin-left: 10px;
-  white-space: nowrap;
-  transition: opacity 0.2s;
-  flex-shrink: 0;
-}
-
-.toast-view-cart:hover {
-  opacity: 0.8;
-  text-decoration: underline;
-}
-
-/* Skeleton Loaders (from old loader.css) */
-.skeleton-card {
-  background: var(--color-white);
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  display: flex;
-  flex-direction: column;
-  opacity: 0.7;
-}
-
-.skeleton-image {
-  width: 100%;
-  padding-top: 100%;
-  background-color: #e2e8f0;
-  animation: pulse 1.5s infinite ease-in-out;
-}
-
-.skeleton-info {
-  padding: 0.75rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.skeleton-line {
-  height: 1rem;
-  background-color: #e2e8f0;
-  border-radius: 4px;
-  animation: pulse 1.5s infinite ease-in-out;
-}
-
-.skeleton-line.title {
-  width: 80%;
-  margin-bottom: 0.25rem;
-}
-
-.skeleton-line.price {
-  width: 40%;
-  margin-bottom: 0.75rem;
-}
-
-.skeleton-line.btn {
-  width: 100%;
-  height: 2.5rem;
-  border-radius: var(--radius-md);
-}
-
-@keyframes pulse {
-  0% {
-    background-color: #e2e8f0;
-  }
-
-  50% {
-    background-color: #cbd5e1;
-  }
-
-  100% {
-    background-color: #e2e8f0;
-  }
-}
-
-/* --- Shake Horizontal Animation for Add to Cart Button --- */
-@keyframes shakeHorizontal {
-
-  0%,
-  88% {
-    transform: translateX(0);
-  }
-
-  90% {
-    transform: translateX(-6px);
-  }
-
-  92% {
-    transform: translateX(6px);
-  }
-
-  94% {
-    transform: translateX(-4px);
-  }
-
-  96% {
-    transform: translateX(4px);
-  }
-
-  98% {
-    transform: translateX(-2px);
-  }
-
-  100% {
-    transform: translateX(0);
-  }
-}
-
-.shake-cart-btn {
-  animation: shakeHorizontal 5s ease-in-out infinite;
 }
 
 /* ═══ Uniform Product Cards ═══ */
@@ -523,21 +168,25 @@
   overflow: hidden;
   text-overflow: ellipsis;
   min-height: 2.6em;
-  /* reserve exactly 2 lines */
 }
 
 .product-info {
   min-height: 130px;
-  /* ensures price + button stay aligned */
 }
 
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
 }
 
+.hide-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
 /* ═══ Small Screen Button Fix (320px-365px) ═══ */
 @media (max-width: 365px) {
-  .product-card .btn {
+  .product-card .btn,
+  .product-card button {
     font-size: 10px;
     height: 36px;
     padding: 0 6px;
@@ -546,7 +195,7 @@
     text-overflow: ellipsis;
   }
 
-  .product-card .btn .fa-cart-plus {
+  .product-card .fa-cart-plus {
     font-size: 10px;
     margin-right: 4px;
   }
@@ -561,7 +210,8 @@
     min-height: 110px;
   }
 }
-/* Horizontal Scroller Improvements */
+
+/* Horizontal Scroller */
 .scroller-container {
   display: flex !important;
   gap: 1rem !important;
@@ -579,3 +229,54 @@
 .mask-edge {
   mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
 }
+
+/* ═══ Sonner Toast Overrides ═══ */
+[data-sonner-toaster] {
+  --normal-bg: white;
+  --normal-border: #e5e7eb;
+  --normal-text: #1f2937;
+  --success-bg: #ecfdf5;
+  --success-border: #a7f3d0;
+  --success-text: #065f46;
+  font-family: var(--font-family) !important;
+}
+
+[data-sonner-toast][data-type="success"] {
+  --toast-bg: var(--success-bg);
+  border-color: var(--success-border) !important;
+}
+
+[data-sonner-toast] [data-button] {
+  background-color: #0A3D2E !important;
+  color: white !important;
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  padding: 4px 12px !important;
+}
+
+[data-sonner-toast] [data-button]:hover {
+  background-color: #10b981 !important;
+  color: white !important;
+}
+
+/* ═══ Tailwind CSS Animations (Hardware Accelerated) ═══ */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.4s ease-out both;
+  will-change: opacity;
+}
+
+.animate-fadeInUp {
+  animation: fadeInUp 0.5s ease-out both;
+  will-change: opacity, transform;
+}
+

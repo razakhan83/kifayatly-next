@@ -23,9 +23,14 @@ const ProductSchema = new mongoose.Schema(
             type: String,
             required: false,
         },
+        Images: {
+            type: [String],
+            default: []
+        },
         Category: {
-            type: String,
-            required: [true, 'Please provide a category.'],
+            type: [String],
+            required: [true, 'Please provide at least one category.'],
+            default: [],
         },
         stockQuantity: {
             type: Number,
@@ -41,6 +46,10 @@ const ProductSchema = new mongoose.Schema(
             type: String,
             required: false,
             unique: true,
+        },
+        isLive: {
+            type: Boolean,
+            default: true
         }
     },
     {

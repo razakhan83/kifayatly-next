@@ -1,36 +1,50 @@
 'use client';
+import { useState, useEffect } from 'react';
 
 export default function AdminDashboard() {
-  // Sample Stats Data
+  const [productCount, setProductCount] = useState(0);
+
+  useEffect(() => {
+    fetch('/api/products')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setProductCount(data.data.length);
+        }
+      })
+      .catch(err => console.error('Failed to fetch products for dashboard', err));
+  }, []);
+
+  // Stats Data
   const stats = [
     {
       title: 'Total Orders',
-      value: '156',
-      change: '+12%',
+      value: '0',
+      change: '-',
       icon: 'fa-shopping-bag',
       bgColor: 'bg-blue-50',
       textColor: 'text-blue-600'
     },
     {
       title: 'Revenue',
-      value: 'Rs. 45,320',
-      change: '+8%',
+      value: 'Rs. 0',
+      change: '-',
       icon: 'fa-dollar-sign',
       bgColor: 'bg-green-50',
       textColor: 'text-green-600'
     },
     {
       title: 'Total Products',
-      value: '89',
-      change: '+5',
+      value: productCount.toString(),
+      change: '-',
       icon: 'fa-box',
       bgColor: 'bg-purple-50',
       textColor: 'text-purple-600'
     },
     {
       title: 'Customers',
-      value: '234',
-      change: '+23',
+      value: '0',
+      change: '-',
       icon: 'fa-users',
       bgColor: 'bg-orange-50',
       textColor: 'text-orange-600'

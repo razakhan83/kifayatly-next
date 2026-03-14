@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
 
 export default function HomeSearch() {
     const [searchTerm, setSearchTerm] = useState('');
@@ -23,12 +24,12 @@ export default function HomeSearch() {
                     type="text"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="search-input w-full py-3 px-4 pl-12 border-2 border-[#145e46] rounded-full text-base outline-none transition-all shadow-sm focus:border-[#0A3D2E] focus:ring-4 focus:ring-[#0A3D2E]/20"
+                    className="search-input w-full py-3 px-4 pl-12 border-2 border-[#145e46] rounded-full text-base text-gray-900 placeholder:text-gray-500 outline-none transition-all shadow-sm focus:border-primary focus:ring-4 focus:ring-primary/20 bg-white"
                     placeholder="Search for premium products..."
                 />
-                <button type="submit" className="absolute right-2 bg-[#0A3D2E] hover:bg-[#10b981] text-white px-4 py-1.5 rounded-full text-sm font-semibold transition-colors shadow-md">
+                <Button type="submit" className="absolute right-2 rounded-full px-4 h-9">
                     Search
-                </button>
+                </Button>
             </form>
         </div>
     );

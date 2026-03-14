@@ -53,9 +53,9 @@ export async function POST(req) {
         console.log('[API] ✅ Database connected');
 
         const body = await req.json();
-        console.log('[API] Body received:', { Name: body.Name, Category: body.Category, Price: body.Price });
+        console.log('[API] Body received:', { Name: body.Name, Category: body.Category, Price: body.Price, Images: body.Images?.length });
 
-        let { Name, Description, Price, ImageURL, cloudinary_id, Category, stockQuantity, slug, isLive } = body;
+        let { Name, Description, Price, ImageURL, Images, cloudinary_id, Category, stockQuantity, slug, isLive } = body;
 
         if (!Name || !Price || !Category) {
             console.log('[API] ❌ Validation failed: Missing required fields');
@@ -87,6 +87,7 @@ export async function POST(req) {
             Price,
             ImageURL,
             Image: ImageURL, // Map ImageURL broadly for legacy data bindings
+            Images: Array.isArray(Images) ? Images : (ImageURL ? [ImageURL] : []),
             cloudinary_id,
             Category: categoryArray,
             stockQuantity: stockQuantity || 0,

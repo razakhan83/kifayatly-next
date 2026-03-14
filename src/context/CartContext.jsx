@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
-import Toast from '@/components/Toast';
+import { toast } from 'sonner';
 
 const CartContext = createContext();
 
@@ -10,8 +10,6 @@ function CartProviderContent({ children }) {
     const router = useRouter();
     const [cart, setCart] = useState([]);
     const [isInitialized, setIsInitialized] = useState(false);
-    const [toastMessage, setToastMessage] = useState(null);
-    const [isToastVisible, setIsToastVisible] = useState(false);
     const [activeCategory, setActiveCategory] = useState('all');
     const [isCartOpen, setIsCartOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -50,24 +48,32 @@ function CartProviderContent({ children }) {
     const addToCart = (product, qtyToAdd = 1) => {
         const qtyNumber = Number(qtyToAdd) || 1;
         setCart(prev => {
-            const existing = prev.findIndex(item => (item.slug || item._id) === (product.slug || product._id));
-            if (existing > -1) {
+            const existingIndex = prev.findIndex(item => (item.slug || item._id || item.id) === (product.slug || product._id || product.id));
+            if (existingIndex > -1) {
                 const updated = [...prev];
-                updated[existing] = { ...updated[existing], quantity: qtyNumber };
+                updated[existingIndex] = { 
+                    ...updated[existingIndex], 
+                    quantity: (updated[existingIndex].quantity || 1) + qtyNumber 
+                };
                 return updated;
             }
             return [...prev, { ...product, quantity: qtyNumber }];
         });
 
-        setIsToastVisible(false);
-        setTimeout(() => {
-            setToastMessage({ title: `${product.Name || product.name} added to cart`, _trigger: Date.now() });
-            setIsToastVisible(true);
-        }, 50);
+        toast.success(`${product.Name || product.name} added to cart`, {
+            duration: 3000,
+            action: {
+                label: 'View Cart',
+                onClick: () => openCart()
+            }
+        });
     };
 
     const removeFromCart = (product) => {
         setCart(prev => prev.filter(item => (item.Name || item.name) !== (product.Name || product.name)));
+        toast('Item removed from cart', {
+            description: product.Name || product.name,
+        });
     };
 
     const updateQuantity = (product, newQuantity) => {
@@ -92,16 +98,6 @@ function CartProviderContent({ children }) {
             isSidebarOpen, setIsSidebarOpen, openSidebar
         }}>
             {children}
-
-            <Toast
-                message={toastMessage}
-                isVisible={isToastVisible}
-                onClose={() => setIsToastVisible(false)}
-                action={{
-                    label: 'View Cart',
-                    onClick: openCart
-                }}
-            />
         </CartContext.Provider>
     );
 }

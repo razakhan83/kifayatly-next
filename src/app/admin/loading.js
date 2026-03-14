@@ -2,7 +2,7 @@
 
 export default function AdminLoading() {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/90 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/90">
       <div className="flex flex-col items-center gap-6">
         {/* Premium Pulse Spinner */}
         <div className="relative">

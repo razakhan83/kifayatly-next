@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import Toast from '@/components/Toast';
+import { toast } from 'sonner';
 
 export default function AdminProductsPage() {
     const [products, setProducts] = useState([]);
@@ -11,7 +11,7 @@ export default function AdminProductsPage() {
     const [deleteModal, setDeleteModal] = useState({ open: false, product: null });
     const [deleting, setDeleting] = useState(false);
     const [togglingId, setTogglingId] = useState(null);
-    const [toast, setToast] = useState({ visible: false, message: '', type: 'success' });
+
 
     useEffect(() => {
         fetchProducts();
@@ -36,7 +36,8 @@ export default function AdminProductsPage() {
     };
 
     const showToast = (message, type = 'success') => {
-        setToast({ visible: true, message, type });
+        if (type === 'error') toast.error(message);
+        else toast.success(message);
     };
 
     const filteredProducts = useMemo(() => {
@@ -94,12 +95,7 @@ export default function AdminProductsPage() {
 
     return (
         <div className="pb-24 md:pb-0">
-            <Toast
-                isVisible={toast.visible}
-                message={toast.message}
-                type={toast.type}
-                onClose={() => setToast(prev => ({ ...prev, visible: false }))}
-            />
+
 
             {/* Page Header */}
             <div className="flex items-center justify-between gap-4 mb-6">
@@ -303,7 +299,7 @@ export default function AdminProductsPage() {
             {/* Confirmation Modal */}
             {deleteModal.open && (
                 <div className="fixed inset-0 z-[1000] flex items-center justify-center">
-                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => !deleting && setDeleteModal({ open: false, product: null })}></div>
+                    <div className="fixed inset-0 bg-black/60" onClick={() => !deleting && setDeleteModal({ open: false, product: null })}></div>
                     <div className="relative bg-white w-[90%] max-w-[400px] p-6 rounded-2xl shadow-2xl z-[1001]">
                         <div className="flex flex-col items-center text-center">
                             <div className="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mb-4">

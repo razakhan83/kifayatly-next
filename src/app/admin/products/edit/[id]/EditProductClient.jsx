@@ -1,7 +1,7 @@
 'use client';
 import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Toast from '@/components/Toast';
+import { toast } from 'sonner';
 import Link from 'next/link';
 
 export default function EditProduct({ id }) {
@@ -12,11 +12,9 @@ export default function EditProduct({ id }) {
   const [Price, setPrice] = useState('');
   const [Categories, setCategories] = useState([]); // array
   const [stockQuantity, setStockQuantity] = useState('');
-  const [ImageURL, setImageURL] = useState('');
-  const [cloudinaryId, setCloudinaryId] = useState('');
+  const [images, setImages] = useState([]); // Array of { url, public_id, file, isNew }
   const [isLive, setIsLive] = useState(false);
 
-  const [imagePreview, setImagePreview] = useState(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [allCategories, setAllCategories] = useState([]);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
@@ -24,10 +22,11 @@ export default function EditProduct({ id }) {
   const [isAddingCat, setIsAddingCat] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [toast, setToast] = useState({ visible: false, message: '', type: 'success' });
+
 
   const showToast = (message, type = 'success') => {
-    setToast({ visible: true, message, type });
+    if (type === 'error') toast.error(message);
+    else toast.success(message);
   };
 
   const fetchCategories = useCallback(async () => {
@@ -54,9 +53,15 @@ export default function EditProduct({ id }) {
           setPrice(p.Price || '');
           setCategories(Array.isArray(p.Category) ? p.Category : (p.Category ? [p.Category] : []));
           setStockQuantity(p.stockQuantity ?? '');
-          setImageURL(p.ImageURL || p.Image || '');
-          setImagePreview(p.ImageURL || p.Image || null);
-          setCloudinaryId(p.cloudinary_id || '');
+          
+          let existingImages = [];
+          if (Array.isArray(p.Images) && p.Images.length > 0) {
+              existingImages = p.Images.map(url => ({ url, isNew: false }));
+          } else if (p.ImageURL || p.Image) {
+              existingImages = [{ url: p.ImageURL || p.Image, isNew: false, public_id: p.cloudinary_id }];
+          }
+          setImages(existingImages);
+          
           setIsLive(p.isLive ?? false);
         } else {
           showToast('Product not found', 'error');
@@ -105,24 +110,31 @@ export default function EditProduct({ id }) {
 
   const handleDragOver = useCallback((e) => { e.preventDefault(); setIsDragOver(true); }, []);
   const handleDragLeave = useCallback((e) => { e.preventDefault(); setIsDragOver(false); }, []);
+  
+  const processFiles = (filesList) => {
+    const validFiles = Array.from(filesList).filter(f => f.type.startsWith('image/'));
+    validFiles.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        setImages(prev => [...prev, { url: ev.target.result, file, isNew: true }]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
   const handleDrop = useCallback((e) => {
     e.preventDefault();
     setIsDragOver(false);
-    const files = e.dataTransfer.files;
-    if (files && files[0] && files[0].type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onload = (ev) => { setImagePreview(ev.target.result); setImageURL(ev.target.result); };
-      reader.readAsDataURL(files[0]);
-    }
+    processFiles(e.dataTransfer.files);
   }, []);
 
   const handleFileSelect = (e) => {
-    const file = e.target.files[0];
-    if (file && file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onload = (ev) => { setImagePreview(ev.target.result); setImageURL(ev.target.result); };
-      reader.readAsDataURL(file);
-    }
+    processFiles(e.target.files);
+    e.target.value = null; // reset so same file can be selected again if removed
+  };
+
+  const removeImage = (indexToRemove) => {
+      setImages(prev => prev.filter((_, idx) => idx !== indexToRemove));
   };
 
   const handleSubmit = async (e) => {
@@ -133,43 +145,50 @@ export default function EditProduct({ id }) {
     }
 
     setSaving(true);
-    let finalImageURL = ImageURL;
-    let finalCloudinaryId = cloudinaryId;
-
-    // Upload to Cloudinary if base64
-    if (ImageURL && ImageURL.startsWith('data:')) {
-      try {
-        const signRes = await fetch('/api/cloudinary-sign');
-        const signData = await signRes.json();
-        if (!signRes.ok) throw new Error(signData.error || 'Failed to get signature');
-
-        const { signature, timestamp, cloudName, apiKey } = signData;
-        const uploadFormData = new FormData();
-        uploadFormData.append('file', ImageURL);
-        uploadFormData.append('api_key', apiKey);
-        uploadFormData.append('timestamp', timestamp);
-        uploadFormData.append('signature', signature);
-        uploadFormData.append('folder', 'kifayatly_products');
-
-        const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-          method: 'POST',
-          body: uploadFormData,
-        });
-        const uploadData = await uploadRes.json();
-        if (uploadData.secure_url) {
-          finalImageURL = uploadData.secure_url;
-          finalCloudinaryId = uploadData.public_id;
-        } else {
-          showToast('Image upload failed: ' + (uploadData.error?.message || 'Upload error'), 'error');
-          setSaving(false);
-          return;
+    
+    // Upload new images to Cloudinary
+    const finalImages = [];
+    try {
+        const newImages = images.filter(img => img.isNew);
+        let signData = null;
+        
+        if (newImages.length > 0) {
+            const signRes = await fetch('/api/cloudinary-sign');
+            signData = await signRes.json();
+            if (!signRes.ok) throw new Error(signData.error || 'Failed to get signature');
         }
-      } catch (err) {
-        showToast('Error uploading image: ' + err.message, 'error');
+
+        for (const img of images) {
+            if (!img.isNew) {
+                finalImages.push(img.url);
+            } else {
+                const { signature, timestamp, cloudName, apiKey } = signData;
+                const uploadFormData = new FormData();
+                uploadFormData.append('file', img.url);
+                uploadFormData.append('api_key', apiKey);
+                uploadFormData.append('timestamp', timestamp);
+                uploadFormData.append('signature', signature);
+                uploadFormData.append('folder', 'kifayatly_products');
+
+                const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+                    method: 'POST',
+                    body: uploadFormData,
+                });
+                const uploadData = await uploadRes.json();
+                if (uploadData.secure_url) {
+                    finalImages.push(uploadData.secure_url);
+                } else {
+                    throw new Error(uploadData.error?.message || 'Upload error');
+                }
+            }
+        }
+    } catch (err) {
+        showToast('Error uploading images: ' + err.message, 'error');
         setSaving(false);
         return;
-      }
     }
+
+    const primaryImage = finalImages.length > 0 ? finalImages[0] : '';
 
     try {
       const res = await fetch(`/api/products/${id}`, {
@@ -179,8 +198,8 @@ export default function EditProduct({ id }) {
           Name,
           Description,
           Price: Number(Price),
-          ImageURL: finalImageURL,
-          cloudinary_id: finalCloudinaryId,
+          ImageURL: primaryImage, // backward compatibility
+          Images: finalImages,    // array of urls
           Category: Categories,
           stockQuantity: Number(stockQuantity) || 0,
           isLive,
@@ -213,7 +232,7 @@ export default function EditProduct({ id }) {
 
   return (
     <div className="w-full pb-10">
-      <Toast isVisible={toast.visible} message={toast.message} type={toast.type} onClose={() => setToast(prev => ({ ...prev, visible: false }))} />
+
 
       {/* Page Header */}
       <div className="mb-6 md:mb-8 flex items-center gap-4">
@@ -313,34 +332,47 @@ export default function EditProduct({ id }) {
 
           {/* Image Upload */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Product Image</label>
+            <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-semibold text-gray-700">Product Images</label>
+                <div className="relative overflow-hidden cursor-pointer text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100">
+                    <i className="fa-solid fa-plus-circle"></i> Add More Images
+                    <input type="file" multiple accept="image/*" onChange={handleFileSelect} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                </div>
+            </div>
+            
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+                {images.map((img, idx) => (
+                    <div key={idx} className="relative aspect-square rounded-xl border border-gray-200 overflow-hidden group bg-gray-50">
+                        <img src={img.url} alt="Preview" className="w-full h-full object-cover" />
+                        <button 
+                            type="button" 
+                            onClick={() => removeImage(idx)} 
+                            className="absolute top-2 right-2 w-7 h-7 bg-white/90 text-red-500 rounded-full flex items-center justify-center shadow-md hover:bg-red-500 hover:text-white transition-colors opacity-0 group-hover:opacity-100"
+                        >
+                            <i className="fa-solid fa-trash text-xs"></i>
+                        </button>
+                        {idx === 0 && <span className="absolute bottom-2 left-2 text-[10px] bg-black/60 text-white px-2 py-0.5 rounded-full font-bold shadow-sm">Primary</span>}
+                    </div>
+                ))}
+            </div>
+
             <div
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
-              className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200 cursor-pointer ${isDragOver ? 'border-emerald-500 bg-emerald-50 scale-105' : 'border-emerald-300 hover:border-emerald-400 hover:bg-gray-50'}`}
+              className={`relative border-2 border-dashed rounded-xl p-6 text-center transition-all duration-200 cursor-pointer ${isDragOver ? 'border-emerald-500 bg-emerald-50 scale-102' : 'border-emerald-300 hover:border-emerald-400 hover:bg-gray-50'}`}
             >
-              <input type="file" accept="image/*" onChange={handleFileSelect} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-              {imagePreview ? (
-                <div className="space-y-4">
-                  <div className="relative inline-block">
-                    <img src={imagePreview} alt="Preview" className="max-w-full max-h-32 mx-auto rounded-lg object-contain border border-gray-200" />
-                    <button type="button" onClick={(e) => { e.stopPropagation(); setImagePreview(null); setImageURL(''); }} className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600">×</button>
-                  </div>
-                  <p className="text-sm text-gray-600">Click to change image or drag a new one</p>
+              <input type="file" multiple accept="image/*" onChange={handleFileSelect} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+              <div className="space-y-3">
+                <div className="w-14 h-14 mx-auto bg-emerald-100 rounded-full flex items-center justify-center">
+                  <i className="fa-solid fa-cloud-upload-alt text-xl text-emerald-600"></i>
                 </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="w-16 h-16 mx-auto bg-emerald-100 rounded-full flex items-center justify-center">
-                    <i className="fa-solid fa-cloud-upload-alt text-2xl text-emerald-600"></i>
-                  </div>
-                  <div>
-                    <p className="text-lg font-semibold text-gray-700">Drag & Drop Image</p>
-                    <p className="text-sm text-gray-500">or click to browse files</p>
-                    <p className="text-xs text-gray-400 mt-1">PNG, JPG, GIF up to 10MB</p>
-                  </div>
+                <div>
+                  <p className="text-sm font-semibold text-gray-700">Drag & Drop Images Here</p>
+                  <p className="text-xs text-gray-500">or click to browse multiple files</p>
+                  <p className="text-[10px] text-gray-400 mt-1">PNG, JPG up to 10MB each</p>
                 </div>
-              )}
+              </div>
             </div>
           </div>
 
@@ -391,7 +423,7 @@ export default function EditProduct({ id }) {
       {/* Category Modal */}
       {isCategoryModalOpen && (
         <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setIsCategoryModalOpen(false)}></div>
+          <div className="absolute inset-0 bg-black/40" onClick={() => setIsCategoryModalOpen(false)}></div>
           <div className="relative bg-white w-[92%] sm:w-[512px] rounded-3xl shadow-2xl max-h-[85vh] flex flex-col overflow-hidden">
             <div className="flex items-center justify-between p-5 border-b bg-gray-50/50">
               <h2 className="text-xl font-bold text-gray-900">Manage Categories</h2>

@@ -2,34 +2,16 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { usePathname } from 'next/navigation';
-import SplashScreen from '@/components/SplashScreen';
 import FloatingWhatsApp from '@/components/FloatingWhatsApp';
 import Navbar from '@/components/Navbar';
 import CartDrawer from '@/components/CartDrawer';
 
 function LayoutContent({ children, categories }) {
     const pathname = usePathname();
-    const [loading, setLoading] = useState(true);
     const [year, setYear] = useState(2025);
 
     useEffect(() => {
         setYear(new Date().getFullYear());
-    }, []);
-
-    useEffect(() => {
-        const handleLoad = () => setLoading(false);
-
-        if (document.readyState === 'complete') {
-            const timer = setTimeout(() => setLoading(false), 2000);
-            return () => clearTimeout(timer);
-        } else {
-            window.addEventListener('load', handleLoad);
-            const timer = setTimeout(() => setLoading(false), 2000);
-            return () => {
-                window.removeEventListener('load', handleLoad);
-                clearTimeout(timer);
-            };
-        }
     }, []);
 
     const isAdminPage = pathname?.startsWith('/admin');
@@ -38,13 +20,11 @@ function LayoutContent({ children, categories }) {
         return <>{children}</>;
     }
 
-    // Store routes: full chrome with Navbar, Footer, WhatsApp, Splash
+    // Store routes: full chrome with Navbar, Footer, WhatsApp
     return (
         <>
-            {loading && <SplashScreen onComplete={() => setLoading(false)} />}
             <div
                 className="flex flex-col min-h-screen bg-[#f3f4f6]"
-                style={{ visibility: loading ? 'hidden' : 'visible' }}
             >
                 <Navbar categories={categories} />
 
@@ -52,7 +32,7 @@ function LayoutContent({ children, categories }) {
                     {children}
                 </main>
 
-                {/* Emerald Professional Footer */}
+                {/* Footer */}
                 <footer className="bg-[#0A3D2E] pt-12 pb-6 text-white text-sm mt-auto">
                     <div className="container mx-auto px-4 max-w-7xl">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">

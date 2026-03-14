@@ -1,24 +1,39 @@
 'use client';
 
 import { useState, useMemo, useEffect, useRef, Suspense, useCallback } from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import ProductSkeleton from '@/components/ProductSkeleton';
+import ProductCard from '@/components/ProductCard';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 
 function ProductGridContent({ initialProducts, forceSearchTerm, hideSearch }) {
     const searchParams = useSearchParams();
-    const { activeCategory, setActiveCategory, addToCart } = useCart();
-    const [isLoading, setIsLoading] = useState(true);
+    const { activeCategory, setActiveCategory } = useCart();
     const [searchTerm, setSearchTerm] = useState(forceSearchTerm || searchParams?.get('search') || '');
-    const [sortBy, setSortBy] = useState('newest'); // 'price-low', 'price-high', 'az', 'za', 'newest'
+    const [sortBy, setSortBy] = useState('newest');
     const [currentPage, setCurrentPage] = useState(1);
     const [fadeState, setFadeState] = useState('opacity-100');
+    const [initialLoad, setInitialLoad] = useState(true);
     const itemsPerPage = 12;
 
     const loadMoreRef = useRef(null);
     const categoryNavRef = useRef(null);
+
+    // Only show skeleton on very first render
+    useEffect(() => {
+        const timer = setTimeout(() => setInitialLoad(false), 100);
+        return () => clearTimeout(timer);
+    }, []);
 
     // 1. First Pass: Filter strictly by Search Term to compute available categories
     const searchFilteredProducts = useMemo(() => {
@@ -109,12 +124,13 @@ function ProductGridContent({ initialProducts, forceSearchTerm, hideSearch }) {
             threshold: 0
         };
         const observer = new IntersectionObserver(handleObserver, option);
-        if (loadMoreRef.current) observer.observe(loadMoreRef.current);
+        const currentRef = loadMoreRef.current;
+        if (currentRef) observer.observe(currentRef);
         
         return () => {
-            if (loadMoreRef.current) observer.unobserve(loadMoreRef.current);
+            if (currentRef) observer.unobserve(currentRef);
         };
-    }, [handleObserver, loadMoreRef]);
+    }, [handleObserver]);
 
     const scrollToProducts = () => {
         const section = document.querySelector('.category-nav-container');
@@ -130,20 +146,15 @@ function ProductGridContent({ initialProducts, forceSearchTerm, hideSearch }) {
         setFadeState('opacity-0');
         setTimeout(() => {
             setActiveCategory(catId);
-            setCurrentPage(1); // Reset page on filter
+            setCurrentPage(1);
             setFadeState('opacity-100');
             setTimeout(scrollToProducts, 50);
         }, 150);
     };
 
-    // Simulate premium loading state on category or search change
+    // Reset page on category or search change
     useEffect(() => {
-        setIsLoading(true);
-        setCurrentPage(1); // Reset to page 1 on new search
-        const timer = setTimeout(() => {
-            setIsLoading(false);
-        }, 600);
-        return () => clearTimeout(timer);
+        setCurrentPage(1);
     }, [activeCategory, searchTerm]);
 
     // Handle incoming URL search params or forcefully imposed search param changes
@@ -158,12 +169,20 @@ function ProductGridContent({ initialProducts, forceSearchTerm, hideSearch }) {
         }
     }, [searchParams, forceSearchTerm]);
 
+    // Handle category URL parameters
+    useEffect(() => {
+        const catQuery = searchParams?.get('category');
+        if (catQuery && catQuery !== activeCategory) {
+            setActiveCategory(catQuery);
+            setCurrentPage(1);
+        }
+    }, [searchParams, activeCategory, setActiveCategory]);
+
     // Auto-scroll the pills container
     useEffect(() => {
         if (categoryNavRef.current) {
-            const activePill = categoryNavRef.current.querySelector('.category-btn.bg-\\[\\#10b981\\]');
+            const activePill = categoryNavRef.current.querySelector('.cat-pill-active');
             if (activePill) {
-                const containerLeft = categoryNavRef.current.scrollLeft;
                 const containerWidth = categoryNavRef.current.clientWidth;
                 const pillLeft = activePill.offsetLeft;
                 const pillWidth = activePill.clientWidth;
@@ -176,18 +195,17 @@ function ProductGridContent({ initialProducts, forceSearchTerm, hideSearch }) {
         }
     }, [activeCategory]);
 
-    const handleAddToCart = (product) => {
-        addToCart(product);
-    };
-
-    const formatPrice = (raw) => {
-        let cleanNumbers = String(raw).replace(/[^\d.]/g, '');
-        if (!cleanNumbers) return 'Rs. 0';
-        return `Rs. ${Number(cleanNumbers).toLocaleString('en-PK')}`;
-    };
+    const sortOptions = [
+        { value: 'newest', label: 'Newest First' },
+        { value: 'price-low', label: 'Price: Low → High' },
+        { value: 'price-high', label: 'Price: High → Low' },
+        { value: 'az', label: 'Name: A → Z' },
+        { value: 'za', label: 'Name: Z → A' },
+    ];
 
     return (
         <>
+            {/* Category Pills */}
             <div className="category-nav-container transition-all duration-300 opacity-100">
                 <div
                     ref={categoryNavRef}
@@ -195,22 +213,22 @@ function ProductGridContent({ initialProducts, forceSearchTerm, hideSearch }) {
                     style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                 >
                     <button
-                        className={`category-btn px-3 py-1.5 rounded-full text-[0.85rem] font-semibold border transition-all whitespace-nowrap shrink-0 ${activeCategory === 'all' ? 'bg-[#10b981] text-white border-[#10b981] shadow-sm' : 'bg-white text-black border-gray-200 hover:bg-[#10b981]/5 hover:text-[#10b981]'}`}
+                        className={`cat-pill px-3.5 py-1.5 rounded-full text-[0.85rem] font-semibold border transition-all whitespace-nowrap shrink-0 will-change-transform ${activeCategory === 'all' ? 'cat-pill-active bg-[#10b981] text-white border-[#10b981] shadow-sm scale-[1.02]' : 'bg-white text-gray-700 border-gray-200 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200'}`}
                         onClick={() => setCategoryAndScroll('all')}
                     >
                         All Items
                     </button>
                     <button
-                        className={`category-btn px-3 py-1.5 rounded-full text-[0.85rem] font-semibold border transition-all whitespace-nowrap shrink-0 ${activeCategory === 'new-arrivals' ? 'bg-[#10b981] text-white border-[#10b981] shadow-sm' : 'bg-white text-black border-gray-200 hover:bg-[#10b981]/5 hover:text-[#10b981]'}`}
+                        className={`cat-pill px-3.5 py-1.5 rounded-full text-[0.85rem] font-semibold border transition-all whitespace-nowrap shrink-0 will-change-transform ${activeCategory === 'new-arrivals' ? 'cat-pill-active bg-[#10b981] text-white border-[#10b981] shadow-sm scale-[1.02]' : 'bg-white text-gray-700 border-gray-200 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200'}`}
                         onClick={() => setCategoryAndScroll('new-arrivals')}
                     >
-                        New Arrivals
+                        ✨ New Arrivals
                     </button>
 
                     {dynamicCategories.map(cat => (
                         <button
                             key={cat.id}
-                            className={`category-btn px-3 py-1.5 rounded-full text-[0.85rem] font-semibold border transition-all whitespace-nowrap shrink-0 ${activeCategory === cat.id ? 'bg-[#10b981] text-white border-[#10b981] shadow-sm' : 'bg-white text-black border-gray-200 hover:bg-[#10b981]/5 hover:text-[#10b981]'}`}
+                            className={`cat-pill px-3.5 py-1.5 rounded-full text-[0.85rem] font-semibold border transition-all whitespace-nowrap shrink-0 will-change-transform ${activeCategory === cat.id ? 'cat-pill-active bg-[#10b981] text-white border-[#10b981] shadow-sm scale-[1.02]' : 'bg-white text-gray-700 border-gray-200 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200'}`}
                             onClick={() => setCategoryAndScroll(cat.id)}
                         >
                             {cat.label}
@@ -219,34 +237,49 @@ function ProductGridContent({ initialProducts, forceSearchTerm, hideSearch }) {
                 </div>
             </div>
 
+            {/* Search + Sort Bar */}
             {!hideSearch && (
                 <div className="container mx-auto px-4 max-w-7xl pt-4">
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white/50 backdrop-blur-sm p-4 rounded-2xl border border-gray-100 shadow-sm">
-                        <div className="search-container relative flex items-center w-full max-w-md">
-                            <i className="fa-solid fa-magnifying-glass search-icon absolute left-4 text-[#0A3D2E] text-[1.1rem]"></i>
-                            <input
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-3 sm:p-4 rounded-2xl border border-gray-100 shadow-sm">
+                        {/* Search Input */}
+                        <div className="relative flex items-center w-full flex-1 sm:max-w-2xl">
+                            <i className="fa-solid fa-magnifying-glass absolute left-4 text-gray-400 text-[1rem] z-10"></i>
+                            <Input
                                 id="product-search"
                                 type="text"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="search-input w-full py-2.5 px-4 pl-12 border-2 border-[#145e46] rounded-full text-sm outline-none transition-all shadow-sm focus:border-[#0A3D2E] focus:ring-4 focus:ring-[#0A3D2E]/20"
+                                className="w-full pl-11 pr-10 h-10 rounded-full text-base transition-colors"
                                 placeholder="Search products..."
                             />
+                            {searchTerm && (
+                                <button 
+                                    type="button" 
+                                    onClick={() => setSearchTerm('')} 
+                                    className="absolute right-3 text-gray-400 hover:text-gray-600 transition-colors" 
+                                    aria-label="Clear Search"
+                                >
+                                    <i className="fa-solid fa-circle-xmark text-base"></i>
+                                </button>
+                            )}
                         </div>
 
-                        <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 overflow-x-auto pb-1 sm:pb-0 scrollbar-hide">
-                            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider mr-2 hidden md:block">Sort By:</span>
-                            <select 
-                                value={sortBy} 
-                                onChange={(e) => setSortBy(e.target.value)}
-                                className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-700 outline-none focus:ring-2 focus:ring-emerald-500/20 cursor-pointer hover:border-emerald-500 transition-all shrink-0"
-                            >
-                                <option value="newest">Newest First</option>
-                                <option value="price-low">Price: Low to High</option>
-                                <option value="price-high">Price: High to Low</option>
-                                <option value="az">Alphabetical: A-Z</option>
-                                <option value="za">Alphabetical: Z-A</option>
-                            </select>
+                        {/* Sort Dropdown — shadcn Select */}
+                        <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
+                            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider hidden sm:block">Sort:</span>
+                            <Select value={sortBy} onValueChange={setSortBy}>
+                                <SelectTrigger className="w-full sm:w-[180px] h-9 text-xs">
+                                    <i className="fa-solid fa-arrow-down-wide-short text-gray-400 mr-1.5 text-[11px]" />
+                                    <SelectValue placeholder="Sort by" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {sortOptions.map(opt => (
+                                        <SelectItem key={opt.value} value={opt.value}>
+                                            {opt.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
                     </div>
                 </div>
@@ -254,60 +287,73 @@ function ProductGridContent({ initialProducts, forceSearchTerm, hideSearch }) {
 
             <section id="products-section" className="section py-3 flex-grow w-full overflow-hidden">
                 <div className="container mx-auto px-2 max-w-7xl">
+                    {/* Results count */}
+                    {!initialLoad && (
+                        <div className="flex items-center justify-between px-2 mb-3">
+                            <p className="text-xs text-gray-500">
+                                Showing <span className="font-bold text-gray-800">{displayedProducts.length}</span> of{' '}
+                                <span className="font-bold text-gray-800">{filteredProducts.length}</span> products
+                            </p>
+                            {searchTerm && (
+                                <Badge variant="emerald" className="text-[10px]">
+                                    <i className="fa-solid fa-magnifying-glass mr-1 text-[9px]" />
+                                    &quot;{searchTerm}&quot;
+                                </Badge>
+                            )}
+                        </div>
+                    )}
+
                     <div className={`transition-opacity duration-300 ${fadeState}`}>
                         <div
-                            className="products-grid grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 min-h-[400px]"
+                            className="products-grid grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-5 min-h-[400px]"
                         >
-                            {isLoading ? (
+                            {initialLoad ? (
                                 Array(12).fill(0).map((_, idx) => (
-                                    <div key={`grid-skeleton-${idx}`} className="h-[320px]">
+                                    <div key={`grid-skeleton-${idx}`}>
                                         <ProductSkeleton />
                                     </div>
                                 ))
                             ) : displayedProducts.length === 0 ? (
-                                <p className="col-span-full text-center text-gray-500 py-4 w-full">No products found matching your criteria.</p>
+                                <div className="col-span-full flex flex-col items-center justify-center py-16 text-center">
+                                    <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+                                        <i className="fa-solid fa-box-open text-3xl text-gray-300"></i>
+                                    </div>
+                                    <h3 className="text-lg font-bold text-gray-700 mb-1">No products found</h3>
+                                    <p className="text-sm text-gray-500 max-w-xs">
+                                        Try adjusting your search or filter to find what you&apos;re looking for.
+                                    </p>
+                                </div>
                             ) : (
                                 displayedProducts.map((p, idx) => (
-                                    <div key={`${p.slug || p._id || p.id || 'product'}-${idx}`} className="product-card bg-white/70 backdrop-blur-md rounded-xl overflow-hidden shadow-[0_2px_10px_-3px_rgba(0,0,0,0.07)] border border-white/40 transition-transform hover:-translate-y-1 hover:shadow-xl flex flex-col group h-auto min-h-[380px] h-full">
-                                        <Link href={`/products/${p.slug || p._id || p.id}`} className="block relative pt-[100%] bg-gray-50 cursor-pointer w-full overflow-hidden">
-                                            {(p.Image || p.image) && (
-                                                <Image
-                                                    src={p.Image || p.image}
-                                                    alt={p.Name || p.name || 'product'}
-                                                    fill
-                                                    sizes="(max-width: 768px) 50vw, 25vw"
-                                                    className="object-cover transition-transform duration-500 group-hover:scale-105"
-                                                    unoptimized
-                                                />
-                                            )}
-                                        </Link>
-                                        <div className="product-info p-3 flex flex-col flex-grow justify-between gap-3">
-                                            <Link href={`/products/${p.slug || p._id || p.id}`} className="block cursor-pointer">
-                                                <h3 className="product-title text-sm font-bold text-gray-800 mb-1 leading-tight hover:text-[#10b981] transition-colors line-clamp-2 h-10 overflow-hidden" title={p.Name || p.name}>
-                                                    {p.Name || p.name || 'Unknown'}
-                                                </h3>
-                                            </Link>
-                                            <p className="product-price text-lg font-extrabold text-[#1f2937]">
-                                                {formatPrice(p.Price || p.price)}
-                                            </p>
-                                            <button
-                                                onClick={() => handleAddToCart(p)}
-                                                className="btn btn-primary bg-[#0A3D2E] text-white w-full !flex justify-center items-center py-2.5 md:py-3 px-4 md:px-6 md:text-base rounded-lg font-semibold text-sm transition-colors hover:bg-[#10b981] md:hover:bg-emerald-700 shadow-sm mt-auto opacity-100 visible h-[44px] md:h-[48px] shrink-0"
-                                            >
-                                                <i className="fa-solid fa-cart-plus mr-1.5 md:mr-2 flex-shrink-0"></i> Add to Cart
-                                            </button>
-                                        </div>
-                                    </div>
+                                    <ProductCard
+                                        key={`${p.slug || p._id || p.id || 'product'}-${idx}`}
+                                        product={p}
+                                    />
                                 ))
                             )}
                         </div>
                     </div>
 
-                    {/* Infinite Scroll Detection Target */}
-                    {!isLoading && hasMore && (
-                        <div ref={loadMoreRef} className="flex justify-center mt-10 mb-6 w-full h-10 border-t border-transparent">
-                            <i className="fa-solid fa-circle-notch fa-spin text-[#0A3D2E] text-2xl"></i>
+                    {/* Load More + Results Count */}
+                    {!initialLoad && displayedProducts.length > 0 && (
+                        <div className="flex flex-col items-center gap-3 mt-8 mb-6">
+                            <p className="text-xs text-gray-400">
+                                {displayedProducts.length} of {filteredProducts.length} products loaded
+                            </p>
+                            {hasMore && (
+                                <Button
+                                    onClick={() => setCurrentPage(prev => prev + 1)}
+                                    className="rounded-full px-8 cursor-pointer"
+                                >
+                                    Load More Products
+                                </Button>
+                            )}
                         </div>
+                    )}
+
+                    {/* Infinite Scroll Detection Target */}
+                    {!initialLoad && hasMore && (
+                        <div ref={loadMoreRef} className="h-10 w-full border-t border-transparent" />
                     )}
                 </div>
             </section>
@@ -317,7 +363,13 @@ function ProductGridContent({ initialProducts, forceSearchTerm, hideSearch }) {
 
 export default function ProductGridClient({ initialProducts, forceSearchTerm, hideSearch }) {
     return (
-        <Suspense fallback={<div className="container mx-auto max-w-7xl py-12 text-center">Loading products...</div>}>
+        <Suspense fallback={
+            <div className="container mx-auto max-w-7xl px-2 py-6">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-5">
+                    {Array(8).fill(0).map((_, i) => <ProductSkeleton key={i} />)}
+                </div>
+            </div>
+        }>
             <ProductGridContent initialProducts={initialProducts} forceSearchTerm={forceSearchTerm} hideSearch={hideSearch} />
         </Suspense>
     );

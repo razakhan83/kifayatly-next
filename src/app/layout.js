@@ -21,6 +21,7 @@ export const metadata = {
 import { CartProvider } from "@/context/CartContext";
 import AuthProvider from "@/components/AuthProvider";
 import LayoutWrapper from "@/components/LayoutWrapper";
+import { Toaster } from "@/components/ui/sonner";
 
 export default async function RootLayout({ children }) {
   const categories = await getCategories();
@@ -31,7 +32,6 @@ export default async function RootLayout({ children }) {
         <meta name="google" content="notranslate" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
       </head>
-      {/* Humne niche body tag mein suppressHydrationWarning add kiya hai */}
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning={true}
@@ -45,6 +45,7 @@ export default async function RootLayout({ children }) {
             </LayoutWrapper>
           </AuthProvider>
         </CartProvider>
+        <Toaster />
       </body>
     </html>
   );

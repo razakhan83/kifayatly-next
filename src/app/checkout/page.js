@@ -5,7 +5,26 @@ import { useCart } from '@/context/CartContext';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Separator } from '@/components/ui/separator';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import {
+    Breadcrumb,
+    BreadcrumbItem,
+    BreadcrumbLink,
+    BreadcrumbList,
+    BreadcrumbPage,
+    BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
 
 export default function CheckoutPage() {
     const { cart } = useCart();
@@ -45,14 +64,13 @@ export default function CheckoutPage() {
     };
 
     const subtotal = cart.reduce((total, item) => total + (formatPrice(item.Price || item.price) * item.quantity), 0);
-    const shipping = 200; // Mock shipping logic if under thresholds
+    const shipping = 200;
     const total = subtotal > 3000 ? subtotal : subtotal + shipping;
     const isFreeShipping = subtotal > 3000;
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
-        // Clear error dynamically
         if (errors[name]) {
             setErrors(prev => ({ ...prev, [name]: '' }));
         }
@@ -97,8 +115,6 @@ export default function CheckoutPage() {
         const encodedMessage = encodeURIComponent(message);
         const waUrl = `https://wa.me/923001234567?text=${encodedMessage}`;
         window.open(waUrl, '_blank');
-        
-        // Optional: Clear cart logic could go here after successful routing
     };
 
     if (!isMounted || cart.length === 0) {
@@ -112,150 +128,167 @@ export default function CheckoutPage() {
     return (
         <main className="min-h-screen bg-gray-50 pt-8 pb-16">
             <div className="container mx-auto px-4 max-w-6xl">
-                <div className="mb-6 flex items-center gap-2 text-sm text-gray-500">
-                    <Link href="/" className="hover:text-[#0A3D2E] transition-colors"><i className="fa-solid fa-house"></i> Home</Link>
-                    <i className="fa-solid fa-chevron-right text-[10px]"></i>
-                    <Link href="/products" className="hover:text-[#0A3D2E] transition-colors">Products</Link>
-                    <i className="fa-solid fa-chevron-right text-[10px]"></i>
-                    <span className="font-semibold text-gray-800">Checkout</span>
+                {/* Breadcrumb */}
+                <div className="mb-6">
+                    <Breadcrumb>
+                        <BreadcrumbList>
+                            <BreadcrumbItem>
+                                <BreadcrumbLink href="/">Home</BreadcrumbLink>
+                            </BreadcrumbItem>
+                            <BreadcrumbSeparator />
+                            <BreadcrumbItem>
+                                <BreadcrumbLink href="/products">Products</BreadcrumbLink>
+                            </BreadcrumbItem>
+                            <BreadcrumbSeparator />
+                            <BreadcrumbItem>
+                                <BreadcrumbPage>Checkout</BreadcrumbPage>
+                            </BreadcrumbItem>
+                        </BreadcrumbList>
+                    </Breadcrumb>
                 </div>
 
                 <h1 className="text-3xl font-extrabold text-[#0A3D2E] tracking-tight mb-8">Secure Checkout</h1>
 
-                <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, ease: 'easeOut' }}
-                    className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start"
-                >
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start animate-fadeInUp">
                     {/* Left Column - Form */}
                     <div className="lg:col-span-7 space-y-6">
-                        <section className="bg-white/60 backdrop-blur-md p-6 rounded-2xl shadow-sm border border-white/40">
+                        <section className="bg-white p-6 rounded-2xl shadow-sm border border-white/40">
                             <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
                                 <i className="fa-solid fa-location-dot text-[#10b981]"></i> Shipping Information
                             </h2>
-                            <form className="space-y-6">
+                            <form onSubmit={handlePlaceOrder} className="space-y-6">
                                 {/* Contact Section */}
                                 <div className="space-y-4">
                                     <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2">Contact Details</h3>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="space-y-1">
-                                            <label className="text-sm font-semibold text-gray-700">Email Address <span className="text-gray-400 font-normal">(Optional)</span></label>
-                                            <input 
-                                                type="email" 
+                                        <div className="space-y-2">
+                                            <Label htmlFor="email">Email Address <span className="text-gray-400 font-normal">(Optional)</span></Label>
+                                            <Input
+                                                id="email"
+                                                type="email"
                                                 name="email"
                                                 value={formData.email}
                                                 onChange={handleChange}
-                                                className="w-full p-3 bg-white/50 border border-gray-200 rounded-xl outline-none transition-colors focus:bg-white focus:border-[#0A3D2E] focus:ring-2 focus:ring-[#0A3D2E]/20"
                                                 placeholder="you@example.com"
                                             />
                                         </div>
-                                        <div className="space-y-1">
-                                            <label className="text-sm font-semibold text-gray-700">Phone Number *</label>
-                                            <input 
-                                                type="tel" 
+                                        <div className="space-y-2">
+                                            <Label htmlFor="phone">Phone Number *</Label>
+                                            <Input
+                                                id="phone"
+                                                type="tel"
                                                 name="phone"
                                                 value={formData.phone}
                                                 onChange={handleChange}
-                                                className={`w-full p-3 bg-white/50 border rounded-xl outline-none transition-colors focus:bg-white ${errors.phone ? 'border-red-500 bg-red-50 focus:border-red-500 focus:ring-2 focus:ring-red-200' : 'border-gray-200 focus:border-[#0A3D2E] focus:ring-2 focus:ring-[#0A3D2E]/20'}`}
                                                 placeholder="03XX XXXXXXX"
+                                                className={errors.phone ? 'border-red-500 focus-visible:ring-red-200' : ''}
                                             />
-                                            {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
+                                            {errors.phone && <p className="text-red-500 text-xs">{errors.phone}</p>}
                                         </div>
-                                        <div className="space-y-1 md:col-span-2">
-                                            <label className="text-sm font-semibold text-gray-700">Alternate Phone <span className="text-gray-400 font-normal">(Optional)</span></label>
-                                            <input 
-                                                type="tel" 
+                                        <div className="space-y-2 md:col-span-2">
+                                            <Label htmlFor="altPhone">Alternate Phone <span className="text-gray-400 font-normal">(Optional)</span></Label>
+                                            <Input
+                                                id="altPhone"
+                                                type="tel"
                                                 name="altPhone"
                                                 value={formData.altPhone}
                                                 onChange={handleChange}
-                                                className="w-full p-3 bg-white/50 border border-gray-200 rounded-xl outline-none transition-colors focus:bg-white focus:border-[#0A3D2E] focus:ring-2 focus:ring-[#0A3D2E]/20"
                                                 placeholder="03XX XXXXXXX"
                                             />
                                         </div>
                                     </div>
                                 </div>
 
-                                <hr className="border-gray-200" />
+                                <Separator />
 
                                 {/* Shipping Section */}
                                 <div className="space-y-4">
                                     <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2">Delivery Address</h3>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="space-y-1">
-                                            <label className="text-sm font-semibold text-gray-700">Full Name *</label>
-                                            <input 
-                                                type="text" 
+                                        <div className="space-y-2">
+                                            <Label htmlFor="fullName">Full Name *</Label>
+                                            <Input
+                                                id="fullName"
+                                                type="text"
                                                 name="fullName"
                                                 value={formData.fullName}
                                                 onChange={handleChange}
-                                                className={`w-full p-3 bg-white/50 border rounded-xl outline-none transition-colors focus:bg-white ${errors.fullName ? 'border-red-500 bg-red-50 focus:border-red-500 focus:ring-2 focus:ring-red-200' : 'border-gray-200 focus:border-[#0A3D2E] focus:ring-2 focus:ring-[#0A3D2E]/20'}`}
                                                 placeholder="John Doe"
+                                                className={errors.fullName ? 'border-red-500 focus-visible:ring-red-200' : ''}
                                             />
-                                            {errors.fullName && <p className="text-red-500 text-xs mt-1">{errors.fullName}</p>}
+                                            {errors.fullName && <p className="text-red-500 text-xs">{errors.fullName}</p>}
                                         </div>
-                                        <div className="space-y-1">
-                                            <label className="text-sm font-semibold text-gray-700">City *</label>
-                                            <select 
-                                                name="city"
+                                        <div className="space-y-2">
+                                            <Label htmlFor="city">City *</Label>
+                                            <Select
                                                 value={formData.city}
-                                                onChange={handleChange}
-                                                className={`w-full p-3 bg-white/50 border rounded-xl outline-none transition-colors focus:bg-white appearance-none ${errors.city ? 'border-red-500 bg-red-50 focus:border-red-500 focus:ring-2 focus:ring-red-200' : 'border-gray-200 focus:border-[#0A3D2E] focus:ring-2 focus:ring-[#0A3D2E]/20'}`}
+                                                onValueChange={(value) => {
+                                                    setFormData(prev => ({ ...prev, city: value }));
+                                                    if (errors.city) setErrors(prev => ({ ...prev, city: '' }));
+                                                }}
                                             >
-                                                <option value="" disabled>Select City</option>
-                                                <option value="Karachi">Karachi</option>
-                                                <option value="Lahore">Lahore</option>
-                                                <option value="Islamabad">Islamabad</option>
-                                                <option value="Rawalpindi">Rawalpindi</option>
-                                                <option value="Faisalabad">Faisalabad</option>
-                                                <option value="Multan">Multan</option>
-                                                <option value="Peshawar">Peshawar</option>
-                                                <option value="Quetta">Quetta</option>
-                                                <option value="Other">Other (Specify in Notes)</option>
-                                            </select>
-                                            {errors.city && <p className="text-red-500 text-xs mt-1">{errors.city}</p>}
+                                                <SelectTrigger className={errors.city ? 'border-red-500 focus:ring-red-200' : ''}>
+                                                    <SelectValue placeholder="Select City" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="Karachi">Karachi</SelectItem>
+                                                    <SelectItem value="Lahore">Lahore</SelectItem>
+                                                    <SelectItem value="Islamabad">Islamabad</SelectItem>
+                                                    <SelectItem value="Rawalpindi">Rawalpindi</SelectItem>
+                                                    <SelectItem value="Faisalabad">Faisalabad</SelectItem>
+                                                    <SelectItem value="Multan">Multan</SelectItem>
+                                                    <SelectItem value="Peshawar">Peshawar</SelectItem>
+                                                    <SelectItem value="Quetta">Quetta</SelectItem>
+                                                    <SelectItem value="Other">Other (Specify in Notes)</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                            {errors.city && <p className="text-red-500 text-xs">{errors.city}</p>}
                                         </div>
                                     </div>
-                                    <div className="space-y-1">
-                                        <label className="text-sm font-semibold text-gray-700">Complete Address *</label>
-                                        <input 
-                                            type="text" 
+                                    <div className="space-y-2">
+                                        <Label htmlFor="address">Complete Address *</Label>
+                                        <Input
+                                            id="address"
+                                            type="text"
                                             name="address"
                                             value={formData.address}
                                             onChange={handleChange}
-                                            className={`w-full p-3 bg-white/50 border rounded-xl outline-none transition-colors focus:bg-white ${errors.address ? 'border-red-500 bg-red-50 focus:border-red-500 focus:ring-2 focus:ring-red-200' : 'border-gray-200 focus:border-[#0A3D2E] focus:ring-2 focus:ring-[#0A3D2E]/20'}`}
                                             placeholder="House #, Street #, Sector/Block, Area"
+                                            className={errors.address ? 'border-red-500 focus-visible:ring-red-200' : ''}
                                         />
-                                        {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address}</p>}
+                                        {errors.address && <p className="text-red-500 text-xs">{errors.address}</p>}
                                     </div>
-                                    <div className="space-y-1">
-                                        <label className="text-sm font-semibold text-gray-700">Nearest Landmark <span className="text-gray-400 font-normal">(Optional)</span></label>
-                                        <input 
-                                            type="text" 
+                                    <div className="space-y-2">
+                                        <Label htmlFor="landmark">Nearest Landmark <span className="text-gray-400 font-normal">(Optional)</span></Label>
+                                        <Input
+                                            id="landmark"
+                                            type="text"
                                             name="landmark"
                                             value={formData.landmark}
                                             onChange={handleChange}
-                                            className="w-full p-3 bg-white/50 border border-gray-200 rounded-xl outline-none transition-colors focus:bg-white focus:border-[#0A3D2E] focus:ring-2 focus:ring-[#0A3D2E]/20"
                                             placeholder="e.g. Near KFC, Behind City School"
                                         />
                                     </div>
-                                    <div className="space-y-1">
-                                        <label className="text-sm font-semibold text-gray-700">Special Notes / Instructions <span className="text-gray-400 font-normal">(Optional)</span></label>
-                                        <textarea 
+                                    <div className="space-y-2">
+                                        <Label htmlFor="instructions">Special Notes / Instructions <span className="text-gray-400 font-normal">(Optional)</span></Label>
+                                        <Textarea
+                                            id="instructions"
                                             name="instructions"
                                             value={formData.instructions}
                                             onChange={handleChange}
-                                            rows="2"
-                                            className="w-full p-3 bg-white/50 border border-gray-200 rounded-xl outline-none transition-colors resize-none focus:bg-white focus:border-[#0A3D2E] focus:ring-2 focus:ring-[#0A3D2E]/20"
+                                            rows={2}
                                             placeholder="Any specific delivery instructions?"
-                                        ></textarea>
+                                        />
                                     </div>
                                 </div>
+
+                                {/* Submit button (hidden, triggered by the visible one in summary) */}
+                                <button type="submit" id="checkout-submit" className="hidden" />
                             </form>
                         </section>
 
                         <section className="bg-white/50 p-6 rounded-2xl border border-gray-200 relative overflow-hidden">
-                            <div className="absolute inset-0 bg-white/40 backdrop-blur-sm z-0"></div>
+                            <div className="absolute inset-0 bg-white z-0"></div>
                             <div className="relative z-10 w-full">
                                 <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
                                     <i className="fa-solid fa-wallet text-[#10b981]"></i> Payment Method
@@ -305,7 +338,9 @@ export default function CheckoutPage() {
                                 ))}
                             </div>
 
-                            <div className="border-t border-gray-100 pt-4 space-y-3 mb-6">
+                            <Separator className="mb-4" />
+
+                            <div className="space-y-3 mb-6">
                                 <div className="flex justify-between text-sm text-gray-600">
                                     <span>Subtotal</span>
                                     <span className="font-semibold">Rs. {subtotal.toLocaleString('en-PK')}</span>
@@ -320,7 +355,9 @@ export default function CheckoutPage() {
                                 </div>
                             </div>
 
-                            <div className="border-t border-gray-100 pt-4 mb-8">
+                            <Separator className="mb-4" />
+
+                            <div className="mb-8">
                                 <div className="flex justify-between items-center text-xl font-black text-[#0A3D2E]">
                                     <span>Total</span>
                                     <span>Rs. {total.toLocaleString('en-PK')}</span>
@@ -328,19 +365,20 @@ export default function CheckoutPage() {
                                 <p className="text-right text-[10px] text-gray-400 mt-1">Including all taxes</p>
                             </div>
 
-                            <button 
-                                onClick={handlePlaceOrder}
-                                className="w-full bg-[#0A3D2E] hover:bg-[#10b981] text-white py-4 px-6 rounded-xl font-black tracking-wide text-lg transition-transform hover:-translate-y-0.5 shadow-lg flex items-center justify-center gap-3 mt-auto uppercase"
+                            <Button 
+                                onClick={() => document.getElementById('checkout-submit').click()}
+                                className="w-full h-14 text-lg font-black tracking-wide uppercase cursor-pointer"
+                                size="lg"
                             >
-                                <i className="fa-solid fa-check-circle text-2xl"></i>
+                                <i className="fa-solid fa-check-circle text-2xl mr-3"></i>
                                 Complete Order
-                            </button>
+                            </Button>
                             <p className="text-center text-xs text-gray-500 mt-4 flex items-center justify-center gap-1.5 font-medium">
                                 <i className="fa-solid fa-shield-halved text-[#10b981]"></i> Securing your order via encrypted chat
                             </p>
                         </section>
                     </div>
-                </motion.div>
+                </div>
             </div>
         </main>
     );

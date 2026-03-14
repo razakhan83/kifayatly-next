@@ -1,16 +1,23 @@
 import { getProducts } from '@/lib/data';
 import Image from 'next/image';
-import Link from 'next/link';
 import ProductActions from '@/components/ProductActions';
 import CategoryProductSlider from '@/components/CategoryProductSlider';
+import ProductGallery from '@/components/ProductGallery';
 import { notFound } from 'next/navigation';
+import { getCategoryColor } from '@/lib/categoryColors';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Button } from '@/components/ui/button';
+import {
+    Breadcrumb,
+    BreadcrumbItem,
+    BreadcrumbLink,
+    BreadcrumbList,
+    BreadcrumbPage,
+    BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
 
-export async function generateStaticParams() {
-    const products = await getProducts();
-    return products.slice(0, 100).map(p => ({
-        id: p.slug
-    }));
-}
+export const dynamic = 'force-dynamic';
 
 export default async function ProductPage({ params }) {
     const resolvedParams = await params;
@@ -26,14 +33,22 @@ export default async function ProductPage({ params }) {
     };
 
     const rawCategory = product.Category || product.category || '';
-    const categoryToSlug = Array.isArray(rawCategory) ? (rawCategory[0] || '') : rawCategory;
+    const categoryLabel = Array.isArray(rawCategory) ? (rawCategory[0] || '') : rawCategory;
+    const colors = getCategoryColor(categoryLabel);
 
-    const categorySlug = String(categoryToSlug)
+    const categorySlug = String(categoryLabel)
         .toLowerCase()
         .replace(/&/g, 'and')
         .replace(/\s+/g, '-')
         .replace(/[^a-z0-9-]/g, '')
         .replace(/-+/g, '-');
+
+    const productImages = [];
+    if (Array.isArray(product.Images) && product.Images.length > 0) {
+        productImages.push(...product.Images);
+    } else if (product.Image || product.image || product.ImageURL) {
+        productImages.push(product.Image || product.image || product.ImageURL);
+    }
 
     return (
         <div className="bg-white min-h-screen">
@@ -44,12 +59,24 @@ export default async function ProductPage({ params }) {
   .fa-whatsapp.text-3xl { display: none !important; }
   .whatsapp-float { display: none !important; opacity: 0 !important; pointer-events: none !important; }
 ` }} />
+
             {/* Breadcrumb */}
             <div className="container mx-auto max-w-7xl px-4 pt-4 pb-2">
-                <Link href="/" className="text-sm text-gray-500 hover:text-[#064e3b] transition-colors flex items-center gap-1.5 max-w-max">
-                    <i className="fa-solid fa-arrow-left text-xs"></i>
-                    <span>Back to Store</span>
-                </Link>
+                <Breadcrumb>
+                    <BreadcrumbList>
+                        <BreadcrumbItem>
+                            <BreadcrumbLink href="/">Home</BreadcrumbLink>
+                        </BreadcrumbItem>
+                        <BreadcrumbSeparator />
+                        <BreadcrumbItem>
+                            <BreadcrumbLink href="/products">Products</BreadcrumbLink>
+                        </BreadcrumbItem>
+                        <BreadcrumbSeparator />
+                        <BreadcrumbItem>
+                            <BreadcrumbPage>{product.Name || product.name}</BreadcrumbPage>
+                        </BreadcrumbItem>
+                    </BreadcrumbList>
+                </Breadcrumb>
             </div>
 
             {/* Main Product Section */}
@@ -58,55 +85,20 @@ export default async function ProductPage({ params }) {
 
                     {/* Left Column — Product Image */}
                     <div className="w-full md:w-[55%] lg:w-[58%]">
-                        <div className="relative aspect-square bg-gray-50 rounded-2xl overflow-hidden border border-gray-200 shadow-sm">
-                            {product.Image || product.image ? (
-                                <Image
-                                    src={product.Image || product.image}
-                                    alt={product.Name || product.name || 'Product Image'}
-                                    fill
-                                    className="object-cover transition-transform duration-700 hover:scale-105"
-                                    unoptimized
-                                    priority
-                                />
-                            ) : (
-                                <div className="w-full h-full flex items-center justify-center text-gray-300">
-                                    <i className="fa-solid fa-image text-8xl"></i>
-                                </div>
-                            )}
-                        </div>
-                        {/* Image Skeleton Thumbnails */}
-                        <div className="flex gap-2 mt-3">
-                            <div className="w-1/4 aspect-square bg-gray-100 rounded-xl border border-gray-200 overflow-hidden relative">
-                                {(product.Image || product.image) && (
-                                    <Image
-                                        src={product.Image || product.image}
-                                        alt="Thumbnail"
-                                        fill
-                                        className="object-cover opacity-100 ring-2 ring-[#064e3b] rounded-xl"
-                                        unoptimized
-                                    />
-                                )}
-                            </div>
-                            <div className="w-1/4 aspect-square bg-gray-100 rounded-xl border border-dashed border-gray-300 flex items-center justify-center">
-                                <i className="fa-solid fa-image text-gray-300 text-lg"></i>
-                            </div>
-                            <div className="w-1/4 aspect-square bg-gray-100 rounded-xl border border-dashed border-gray-300 flex items-center justify-center">
-                                <i className="fa-solid fa-image text-gray-300 text-lg"></i>
-                            </div>
-                            <div className="w-1/4 aspect-square bg-gray-100 rounded-xl border border-dashed border-gray-300 flex items-center justify-center">
-                                <i className="fa-solid fa-image text-gray-300 text-lg"></i>
-                            </div>
-                        </div>
+                        <ProductGallery images={productImages} />
                     </div>
 
                     {/* Right Column — Product Details (Sticky on Desktop) */}
                     <div className="w-full md:w-[45%] lg:w-[42%]">
                         <div className="md:sticky md:top-28 flex flex-col gap-5">
-                            {/* Category Badge */}
+                            {/* Category Badge — colored */}
                             <div>
-                                <span className="inline-block bg-emerald-50 text-[#064e3b] text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider border border-emerald-100">
-                                    {product.Category || product.category || 'Premium Item'}
-                                </span>
+                                <Badge
+                                    variant="outline"
+                                    className={`${colors.badge} text-xs font-bold uppercase tracking-wider`}
+                                >
+                                    {categoryLabel || 'Premium Item'}
+                                </Badge>
                             </div>
 
                             {/* Product Title */}
@@ -121,8 +113,7 @@ export default async function ProductPage({ params }) {
                                 </span>
                             </div>
 
-                            {/* Divider */}
-                            <div className="h-px bg-gray-200"></div>
+                            <Separator />
 
                             {/* Description */}
                             <div className="text-gray-600 leading-relaxed text-[15px]">
@@ -131,8 +122,7 @@ export default async function ProductPage({ params }) {
                                 </p>
                             </div>
 
-                            {/* Divider */}
-                            <div className="h-px bg-gray-200"></div>
+                            <Separator />
 
                             {/* Interactive Buttons Section */}
                             <ProductActions product={product} />
@@ -168,7 +158,6 @@ export default async function ProductPage({ params }) {
             {/* Customer Reviews Section */}
             <div className="container mx-auto max-w-7xl px-4 mt-12 mb-4">
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 md:p-8">
-                    {/* Header */}
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                         <div>
                             <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">Customer Reviews</h2>
@@ -184,14 +173,16 @@ export default async function ProductPage({ params }) {
                                 <span className="text-sm text-gray-400">based on 12 reviews</span>
                             </div>
                         </div>
-                        <button className="px-5 py-2.5 border-2 border-emerald-950 text-emerald-950 rounded-xl font-semibold text-sm hover:bg-emerald-950 hover:text-white transition-colors max-w-max">
+                        <Button
+                            variant="outline"
+                            className="border-2 border-emerald-950 text-emerald-950 hover:bg-emerald-950 hover:text-white font-semibold max-w-max"
+                        >
                             Write a Review
-                        </button>
+                        </Button>
                     </div>
 
                     {/* Review Cards */}
                     <div className="grid gap-4">
-                        {/* Review 1 */}
                         <div className="border border-gray-100 rounded-xl p-4 bg-gray-50/50">
                             <div className="flex items-center justify-between mb-2">
                                 <div className="flex items-center gap-2">
@@ -199,17 +190,12 @@ export default async function ProductPage({ params }) {
                                     <span className="font-semibold text-gray-800 text-sm">Ahmed K.</span>
                                 </div>
                                 <div className="flex text-amber-400 text-xs gap-0.5">
-                                    <i className="fa-solid fa-star"></i>
-                                    <i className="fa-solid fa-star"></i>
-                                    <i className="fa-solid fa-star"></i>
-                                    <i className="fa-solid fa-star"></i>
-                                    <i className="fa-solid fa-star"></i>
+                                    <i className="fa-solid fa-star"></i><i className="fa-solid fa-star"></i><i className="fa-solid fa-star"></i><i className="fa-solid fa-star"></i><i className="fa-solid fa-star"></i>
                                 </div>
                             </div>
                             <p className="text-sm text-gray-600 leading-relaxed">Excellent quality! The product arrived in perfect condition. Very happy with my purchase. Will definitely order again.</p>
                         </div>
 
-                        {/* Review 2 */}
                         <div className="border border-gray-100 rounded-xl p-4 bg-gray-50/50">
                             <div className="flex items-center justify-between mb-2">
                                 <div className="flex items-center gap-2">
@@ -217,17 +203,12 @@ export default async function ProductPage({ params }) {
                                     <span className="font-semibold text-gray-800 text-sm">Sara M.</span>
                                 </div>
                                 <div className="flex text-amber-400 text-xs gap-0.5">
-                                    <i className="fa-solid fa-star"></i>
-                                    <i className="fa-solid fa-star"></i>
-                                    <i className="fa-solid fa-star"></i>
-                                    <i className="fa-solid fa-star"></i>
-                                    <i className="fa-solid fa-star"></i>
+                                    <i className="fa-solid fa-star"></i><i className="fa-solid fa-star"></i><i className="fa-solid fa-star"></i><i className="fa-solid fa-star"></i><i className="fa-solid fa-star"></i>
                                 </div>
                             </div>
                             <p className="text-sm text-gray-600 leading-relaxed">Great value for money. Fast delivery and the item looks exactly like the picture. Highly recommended!</p>
                         </div>
 
-                        {/* Review 3 */}
                         <div className="border border-gray-100 rounded-xl p-4 bg-gray-50/50">
                             <div className="flex items-center justify-between mb-2">
                                 <div className="flex items-center gap-2">
@@ -235,11 +216,7 @@ export default async function ProductPage({ params }) {
                                     <span className="font-semibold text-gray-800 text-sm">Raza B.</span>
                                 </div>
                                 <div className="flex text-amber-400 text-xs gap-0.5">
-                                    <i className="fa-solid fa-star"></i>
-                                    <i className="fa-solid fa-star"></i>
-                                    <i className="fa-solid fa-star"></i>
-                                    <i className="fa-solid fa-star"></i>
-                                    <i className="fa-regular fa-star"></i>
+                                    <i className="fa-solid fa-star"></i><i className="fa-solid fa-star"></i><i className="fa-solid fa-star"></i><i className="fa-solid fa-star"></i><i className="fa-regular fa-star"></i>
                                 </div>
                             </div>
                             <p className="text-sm text-gray-600 leading-relaxed">Good product overall. Packaging was neat and delivery was on time. Would love to see more color options.</p>

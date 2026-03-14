@@ -1,137 +1,121 @@
 'use client';
-
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useCart } from '@/context/CartContext';
-import { Share2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { ShoppingCart, Share2, Minus, Plus, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function ProductActions({ product }) {
     const { addToCart } = useCart();
+    const [isAdding, setIsAdding] = useState(false);
     const [quantity, setQuantity] = useState(1);
-    const [copied, setCopied] = useState(false);
 
-    const handleMinus = () => {
-        if (quantity > 1) setQuantity(quantity - 1);
-    };
+    const increment = () => setQuantity(q => q + 1);
+    const decrement = () => setQuantity(q => (q > 1 ? q - 1 : 1));
 
-    const handlePlus = () => {
-        setQuantity(quantity + 1);
-    };
-
-    const handleAddToCart = () => {
-        addToCart(product, quantity);
+    const handleAddToCart = async () => {
+        setIsAdding(true);
+        // Small delay to allow react to render the spinner
+        await new Promise(resolve => setTimeout(resolve, 300));
+        for (let i = 0; i < quantity; i++) {
+            addToCart(product);
+        }
+        setIsAdding(false);
     };
 
     const handleShare = async () => {
-        try {
-            await navigator.clipboard.writeText(window.location.href);
-            setCopied(true);
-            setTimeout(() => setCopied(false), 2000);
-        } catch {
-            // Fallback
-            const textArea = document.createElement('textarea');
-            textArea.value = window.location.href;
-            document.body.appendChild(textArea);
-            textArea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textArea);
-            setCopied(true);
-            setTimeout(() => setCopied(false), 2000);
+        const url = typeof window !== 'undefined' ? window.location.href : '';
+        const title = product.Name || product.name || 'Check out this product!';
+        
+        if (navigator.share) {
+            try {
+                await navigator.share({ title, url });
+            } catch (err) {
+                // User cancelled
+            }
+        } else {
+            try {
+                await navigator.clipboard.writeText(url);
+                toast.success('Link copied to clipboard!');
+            } catch {
+                toast.error('Failed to copy link.');
+            }
         }
     };
 
-    const productName = product.Name || product.name || 'Product';
-    const productPrice = product.Price || product.price || '';
-    const whatsappMessage = encodeURIComponent(
-        `Hi, I would like to order:\n*${productName}*\nQuantity: ${quantity}\nPrice: ${productPrice}\n\nPlease confirm availability.`
-    );
-
     return (
-        <>
-            {/* ═══ INLINE SECTION (inside the details column) ═══ */}
-            <div className="flex flex-col gap-4">
-                {/* Top Row: Qty (Mobile Friendly) + Share */}
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <span className="text-xs font-bold text-gray-400 uppercase tracking-tighter">Quantity</span>
-                        <div className="flex items-center border-2 border-gray-100 rounded-xl overflow-hidden bg-gray-50/50 h-10 w-28">
-                            <button
-                                onClick={handleMinus}
-                                className="w-10 h-full flex items-center justify-center text-gray-400 hover:text-emerald-600 transition-colors text-lg font-bold"
-                                aria-label="Decrease quantity"
-                            >
-                                −
-                            </button>
-                            <div className="flex-1 h-full flex items-center justify-center font-bold text-gray-800 text-base border-x border-gray-100">
-                                {quantity}
-                            </div>
-                            <button
-                                onClick={handlePlus}
-                                className="w-10 h-full flex items-center justify-center text-gray-400 hover:text-emerald-600 transition-colors text-lg font-bold"
-                                aria-label="Increase quantity"
-                            >
-                                +
-                            </button>
-                        </div>
-                    </div>
-
+        <div className="flex flex-col gap-4">
+            {/* Quantity Selector */}
+            <div className="flex items-center gap-3">
+                <span className="text-sm font-semibold text-gray-700">Quantity:</span>
+                <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden bg-gray-50">
                     <button
-                        onClick={handleShare}
-                        className="relative flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-100 bg-white hover:bg-gray-50 text-gray-400 hover:text-gray-800 transition-all text-xs font-bold"
-                        aria-label="Share product"
+                        onClick={decrement}
+                        className="w-10 h-10 flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors"
+                        aria-label="Decrease quantity"
                     >
-                        <Share2 size={14} />
-                        <span>Share</span>
+                        <Minus className="w-4 h-4" />
                     </button>
-                </div>
-
-                {/* Primary Actions (Desktop Layout) */}
-                <div className="hidden md:flex flex-col gap-3">
+                    <span className="w-12 text-center text-sm font-bold text-gray-800">{quantity}</span>
                     <button
-                        onClick={handleAddToCart}
-                        className="shake-cart-btn w-full h-[56px] bg-[#064e3b] text-white rounded-xl font-bold text-lg tracking-wide hover:bg-[#065f46] transition-colors shadow-lg hover:shadow-xl flex items-center justify-center gap-3"
+                        onClick={increment}
+                        className="w-10 h-10 flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors"
+                        aria-label="Increase quantity"
                     >
-                        <i className="fa-solid fa-cart-shopping text-xl"></i>
-                        ADD TO CART
+                        <Plus className="w-4 h-4" />
                     </button>
-                    <a
-                        href={`https://wa.me/923001234567?text=${whatsappMessage}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-full h-[56px] bg-white border-2 border-gray-100 text-gray-700 rounded-xl font-bold text-lg tracking-wide hover:border-[#25D366] hover:text-[#25D366] transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-3"
-                    >
-                        <i className="fa-brands fa-whatsapp text-2xl text-[#25D366]"></i>
-                        Order via WhatsApp
-                    </a>
                 </div>
             </div>
 
-            {/* ═══ STICKY BOTTOM BAR (mobile only) ═══ */}
-            <div className="fixed bottom-0 left-0 w-full bg-white p-2 z-50 border-t grid grid-cols-2 gap-2 shadow-2xl rounded-t-3xl md:hidden">
-                <button
+            {/* Action Buttons */}
+            <div className="flex gap-3">
+                <Button
                     onClick={handleAddToCart}
-                    className="shake-cart-btn bg-white text-[#0EB981] border-2 border-[#0EB981] rounded-xl h-12 flex items-center justify-center font-semibold text-sm gap-2"
+                    disabled={isAdding}
+                    className="flex-1 h-12 text-base font-bold cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
+                    size="lg"
                 >
-                    <i className="fa-solid fa-cart-shopping text-sm"></i>
-                    ADD TO CART {quantity > 1 ? `(${quantity})` : ''}
-                </button>
-                <a
-                    href={`https://wa.me/923001234567?text=${whatsappMessage}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="bg-[#0EB981] text-white rounded-xl h-12 flex items-center justify-center font-semibold text-sm gap-2"
+                    {isAdding ? (
+                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    ) : (
+                        <ShoppingCart className="w-5 h-5 mr-2" />
+                    )}
+                    Add to Cart
+                </Button>
+                <Button
+                    onClick={handleShare}
+                    variant="outline"
+                    className="h-12 w-12 p-0 border-gray-200 hover:border-[#10b981] hover:text-[#10b981] cursor-pointer"
+                    size="icon"
                 >
-                    <i className="fa-brands fa-whatsapp text-lg"></i>
-                    Order on WhatsApp
-                </a>
+                    <Share2 className="w-5 h-5" />
+                </Button>
             </div>
 
-            {/* ═══ "LINK COPIED" TOAST ═══ */}
-            {copied && (
-                <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[99999] bg-gray-900 text-white px-5 py-3 rounded-xl shadow-2xl text-sm font-semibold flex items-center gap-2 animate-[springSlideDown_0.4s_ease-out]">
-                    <i className="fa-solid fa-check-circle text-emerald-400"></i>
-                    Link Copied!
+            {/* Mobile Sticky Bar */}
+            <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-3 z-50 flex gap-3 shadow-[0_-2px_10px_rgba(0,0,0,0.08)]">
+                <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden bg-gray-50 shrink-0">
+                    <button onClick={decrement} className="w-8 h-10 flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors">
+                        <Minus className="w-3 h-3" />
+                    </button>
+                    <span className="w-8 text-center text-sm font-bold text-gray-800">{quantity}</span>
+                    <button onClick={increment} className="w-8 h-10 flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors">
+                        <Plus className="w-3 h-3" />
+                    </button>
                 </div>
-            )}
-        </>
+                <Button
+                    onClick={handleAddToCart}
+                    disabled={isAdding}
+                    className="flex-1 h-10 text-sm font-bold cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
+                >
+                    {isAdding ? (
+                        <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
+                    ) : (
+                        <ShoppingCart className="w-4 h-4 mr-1.5" />
+                    )}
+                    Add to Cart
+                </Button>
+            </div>
+        </div>
     );
 }
