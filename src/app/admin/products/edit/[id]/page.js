@@ -1,8 +1,8 @@
 import EditProductClient from './EditProductClient';
-
-export const dynamic = 'force-dynamic';
+import { requireAdmin } from '@/lib/requireAdmin';
 
 export default async function Page({ params }) {
+    await requireAdmin();
     const { id } = await params;
     return <EditProductClient id={id} />;
 }

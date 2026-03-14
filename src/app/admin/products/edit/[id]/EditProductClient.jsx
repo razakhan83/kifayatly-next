@@ -2,6 +2,7 @@
 import Image from 'next/image';
 import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { ArrowLeft, Check, CloudUpload, Loader2, Plus, PlusCircle, Trash2, X } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { uploadImageDataUrl } from '@/lib/cloudinaryUpload';
@@ -225,7 +226,7 @@ export default function EditProduct({ id }) {
     return (
       <div className="w-full pb-10 flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
-          <i className="fa-solid fa-circle-notch fa-spin text-4xl text-emerald-500 mb-4 block"></i>
+          <Loader2 className="mx-auto mb-4 size-10 animate-spin text-emerald-500" />
           <p className="text-gray-500 font-medium">Loading product...</p>
         </div>
       </div>
@@ -239,7 +240,7 @@ export default function EditProduct({ id }) {
       {/* Page Header */}
       <div className="mb-6 md:mb-8 flex items-center gap-4">
         <Link href="/admin/products" className="flex items-center justify-center w-9 h-9 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all">
-          <i className="fa-solid fa-arrow-left text-gray-600"></i>
+          <ArrowLeft className="size-4 text-gray-600" />
         </Link>
         <div>
           <h1 className="text-2xl md:text-3xl font-black text-gray-900">Edit Product</h1>
@@ -286,7 +287,7 @@ export default function EditProduct({ id }) {
                 onClick={() => setIsCategoryModalOpen(true)}
                 className="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1"
               >
-                <i className="fa-solid fa-plus-circle"></i> Manage Categories
+                <PlusCircle className="size-3.5" /> Manage Categories
               </button>
             </div>
             <div className="flex flex-wrap gap-2 p-3 bg-gray-50 border border-gray-200 rounded-lg min-h-[52px]">
@@ -302,7 +303,7 @@ export default function EditProduct({ id }) {
                       onClick={() => toggleCategory(cat.name)}
                       className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${selected ? 'bg-emerald-500 text-white border-emerald-500 shadow-sm' : 'bg-white text-gray-600 border-gray-200 hover:border-emerald-300 hover:text-emerald-600'}`}
                     >
-                      {selected && <i className="fa-solid fa-check mr-1 text-[10px]"></i>}
+                      {selected && <Check className="mr-1 size-3" />}
                       {cat.name}
                     </button>
                   );
@@ -337,7 +338,7 @@ export default function EditProduct({ id }) {
             <div className="flex items-center justify-between mb-2">
                 <label className="block text-sm font-semibold text-gray-700">Product Images</label>
                 <div className="relative overflow-hidden cursor-pointer text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100">
-                    <i className="fa-solid fa-plus-circle"></i> Add More Images
+                    <PlusCircle className="size-3.5" /> Add More Images
                     <input type="file" multiple accept="image/*" onChange={handleFileSelect} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                 </div>
             </div>
@@ -359,7 +360,7 @@ export default function EditProduct({ id }) {
                             onClick={() => removeImage(idx)} 
                             className="absolute top-2 right-2 flex h-7 w-7 items-center justify-center rounded-lg bg-white/90 text-red-500 shadow-md transition-colors hover:bg-red-500 hover:text-white opacity-0 group-hover:opacity-100"
                         >
-                            <i className="fa-solid fa-trash text-xs"></i>
+                            <Trash2 className="size-3.5" />
                         </button>
                         {idx === 0 && <span className="absolute bottom-2 left-2 rounded-md bg-black/60 px-2 py-0.5 text-[10px] font-bold text-white shadow-sm">Primary</span>}
                     </div>
@@ -375,7 +376,7 @@ export default function EditProduct({ id }) {
               <input type="file" multiple accept="image/*" onChange={handleFileSelect} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
               <div className="space-y-3">
                 <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-emerald-100">
-                  <i className="fa-solid fa-cloud-upload-alt text-xl text-emerald-600"></i>
+                  <CloudUpload className="size-6 text-emerald-600" />
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-gray-700">Drag & Drop Images Here</p>
@@ -418,7 +419,7 @@ export default function EditProduct({ id }) {
               disabled={saving}
               className="flex-1 min-w-[140px] h-[45px] bg-emerald-600 text-white font-bold rounded-xl flex items-center justify-center hover:bg-emerald-700 shadow-sm transition-all active:scale-95 disabled:opacity-60"
             >
-              {saving ? <><i className="fa-solid fa-spinner fa-spin mr-2"></i>Saving...</> : 'Save Changes'}
+              {saving ? <><Loader2 className="mr-2 size-4 animate-spin" />Saving...</> : 'Save Changes'}
             </button>
             <Link
               href="/admin/products"
@@ -438,7 +439,7 @@ export default function EditProduct({ id }) {
             <div className="flex items-center justify-between p-5 border-b bg-gray-50/50">
               <h2 className="text-xl font-bold text-gray-900">Manage Categories</h2>
               <button type="button" onClick={() => setIsCategoryModalOpen(false)} className="flex h-10 w-10 items-center justify-center rounded-lg text-gray-400 transition-all hover:bg-gray-200 hover:text-gray-600">
-                <i className="fa-solid fa-xmark text-lg"></i>
+                <X className="size-5" />
               </button>
             </div>
             <div className="flex-1 overflow-y-auto p-5">
@@ -466,7 +467,7 @@ export default function EditProduct({ id }) {
                         </div>
                       ) : null}
                       <button type="submit" disabled={isAddingCat} className="w-full sm:w-auto bg-[#0EB981] text-white px-6 py-3 rounded-xl font-black text-sm hover:bg-[#0da874] disabled:opacity-50 transition-all flex items-center justify-center gap-2">
-                        {isAddingCat ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-plus"></i>} Add
+                        {isAddingCat ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />} Add
                       </button>
                     </div>
                   </div>

@@ -1,3 +1,4 @@
+import { updateTag } from 'next/cache';
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/dbConnect";
 import Category from "@/models/Category";
@@ -48,6 +49,7 @@ export async function POST(req) {
       image: body.image || "",
       imagePublicId: body.imagePublicId || "",
     });
+    updateTag('categories');
     return NextResponse.json(
       { success: true, data: category },
       { status: 201 },

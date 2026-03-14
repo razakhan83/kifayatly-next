@@ -1,35 +1,37 @@
-'use client';
-
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
-import { ArrowRight, Box, ChartColumn, CircleDollarSign, Inbox, ShoppingBag, Users } from 'lucide-react';
+import { Suspense } from 'react';
+import { ArrowRight, Box, CircleDollarSign, Inbox, ShoppingBag, Users } from 'lucide-react';
 
+import { AdminDashboardSkeleton } from '@/components/AdminDashboardSkeleton';
 import { Button } from '@/components/ui/button';
+import { getAdminDashboardData } from '@/lib/data';
+import { requireAdmin } from '@/lib/requireAdmin';
 
 const statsConfig = [
-  { title: 'Total Orders', icon: ShoppingBag, tone: 'bg-primary/10 text-primary' },
-  { title: 'Revenue', icon: CircleDollarSign, tone: 'bg-accent/18 text-accent-foreground' },
-  { title: 'Total Products', icon: Box, tone: 'bg-secondary text-secondary-foreground' },
-  { title: 'Customers', icon: Users, tone: 'bg-muted text-foreground' },
+  { title: 'Total Orders', icon: ShoppingBag, tone: 'bg-primary/10 text-primary', key: 'totalOrders' },
+  { title: 'Revenue', icon: CircleDollarSign, tone: 'bg-accent/18 text-accent-foreground', key: 'totalRevenue' },
+  { title: 'Total Products', icon: Box, tone: 'bg-secondary text-secondary-foreground', key: 'totalProducts' },
+  { title: 'Customers', icon: Users, tone: 'bg-muted text-foreground', key: 'totalCustomers' },
 ];
 
-export default function AdminDashboard() {
-  const [productCount, setProductCount] = useState(0);
+export default async function AdminDashboardPage() {
+  await requireAdmin();
 
-  useEffect(() => {
-    fetch('/api/products')
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success) setProductCount(data.data.length);
-      })
-      .catch((error) => console.error('Failed to fetch products for dashboard', error));
-  }, []);
+  return (
+    <Suspense fallback={<AdminDashboardSkeleton />}>
+      <DashboardContent />
+    </Suspense>
+  );
+}
+
+async function DashboardContent() {
+  const { summary, recentOrders } = await getAdminDashboardData();
 
   const stats = [
-    { value: '0', change: 'No orders yet' },
-    { value: 'Rs. 0', change: 'Revenue starts after first order' },
-    { value: productCount.toString(), change: 'Catalog entries currently saved' },
-    { value: '0', change: 'Customers appear after first order' },
+    { value: `${summary.totalOrders}`, change: `${summary.pendingOrders} pending orders` },
+    { value: `Rs. ${summary.totalRevenue.toLocaleString('en-PK')}`, change: 'Store revenue to date' },
+    { value: `${summary.totalProducts}`, change: `${summary.liveProducts} live in the catalog` },
+    { value: `${summary.totalCustomers}`, change: 'Unique customers so far' },
   ];
 
   return (
@@ -61,15 +63,16 @@ export default function AdminDashboard() {
         <div className="surface-card rounded-xl p-5">
           <div className="mb-4 flex items-center gap-3">
             <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              <ChartColumn className="size-4" />
+              <CircleDollarSign className="size-4" />
             </div>
             <div>
-              <h2 className="font-semibold text-foreground">Sales Overview</h2>
-              <p className="text-sm text-muted-foreground">Charts can be connected when order analytics are ready.</p>
+              <h2 className="font-semibold text-foreground">Revenue Snapshot</h2>
+              <p className="text-sm text-muted-foreground">Cash on delivery totals based on saved orders.</p>
             </div>
           </div>
-          <div className="flex h-[280px] items-center justify-center rounded-xl border border-dashed border-border bg-muted/40 text-center text-sm text-muted-foreground">
-            Orders and revenue visuals will appear here.
+          <div className="flex h-[280px] flex-col items-center justify-center rounded-xl border border-dashed border-border bg-muted/40 text-center">
+            <p className="text-4xl font-black text-foreground">Rs. {summary.totalRevenue.toLocaleString('en-PK')}</p>
+            <p className="mt-2 text-sm text-muted-foreground">Keep growing the catalog to drive the next order.</p>
           </div>
         </div>
 
@@ -80,14 +83,30 @@ export default function AdminDashboard() {
             </div>
             <div>
               <h2 className="font-semibold text-foreground">Recent Orders</h2>
-              <p className="text-sm text-muted-foreground">Your order feed will populate as customers purchase.</p>
+              <p className="text-sm text-muted-foreground">Most recent customer activity in one place.</p>
             </div>
           </div>
-          <div className="flex h-[280px] flex-col items-center justify-center rounded-xl border border-dashed border-border bg-muted/40 text-center">
-            <Inbox className="mb-3 size-8 text-muted-foreground" />
-            <p className="font-medium text-foreground">No orders yet</p>
-            <p className="mt-1 text-sm text-muted-foreground">Once customers place orders, this panel becomes your quick overview.</p>
-          </div>
+          {recentOrders.length ? (
+            <div className="space-y-3">
+              {recentOrders.map((order) => (
+                <div key={order._id} className="rounded-xl border border-border bg-background p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="font-semibold text-foreground">{order.customerName}</p>
+                      <p className="text-xs text-muted-foreground">{order.orderId}</p>
+                    </div>
+                    <span className="text-sm font-semibold text-primary">Rs. {order.totalAmount.toLocaleString('en-PK')}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex h-[280px] flex-col items-center justify-center rounded-xl border border-dashed border-border bg-muted/40 text-center">
+              <Inbox className="mb-3 size-8 text-muted-foreground" />
+              <p className="font-medium text-foreground">No orders yet</p>
+              <p className="mt-1 text-sm text-muted-foreground">Once customers place orders, this panel becomes your quick overview.</p>
+            </div>
+          )}
         </div>
       </div>
 

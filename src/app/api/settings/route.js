@@ -1,3 +1,4 @@
+import { updateTag } from 'next/cache';
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -68,6 +69,7 @@ export async function PUT(req) {
         ).lean();
 
         settings._id = settings._id.toString();
+        updateTag('settings');
 
         return NextResponse.json({ success: true, data: settings });
     } catch (error) {

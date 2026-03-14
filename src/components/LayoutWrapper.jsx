@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { Suspense } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronRight, CreditCard, Instagram, MapPin, MessageCircle, Store, Truck } from 'lucide-react';
@@ -8,13 +8,9 @@ import FloatingWhatsApp from '@/components/FloatingWhatsApp';
 import Navbar from '@/components/Navbar';
 import CartDrawer from '@/components/CartDrawer';
 
-function LayoutContent({ children, categories }) {
+function LayoutContent({ children, categories, settings }) {
     const pathname = usePathname();
-    const [year, setYear] = useState(2025);
-
-    useEffect(() => {
-        setYear(new Date().getFullYear());
-    }, []);
+    const year = new Date().getFullYear();
 
     const isAdminPage = pathname?.startsWith('/admin');
 
@@ -39,7 +35,7 @@ function LayoutContent({ children, categories }) {
                                         <Store className="size-5" />
                                     </div>
                                     <div>
-                                        <h3 className="text-lg font-semibold">China Unique Store</h3>
+                                        <h3 className="text-lg font-semibold">{settings.storeName}</h3>
                                         <p className="text-sm text-primary-foreground/70">Curated kitchenware and home details</p>
                                     </div>
                                 </div>
@@ -48,7 +44,7 @@ function LayoutContent({ children, categories }) {
                                     <a href="#" className="inline-flex size-10 items-center justify-center rounded-lg border border-white/10 bg-white/8 transition-colors hover:bg-white/14" aria-label="Instagram">
                                         <Instagram className="size-4" />
                                     </a>
-                                    <a href="https://wa.me/923001234567" className="inline-flex size-10 items-center justify-center rounded-lg border border-white/10 bg-white/8 transition-colors hover:bg-white/14" aria-label="WhatsApp">
+                                    <a href={`https://wa.me/${settings.whatsappNumber}`} className="inline-flex size-10 items-center justify-center rounded-lg border border-white/10 bg-white/8 transition-colors hover:bg-white/14" aria-label="WhatsApp">
                                         <MessageCircle className="size-4" />
                                     </a>
                                 </div>
@@ -79,7 +75,7 @@ function LayoutContent({ children, categories }) {
                                         <MessageCircle className="mt-0.5 size-4" />
                                         <div>
                                             <span className="block font-semibold text-primary-foreground">WhatsApp</span>
-                                            <a href="https://wa.me/923001234567" className="transition-colors hover:text-primary-foreground">+92 300 1234567</a>
+                                            <a href={`https://wa.me/${settings.whatsappNumber}`} className="transition-colors hover:text-primary-foreground">{settings.whatsappNumber}</a>
                                         </div>
                                     </li>
                                     <li className="flex items-start gap-3">
@@ -111,7 +107,7 @@ function LayoutContent({ children, categories }) {
                     </div>
                 </footer>
             </div>
-            <FloatingWhatsApp />
+            <FloatingWhatsApp whatsappNumber={settings.whatsappNumber} storeName={settings.storeName} />
             <CartDrawer />
         </>
     );

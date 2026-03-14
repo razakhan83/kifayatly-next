@@ -1,3 +1,4 @@
+import { revalidateTag, updateTag } from 'next/cache';
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -52,6 +53,11 @@ export async function PUT(request, { params }) {
         if (Object.keys(body).length === 1 && Object.prototype.hasOwnProperty.call(body, 'isLive')) {
             existingProduct.isLive = body.isLive === true || body.isLive === 'true';
             await existingProduct.save();
+            updateTag('products');
+            if (existingProduct.slug) {
+                updateTag(`product-${existingProduct.slug}`);
+            }
+            revalidateTag('admin-dashboard');
 
             return NextResponse.json({ success: true, data: existingProduct });
         }
@@ -76,6 +82,11 @@ export async function PUT(request, { params }) {
         existingProduct.isLive = body.isLive === true || body.isLive === 'true';
 
         await existingProduct.save();
+        updateTag('products');
+        if (existingProduct.slug) {
+            updateTag(`product-${existingProduct.slug}`);
+        }
+        revalidateTag('admin-dashboard');
 
         return NextResponse.json({ success: true, data: existingProduct });
     } catch (error) {
@@ -99,6 +110,12 @@ export async function DELETE(_request, { params }) {
         if (!deletedProduct) {
             return NextResponse.json({ success: false, message: 'Product not found' }, { status: 404 });
         }
+
+        updateTag('products');
+        if (deletedProduct.slug) {
+            updateTag(`product-${deletedProduct.slug}`);
+        }
+        revalidateTag('admin-dashboard');
 
         return NextResponse.json({ success: true, message: 'Product deleted successfully' });
     } catch (error) {

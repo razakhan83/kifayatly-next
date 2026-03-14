@@ -1,3 +1,4 @@
+import { revalidateTag, updateTag } from 'next/cache';
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -104,6 +105,8 @@ export async function POST(req) {
 
         console.log('[API] ✅ Product saved:', product._id);
 
+        updateTag('products');
+        revalidateTag('admin-dashboard');
         return NextResponse.json({ success: true, data: product }, { status: 201 });
     } catch (error) {
         console.error('[API] ❌ Error:', error.message);

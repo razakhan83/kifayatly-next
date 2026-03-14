@@ -1,10 +1,11 @@
+import { Suspense } from 'react';
 import { BadgeCheck, PackageCheck, Star, Truck } from 'lucide-react';
 import { notFound } from 'next/navigation';
 
 import CategoryProductSlider from '@/components/CategoryProductSlider';
 import ProductActions from '@/components/ProductActions';
+import ProductDetailSkeleton from '@/components/ProductDetailSkeleton';
 import ProductGallery from '@/components/ProductGallery';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
   Breadcrumb,
@@ -14,25 +15,21 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
+import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { getProducts } from '@/lib/data';
+import { getProductBySlug, getRelatedProducts } from '@/lib/data';
 import { getCategoryColor } from '@/lib/categoryColors';
-import { normalizeProductImages } from '@/lib/productImages';
 
-export const dynamic = 'force-dynamic';
-
-const formatPrice = (raw) => {
-  const cleanNumbers = String(raw).replace(/[^\d.]/g, '');
-  if (!cleanNumbers) return 'Rs. 0';
-  return `Rs. ${Number(cleanNumbers).toLocaleString('en-PK')}`;
-};
+const formatPrice = (raw) => `Rs. ${Number(raw || 0).toLocaleString('en-PK')}`;
 
 function ReviewCard({ initial, name, body, filledStars = 5 }) {
   return (
     <div className="rounded-xl border border-border bg-muted/35 p-4">
       <div className="mb-2 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-sm font-bold text-primary">{initial}</div>
+          <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-sm font-bold text-primary">
+            {initial}
+          </div>
           <span className="text-sm font-semibold text-foreground">{name}</span>
         </div>
         <div className="flex gap-0.5 text-accent-foreground">
@@ -46,39 +43,60 @@ function ReviewCard({ initial, name, body, filledStars = 5 }) {
   );
 }
 
+export async function generateMetadata({ params }) {
+  const { id } = await params;
+  const product = await getProductBySlug(id);
+
+  if (!product) {
+    return {
+      title: 'Product not found',
+    };
+  }
+
+  return {
+    title: product.Name,
+    description: product.Description || `Buy ${product.Name} from China Unique Store.`,
+    openGraph: {
+      title: product.Name,
+      description: product.Description || `Buy ${product.Name} from China Unique Store.`,
+      images: product.Images[0]?.url ? [product.Images[0].url] : [],
+    },
+  };
+}
+
 export default async function ProductPage({ params }) {
-  const resolvedParams = await params;
-  const products = await getProducts();
-  const product = products.find((entry) => entry.slug === resolvedParams.id);
+  const { id } = await params;
 
-  if (!product) return notFound();
+  return (
+    <Suspense fallback={<ProductDetailSkeleton />}>
+      <ProductPageContent slug={id} />
+    </Suspense>
+  );
+}
 
-  const rawCategory = product.Category || product.category || '';
-  const categoryLabel = Array.isArray(rawCategory) ? (rawCategory[0] || '') : rawCategory;
-  const colors = getCategoryColor(categoryLabel);
-  const categorySlug = String(categoryLabel)
+async function ProductPageContent({ slug }) {
+  const product = await getProductBySlug(slug);
+
+  if (!product) {
+    notFound();
+  }
+
+  const categoryLabel = product.Category[0] || '';
+  const categorySlug = categoryLabel
     .toLowerCase()
     .replace(/&/g, 'and')
     .replace(/\s+/g, '-')
     .replace(/[^a-z0-9-]/g, '')
     .replace(/-+/g, '-');
-
-  const productImages = normalizeProductImages(
-    product.Images,
-    product.Image || product.image || product.ImageURL || '',
-  );
+  const colors = getCategoryColor(categoryLabel);
+  const relatedProducts = await getRelatedProducts({
+    category: categoryLabel,
+    excludeSlug: product.slug,
+    limit: 8,
+  });
 
   return (
     <div className="min-h-screen bg-background">
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-  a[href*='wa.me'].fixed { display: none !important; pointer-events: none !important; }
-  .whatsapp-float { display: none !important; opacity: 0 !important; pointer-events: none !important; }
-`,
-        }}
-      />
-
       <div className="container mx-auto max-w-7xl px-4 pb-2 pt-4">
         <Breadcrumb>
           <BreadcrumbList>
@@ -91,16 +109,16 @@ export default async function ProductPage({ params }) {
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbPage>{product.Name || product.name}</BreadcrumbPage>
+              <BreadcrumbPage>{product.Name}</BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
       </div>
 
-      <div className="container mx-auto max-w-7xl px-4 pb-20 pt-4 md:pb-8 md:py-8">
+      <div className="container mx-auto max-w-7xl px-4 pb-20 pt-4 md:py-8">
         <div className="flex flex-col gap-6 md:flex-row md:gap-10 lg:gap-14">
           <div className="w-full md:w-[55%] lg:w-[58%]">
-            <ProductGallery images={productImages} />
+            <ProductGallery images={product.Images} />
           </div>
 
           <div className="w-full md:w-[45%] lg:w-[42%]">
@@ -112,12 +130,12 @@ export default async function ProductPage({ params }) {
               </div>
 
               <h1 className="text-2xl font-black tracking-tight text-foreground md:text-3xl lg:text-4xl">
-                {product.Name || product.name}
+                {product.Name}
               </h1>
 
               <div className="flex items-baseline gap-3">
                 <span className="text-3xl font-extrabold text-primary md:text-4xl">
-                  {formatPrice(product.Price || product.price)}
+                  {formatPrice(product.Price)}
                 </span>
               </div>
 
@@ -125,7 +143,8 @@ export default async function ProductPage({ params }) {
 
               <div className="text-[15px] leading-relaxed text-muted-foreground">
                 <p>
-                  {product.Description || product.description || 'Discover the perfect addition to your collection. This premium item from China Unique Store is crafted with quality and elegance in mind, designed to elevate your everyday lifestyle.'}
+                  {product.Description ||
+                    'Discover the perfect addition to your collection. This premium item from China Unique Store is crafted with quality and elegance in mind.'}
                 </p>
               </div>
 
@@ -157,56 +176,60 @@ export default async function ProductPage({ params }) {
             </div>
           </div>
         </div>
-      </div>
 
-      <div className="container mx-auto mb-4 mt-12 max-w-7xl px-4">
-        <div className="surface-card rounded-xl p-6 md:p-8">
-          <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h2 className="mb-1 text-xl font-bold text-foreground md:text-2xl">Customer Reviews</h2>
-              <div className="flex items-center gap-2">
-                <div className="flex text-accent-foreground">
-                  {Array.from({ length: 5 }).map((_, index) => (
-                    <Star key={index} className="size-4 fill-current" />
-                  ))}
+        <div className="mb-4 mt-12">
+          <div className="surface-card rounded-xl p-6 md:p-8">
+            <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="mb-1 text-xl font-bold text-foreground md:text-2xl">Customer Reviews</h2>
+                <div className="flex items-center gap-2">
+                  <div className="flex text-accent-foreground">
+                    {Array.from({ length: 5 }).map((_, index) => (
+                      <Star key={index} className="size-4 fill-current" />
+                    ))}
+                  </div>
+                  <span className="text-sm font-semibold text-foreground">Store favorite</span>
                 </div>
-                <span className="text-sm font-semibold text-foreground">4.8/5</span>
-                <span className="text-sm text-muted-foreground">based on 12 reviews</span>
               </div>
+              <Button variant="outline" className="max-w-max">
+                Write a Review
+              </Button>
             </div>
-            <Button variant="outline" className="max-w-max">Write a Review</Button>
-          </div>
 
-          <div className="grid gap-4">
-            <ReviewCard
-              initial="A"
-              name="Ahmed K."
-              body="Excellent quality! The product arrived in perfect condition. Very happy with my purchase. Will definitely order again."
-            />
-            <ReviewCard
-              initial="S"
-              name="Sara M."
-              body="Great value for money. Fast delivery and the item looks exactly like the picture. Highly recommended!"
-            />
-            <ReviewCard
-              initial="R"
-              name="Raza B."
-              body="Good product overall. Packaging was neat and delivery was on time. Would love to see more color options."
-              filledStars={4}
-            />
+            <div className="grid gap-4">
+              <ReviewCard
+                initial="A"
+                name="Ahmed K."
+                body="Excellent quality! The product arrived in perfect condition. Very happy with my purchase."
+              />
+              <ReviewCard
+                initial="S"
+                name="Sara M."
+                body="Great value for money. Fast delivery and the item looks exactly like the picture."
+              />
+              <ReviewCard
+                initial="R"
+                name="Raza B."
+                body="Good product overall. Packaging was neat and delivery was on time."
+                filledStars={4}
+              />
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="border-t border-border bg-muted/35 py-10 md:py-14">
-        <div className="container mx-auto max-w-7xl px-4">
-          <CategoryProductSlider
-            categoryId={categorySlug}
-            categoryLabel="You May Also Like"
-            products={products.filter((entry) => entry.slug !== product.slug)}
-          />
+      {relatedProducts.length > 0 ? (
+        <div className="border-t border-border bg-muted/35 py-10 md:py-14">
+          <div className="container mx-auto max-w-7xl px-4">
+            <CategoryProductSlider
+              categoryId={categorySlug}
+              categoryLabel="You May Also Like"
+              products={relatedProducts}
+              skipFilter
+            />
+          </div>
         </div>
-      </div>
+      ) : null}
     </div>
   );
 }

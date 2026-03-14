@@ -6,9 +6,8 @@ import ProductCard from '@/components/ProductCard';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 
-export default function CategoryProductSlider({ categoryId, categoryLabel, products, onViewAll }) {
-    // Filter products for this category
-    const categoryProducts = products.filter(p => {
+export default function CategoryProductSlider({ categoryId, categoryLabel, products, onViewAll, skipFilter = false }) {
+    const categoryProducts = skipFilter ? products : products.filter(p => {
         const cats = Array.isArray(p.Category) ? p.Category : (p.Category ? [p.Category] : []);
         return cats.some(cat => {
             const pCat = (cat || '').trim().toLowerCase().replace(/&/g, 'and').replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-');

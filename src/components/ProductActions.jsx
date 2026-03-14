@@ -17,9 +17,7 @@ export default function ProductActions({ product }) {
         setIsAdding(true);
         // Small delay to allow react to render the spinner
         await new Promise(resolve => setTimeout(resolve, 300));
-        for (let i = 0; i < quantity; i++) {
-            addToCart(product);
-        }
+        addToCart(product, quantity);
         setIsAdding(false);
     };
 

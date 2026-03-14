@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { getCategories } from "@/lib/data";
+import { getStoreCategories, getStoreSettings } from "@/lib/data";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,9 +13,26 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const siteUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+
 export const metadata = {
-  title: "China Unique Store",
-  description: "Premium kitchenware, home decor and lifestyle products",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: 'China Unique Store',
+    template: '%s | China Unique Store',
+  },
+  description: 'Premium kitchenware, home decor, and lifestyle products for modern Pakistani homes.',
+  openGraph: {
+    title: 'China Unique Store',
+    description: 'Premium kitchenware, home decor, and lifestyle products for modern Pakistani homes.',
+    type: 'website',
+    url: siteUrl,
+    siteName: 'China Unique Store',
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 import { CartProvider } from "@/context/CartContext";
@@ -25,16 +42,12 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 export default async function RootLayout({ children }) {
-  const categories = await getCategories();
+  const [categories, settings] = await Promise.all([getStoreCategories(), getStoreSettings()]);
 
   return (
     <html lang="en" suppressHydrationWarning={true}>
       <head>
         <meta name="google" content="notranslate" />
-        <link
-          rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-        />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
@@ -43,7 +56,7 @@ export default async function RootLayout({ children }) {
         <CartProvider>
           <AuthProvider>
             <TooltipProvider>
-              <LayoutWrapper categories={categories}>{children}</LayoutWrapper>
+              <LayoutWrapper categories={categories} settings={settings}>{children}</LayoutWrapper>
             </TooltipProvider>
           </AuthProvider>
         </CartProvider>

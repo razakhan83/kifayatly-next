@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { signIn, signOut, useSession } from 'next-auth/react';
+import { signOut } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
 import NextTopLoader from 'nextjs-toploader';
 import {
@@ -11,7 +11,6 @@ import {
   LogOut,
   Menu,
   Settings,
-  ShieldCheck,
   ShoppingCart,
   Store,
   X,
@@ -29,38 +28,10 @@ const navItems = [
 ];
 
 export default function AdminLayout({ children }) {
-  const { data: session, status } = useSession();
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   if (pathname === '/admin/login') return <>{children}</>;
-
-  if (status === 'loading') {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="surface-card rounded-xl px-8 py-6 text-center">
-          <p className="text-base font-semibold text-foreground">Loading dashboard...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!session || !session.user?.isAdmin) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background p-4">
-        <div className="surface-card w-full max-w-md rounded-xl p-8 text-center">
-          <div className="mx-auto mb-5 flex size-16 items-center justify-center rounded-xl bg-primary/10 text-primary">
-            <ShieldCheck className="size-8" />
-          </div>
-          <h1 className="text-2xl font-bold text-foreground">Admin access only</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Please sign in with the authorized store manager account.</p>
-          <Button className="mt-6 w-full" onClick={() => signIn('google')}>
-            Continue with Google
-          </Button>
-        </div>
-      </div>
-    );
-  }
 
   const sidebar = (
     <div className="flex h-full flex-col gap-6 bg-primary px-4 py-5 text-primary-foreground">
@@ -121,7 +92,7 @@ export default function AdminLayout({ children }) {
                 </Button>
                 <div>
                   <p className="text-sm font-semibold uppercase tracking-[0.16em] text-primary">Dashboard</p>
-                  <p className="text-xs text-muted-foreground">Welcome back, {session?.user?.name || 'Admin'}</p>
+                  <p className="text-xs text-muted-foreground">Welcome back, Admin</p>
                 </div>
               </div>
               <Button variant="outline" onClick={() => signOut({ callbackUrl: '/admin/login' })}>

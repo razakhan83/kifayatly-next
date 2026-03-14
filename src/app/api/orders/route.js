@@ -1,3 +1,4 @@
+import { revalidateTag, updateTag } from 'next/cache';
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -55,6 +56,9 @@ export async function POST(req) {
             notes,
             status: 'Pending',
         });
+
+        updateTag('orders');
+        revalidateTag('admin-dashboard');
 
         return NextResponse.json({ success: true, data: order }, { status: 201 });
     } catch (error) {

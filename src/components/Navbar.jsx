@@ -45,7 +45,6 @@ function NavbarContent({ categories }) {
   const [isFocused, setIsFocused] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [allProducts, setAllProducts] = useState([]);
   const dropdownRef = useRef(null);
 
   useEffect(() => {
@@ -63,50 +62,7 @@ function NavbarContent({ categories }) {
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const res = await fetch('/api/search-products');
-        if (!res.ok) return;
-        const data = await res.json();
-        setAllProducts(Array.isArray(data) ? data : []);
-      } catch (error) {
-        console.error('Failed to fetch search products', error);
-      }
-    };
-    fetchProducts();
-  }, []);
-
-  const suggestions = useMemo(() => {
-    if (!debouncedSearch.trim()) return [];
-    const term = debouncedSearch.toLowerCase();
-    return allProducts
-      .filter((product) => {
-        const name = (product.Name || product.name || '').toLowerCase();
-        const productCategories = Array.isArray(product.Category)
-          ? product.Category
-          : product.Category
-            ? [product.Category]
-            : [];
-        return (
-          name.includes(term) ||
-          productCategories.some((category) => (category || '').toLowerCase().includes(term))
-        );
-      })
-      .slice(0, 5)
-      .map((product) => ({
-        ...product,
-        onSelect: handleSuggestionClick,
-      }));
-  }, [allProducts, debouncedSearch]);
-
-  function handleSuggestionClick(product) {
-    const label = product.Name || product.name || '';
-    setSearchTerm(label);
-    setIsFocused(false);
-    setIsSearchOpen(false);
-    router.push(`/products?search=${encodeURIComponent(label)}`);
-  }
+  const suggestions = useMemo(() => [], []);
 
   function handleCategoryClick(categoryId) {
     setActiveCategory(categoryId);
@@ -248,6 +204,7 @@ function NavbarContent({ categories }) {
               onFocus={() => setIsFocused(true)}
               isFocused={isFocused}
               suggestions={suggestions}
+              showSuggestions={false}
               emptyLabel={`No products found for "${debouncedSearch}"`}
             />
           </div>
