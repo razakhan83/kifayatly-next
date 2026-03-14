@@ -24,8 +24,21 @@ export async function uploadImageDataUrl(dataUrl, folder = "kifayatly_products")
     throw new Error(uploadData.error?.message || "Cloudinary upload failed");
   }
 
+  const placeholderRes = await fetch("/api/images/placeholder", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ dataUrl }),
+  });
+  const placeholderData = await placeholderRes.json();
+  if (!placeholderRes.ok) {
+    throw new Error(
+      placeholderData.error || "Failed to generate image placeholder",
+    );
+  }
+
   return {
     url: uploadData.secure_url,
     publicId: uploadData.public_id || "",
+    blurDataURL: placeholderData.blurDataURL || "",
   };
 }

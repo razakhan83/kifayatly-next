@@ -17,6 +17,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { getProducts } from '@/lib/data';
 import { getCategoryColor } from '@/lib/categoryColors';
+import { normalizeProductImages } from '@/lib/productImages';
 
 export const dynamic = 'force-dynamic';
 
@@ -62,12 +63,10 @@ export default async function ProductPage({ params }) {
     .replace(/[^a-z0-9-]/g, '')
     .replace(/-+/g, '-');
 
-  const productImages = [];
-  if (Array.isArray(product.Images) && product.Images.length > 0) {
-    productImages.push(...product.Images);
-  } else if (product.Image || product.image || product.ImageURL) {
-    productImages.push(product.Image || product.image || product.ImageURL);
-  }
+  const productImages = normalizeProductImages(
+    product.Images,
+    product.Image || product.image || product.ImageURL || '',
+  );
 
   return (
     <div className="min-h-screen bg-background">

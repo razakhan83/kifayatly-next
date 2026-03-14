@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { isAdminEmail } from '@/lib/admin';
 import dbConnect from '@/lib/dbConnect';
 import Product from '@/models/Product';
+import { normalizeProductImages } from '@/lib/productImages';
 
 // Utility for formatting a string to a unique URL-friendly slug
 const slugify = (text) => {
@@ -26,6 +28,7 @@ export async function GET() {
             _id: p._id.toString(),
             id: p.slug || p._id.toString(),
             Category: Array.isArray(p.Category) ? p.Category : (p.Category ? [p.Category] : []),
+            Images: normalizeProductImages(p.Images, p.ImageURL || p.Image || ''),
         }));
 
         return NextResponse.json({ success: true, data: safeProducts });
@@ -43,7 +46,7 @@ export async function POST(req) {
         const session = await getServerSession(authOptions);
         console.log('[API] Session check:', session?.user?.email || 'No session');
 
-        if (!session || session.user?.email !== process.env.ADMIN_EMAIL) {
+        if (!session || !isAdminEmail(session.user?.email)) {
             console.log('[API] ❌ Unauthorized access attempt');
             return NextResponse.json({ success: false, message: 'Unauthorized Access' }, { status: 401 });
         }
@@ -81,13 +84,16 @@ export async function POST(req) {
         const stockStatus = (stockQuantity || 0) > 0 ? 'In Stock' : 'Out of Stock';
         console.log('[API] 📦 Stock Quantity:', stockQuantity, '-> Status:', stockStatus);
 
+        const normalizedImages = normalizeProductImages(Images, ImageURL || '');
+        const primaryImage = normalizedImages[0]?.url || ImageURL || '';
+
         const product = await Product.create({
             Name,
             Description,
             Price,
-            ImageURL,
-            Image: ImageURL, // Map ImageURL broadly for legacy data bindings
-            Images: Array.isArray(Images) ? Images : (ImageURL ? [ImageURL] : []),
+            ImageURL: primaryImage,
+            Image: primaryImage,
+            Images: normalizedImages,
             cloudinary_id,
             Category: categoryArray,
             stockQuantity: stockQuantity || 0,

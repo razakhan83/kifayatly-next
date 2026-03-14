@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { isAdminEmail } from '@/lib/admin';
 import dbConnect from '@/lib/dbConnect';
 import Order from '@/models/Order';
 
@@ -8,7 +9,7 @@ import Order from '@/models/Order';
 export async function GET() {
     try {
         const session = await getServerSession(authOptions);
-        if (!session || session.user?.email !== process.env.ADMIN_EMAIL) {
+        if (!session || !isAdminEmail(session.user?.email)) {
             return NextResponse.json({ success: false, message: 'Unauthorized Access' }, { status: 401 });
         }
 

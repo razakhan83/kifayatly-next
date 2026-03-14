@@ -45,7 +45,7 @@ export default function AdminLayout({ children }) {
     );
   }
 
-  if (!session || session.user?.email !== '123raza83@gmail.com') {
+  if (!session || !session.user?.isAdmin) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background p-4">
         <div className="surface-card w-full max-w-md rounded-xl p-8 text-center">

@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { uploadImageDataUrl } from '@/lib/cloudinaryUpload';
+import { normalizeProductImages } from '@/lib/productImages';
 
 export default function EditProduct({ id }) {
   const router = useRouter();
@@ -13,7 +14,7 @@ export default function EditProduct({ id }) {
   const [Price, setPrice] = useState('');
   const [Categories, setCategories] = useState([]); // array
   const [stockQuantity, setStockQuantity] = useState('');
-  const [images, setImages] = useState([]); // Array of { url, public_id, file, isNew }
+  const [images, setImages] = useState([]); // Array of { url, blurDataURL, publicId, file, isNew }
   const [isLive, setIsLive] = useState(false);
 
   const [isDragOver, setIsDragOver] = useState(false);
@@ -56,12 +57,10 @@ export default function EditProduct({ id }) {
           setCategories(Array.isArray(p.Category) ? p.Category : (p.Category ? [p.Category] : []));
           setStockQuantity(p.stockQuantity ?? '');
           
-          let existingImages = [];
-          if (Array.isArray(p.Images) && p.Images.length > 0) {
-              existingImages = p.Images.map(url => ({ url, isNew: false }));
-          } else if (p.ImageURL || p.Image) {
-              existingImages = [{ url: p.ImageURL || p.Image, isNew: false, public_id: p.cloudinary_id }];
-          }
+          const existingImages = normalizeProductImages(
+            p.Images,
+            p.ImageURL || p.Image || '',
+          ).map((image) => ({ ...image, isNew: false }));
           setImages(existingImages);
           
           setIsLive(p.isLive ?? false);
@@ -171,37 +170,16 @@ export default function EditProduct({ id }) {
     // Upload new images to Cloudinary
     const finalImages = [];
     try {
-        const newImages = images.filter(img => img.isNew);
-        let signData = null;
-        
-        if (newImages.length > 0) {
-            const signRes = await fetch('/api/cloudinary-sign');
-            signData = await signRes.json();
-            if (!signRes.ok) throw new Error(signData.error || 'Failed to get signature');
-        }
-
         for (const img of images) {
             if (!img.isNew) {
-                finalImages.push(img.url);
-            } else {
-                const { signature, timestamp, cloudName, apiKey } = signData;
-                const uploadFormData = new FormData();
-                uploadFormData.append('file', img.url);
-                uploadFormData.append('api_key', apiKey);
-                uploadFormData.append('timestamp', timestamp);
-                uploadFormData.append('signature', signature);
-                uploadFormData.append('folder', 'kifayatly_products');
-
-                const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-                    method: 'POST',
-                    body: uploadFormData,
+                finalImages.push({
+                  url: img.url,
+                  blurDataURL: img.blurDataURL || '',
+                  publicId: img.publicId || '',
                 });
-                const uploadData = await uploadRes.json();
-                if (uploadData.secure_url) {
-                    finalImages.push(uploadData.secure_url);
-                } else {
-                    throw new Error(uploadData.error?.message || 'Upload error');
-                }
+            } else {
+                const uploadedImage = await uploadImageDataUrl(img.url, 'kifayatly_products');
+                finalImages.push(uploadedImage);
             }
         }
     } catch (err) {
@@ -210,7 +188,7 @@ export default function EditProduct({ id }) {
         return;
     }
 
-    const primaryImage = finalImages.length > 0 ? finalImages[0] : '';
+    const primaryImage = finalImages.length > 0 ? finalImages[0].url : '';
 
     try {
       const res = await fetch(`/api/products/${id}`, {
@@ -221,7 +199,7 @@ export default function EditProduct({ id }) {
           Description,
           Price: Number(Price),
           ImageURL: primaryImage, // backward compatibility
-          Images: finalImages,    // array of urls
+          Images: finalImages,
           Category: Categories,
           stockQuantity: Number(stockQuantity) || 0,
           isLive,

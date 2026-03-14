@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getPrimaryProductImage } from "@/lib/productImages";
 
 const formatPrice = (raw) => {
   let cleanNumbers = String(raw).replace(/[^\d.]/g, "");
@@ -85,7 +86,7 @@ export default function ProductCard({ product, className = "" }) {
 
   const productName = product.Name || product.name || "Unknown";
   const productDescription = product.Description || product.description || "";
-  const productImage = product.Image || product.image;
+  const primaryImage = getPrimaryProductImage(product);
   const productPrice = product.Price || product.price || 0;
   const productSlug = product.slug || product._id || product.id;
   const productHref = `/products/${productSlug}`;
@@ -135,13 +136,15 @@ export default function ProductCard({ product, className = "" }) {
         )}
 
         {/* Product Image */}
-        {productImage ? (
+        {primaryImage?.url ? (
           <Image
-            src={productImage}
+            src={primaryImage.url}
             alt={productName}
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+            placeholder={primaryImage.blurDataURL ? "blur" : "empty"}
+            blurDataURL={primaryImage.blurDataURL || undefined}
             unoptimized
           />
         ) : (

@@ -9,7 +9,7 @@ export default function AddProduct() {
   const [Price, setPrice] = useState("");
   const [Categories, setCategories] = useState([]); // array of selected category names
   const [stockQuantity, setStockQuantity] = useState("");
-  const [images, setImages] = useState([]); // Array of { url, public_id, file, isNew }
+  const [images, setImages] = useState([]); // Array of { url, blurDataURL, publicId, file, isNew }
   const [saving, setSaving] = useState(false);
   const [isLive, setIsLive] = useState(false);
 
@@ -106,10 +106,7 @@ export default function AddProduct() {
     validFiles.forEach((file) => {
       const reader = new FileReader();
       reader.onload = (ev) => {
-        setImages((prev) => [
-          ...prev,
-          { url: ev.target.result, file, isNew: true },
-        ]);
+        setImages((prev) => [...prev, { url: ev.target.result, file, isNew: true }]);
       };
       reader.readAsDataURL(file);
     });
@@ -157,41 +154,16 @@ export default function AddProduct() {
     let finalImages = [];
 
     try {
-      const newImages = images.filter((img) => img.isNew);
-      let signData = null;
-
-      if (newImages.length > 0) {
-        const signRes = await fetch("/api/cloudinary-sign");
-        signData = await signRes.json();
-        if (!signRes.ok)
-          throw new Error(signData.error || "Failed to get signature");
-      }
-
       for (const img of images) {
         if (!img.isNew) {
-          finalImages.push(img.url);
+          finalImages.push({
+            url: img.url,
+            blurDataURL: img.blurDataURL || "",
+            publicId: img.publicId || "",
+          });
         } else {
-          const { signature, timestamp, cloudName, apiKey } = signData;
-          const uploadFormData = new FormData();
-          uploadFormData.append("file", img.url);
-          uploadFormData.append("api_key", apiKey);
-          uploadFormData.append("timestamp", timestamp);
-          uploadFormData.append("signature", signature);
-          uploadFormData.append("folder", "kifayatly_products");
-
-          const uploadRes = await fetch(
-            `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-            {
-              method: "POST",
-              body: uploadFormData,
-            },
-          );
-          const uploadData = await uploadRes.json();
-          if (uploadData.secure_url) {
-            finalImages.push(uploadData.secure_url);
-          } else {
-            throw new Error(uploadData.error?.message || "Upload error");
-          }
+          const uploadedImage = await uploadImageDataUrl(img.url, "kifayatly_products");
+          finalImages.push(uploadedImage);
         }
       }
     } catch (err) {
@@ -200,14 +172,14 @@ export default function AddProduct() {
       return;
     }
 
-    const primaryImage = finalImages.length > 0 ? finalImages[0] : "";
+    const primaryImage = finalImages.length > 0 ? finalImages[0].url : "";
 
     const payload = {
       Name,
       Description,
       Price: Number(Price),
       ImageURL: primaryImage, // backwards compat
-      Images: finalImages, // array of urls
+      Images: finalImages,
       Category: Categories,
       stockQuantity: Number(stockQuantity) || 0,
       isLive,

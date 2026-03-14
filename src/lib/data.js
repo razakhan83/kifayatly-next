@@ -2,6 +2,7 @@ import { cacheLife, cacheTag } from 'next/cache';
 import dbConnect from './dbConnect';
 import Product from '@/models/Product';
 import Category from '@/models/Category';
+import { normalizeProductImages } from './productImages';
 
 export async function getProducts() {
     try {
@@ -16,6 +17,7 @@ export async function getProducts() {
             id: p.slug || p._id.toString(),
             // Normalize Category to always be an array
             Category: Array.isArray(p.Category) ? p.Category : (p.Category ? [p.Category] : []),
+            Images: normalizeProductImages(p.Images, p.ImageURL || p.Image || ''),
         }));
     } catch (err) {
         console.error('[DATA] getProducts Error:', err.message);

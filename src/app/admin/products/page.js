@@ -18,6 +18,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { getPrimaryProductImage } from "@/lib/productImages";
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState([]);
@@ -47,6 +48,7 @@ export default function AdminProductsPage() {
                 : product.category
                   ? [product.category]
                   : [],
+            primaryImage: getPrimaryProductImage(product),
           })),
         );
       }
@@ -155,8 +157,16 @@ export default function AdminProductsPage() {
             <div key={product._id} className="surface-card rounded-xl p-4">
               <div className="flex gap-4">
                 <div className="relative size-20 overflow-hidden rounded-lg border border-border bg-muted">
-                  {product.ImageURL || product.Image ? (
-                    <Image src={product.ImageURL || product.Image} alt={product.Name} fill className="object-cover" unoptimized />
+                  {product.primaryImage?.url ? (
+                    <Image
+                      src={product.primaryImage.url}
+                      alt={product.Name}
+                      fill
+                      className="object-cover"
+                      placeholder={product.primaryImage.blurDataURL ? "blur" : "empty"}
+                      blurDataURL={product.primaryImage.blurDataURL || undefined}
+                      unoptimized
+                    />
                   ) : (
                     <div className="flex size-full items-center justify-center text-muted-foreground">
                       <ImageIcon className="size-5" />
@@ -228,8 +238,16 @@ export default function AdminProductsPage() {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-4">
                         <div className="relative size-12 overflow-hidden rounded-lg border border-border bg-muted">
-                          {product.ImageURL || product.Image ? (
-                            <Image src={product.ImageURL || product.Image} alt={product.Name} fill className="object-cover" unoptimized />
+                          {product.primaryImage?.url ? (
+                            <Image
+                              src={product.primaryImage.url}
+                              alt={product.Name}
+                              fill
+                              className="object-cover"
+                              placeholder={product.primaryImage.blurDataURL ? "blur" : "empty"}
+                              blurDataURL={product.primaryImage.blurDataURL || undefined}
+                              unoptimized
+                            />
                           ) : (
                             <div className="flex size-full items-center justify-center text-muted-foreground">
                               <ImageIcon className="size-4" />

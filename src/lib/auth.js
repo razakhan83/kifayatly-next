@@ -1,6 +1,7 @@
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
+import { isAdminEmail, normalizeEmail } from "@/lib/admin";
 
 export const authOptions = {
   providers: [
@@ -19,17 +20,29 @@ export const authOptions = {
         console.log("Login Attempt:", credentials.email);
 
         if (
-          credentials.email === process.env.ADMIN_EMAIL &&
+          isAdminEmail(credentials.email) &&
           credentials.password === process.env.ADMIN_PASSWORD
         ) {
-          return { id: "1", name: "Raza Admin", email: process.env.ADMIN_EMAIL };
+          return { id: "1", name: "Raza Admin", email: normalizeEmail(credentials.email) };
         }
         return null;
       }
     })
   ],
   callbacks: {
+    async jwt({ token, user }) {
+      const email = user?.email || token?.email;
+      token.isAdmin = isAdminEmail(email);
+      if (email) {
+        token.email = normalizeEmail(email);
+      }
+      return token;
+    },
     async session({ session, token }) {
+      if (session?.user) {
+        session.user.email = normalizeEmail(session.user.email || token?.email);
+        session.user.isAdmin = Boolean(token?.isAdmin);
+      }
       return session;
     },
   },
