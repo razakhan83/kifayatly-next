@@ -22,6 +22,7 @@ import { CartProvider } from "@/context/CartContext";
 import AuthProvider from "@/components/AuthProvider";
 import LayoutWrapper from "@/components/LayoutWrapper";
 import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 export default async function RootLayout({ children }) {
   const categories = await getCategories();
@@ -30,7 +31,10 @@ export default async function RootLayout({ children }) {
     <html lang="en" suppressHydrationWarning={true}>
       <head>
         <meta name="google" content="notranslate" />
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+        <link
+          rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
@@ -38,14 +42,12 @@ export default async function RootLayout({ children }) {
       >
         <CartProvider>
           <AuthProvider>
-            <LayoutWrapper categories={categories}>
-              <Suspense fallback={<div>Loading...</div>}>
-                {children}
-              </Suspense>
-            </LayoutWrapper>
+            <TooltipProvider>
+              <LayoutWrapper categories={categories}>{children}</LayoutWrapper>
+            </TooltipProvider>
           </AuthProvider>
         </CartProvider>
-        <Toaster />
+        <Toaster position="bottom-right" richColors />
       </body>
     </html>
   );

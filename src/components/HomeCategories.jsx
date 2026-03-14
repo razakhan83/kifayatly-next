@@ -40,7 +40,7 @@ export default function HomeCategories({ products }) {
                     const colors = getCategoryColor(cat.label);
                     return (
                         <section key={cat.id} className={`py-8 md:py-12 ${colors.bg}`}>
-                            <div className="container mx-auto px-2 max-w-7xl">
+                            <div className="container mx-auto px-4 max-w-7xl">
                                 <div className="animate-fadeInUp">
                                     <CategoryProductSlider
                                         categoryId={cat.id}

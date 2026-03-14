@@ -1,7 +1,7 @@
 import ProductGridClient from '@/components/ProductGridClient';
 import { getProducts } from '@/lib/data';
 import { Suspense } from 'react';
-import ProductSkeleton from '@/components/ProductSkeleton';
+
 import {
     Breadcrumb,
     BreadcrumbItem,
@@ -28,13 +28,7 @@ export default function Products() {
                 </Breadcrumb>
                 <h1 className="text-3xl font-bold text-[#0A3D2E]">All Products</h1>
             </div>
-            <Suspense fallback={
-                <div className="container mx-auto px-4 py-8">
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                        {[...Array(8)].map((_, i) => <ProductSkeleton key={i} />)}
-                    </div>
-                </div>
-            }>
+            <Suspense fallback={null}>
                 <ProductList />
             </Suspense>
         </div>

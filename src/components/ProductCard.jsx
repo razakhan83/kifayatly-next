@@ -1,77 +1,197 @@
-'use client';
+"use client";
 
-import Image from 'next/image';
-import Link from 'next/link';
-import { useCart } from '@/context/CartContext';
-import { getCategoryColor } from '@/lib/categoryColors';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { ShoppingCart } from 'lucide-react';
+import Image from "next/image";
+import Link from "next/link";
+import { useCart } from "@/context/CartContext";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { ShoppingCart } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const formatPrice = (raw) => {
-    let cleanNumbers = String(raw).replace(/[^\d.]/g, '');
-    if (!cleanNumbers) return 'Rs. 0';
-    return `Rs. ${Number(cleanNumbers).toLocaleString('en-PK')}`;
+  let cleanNumbers = String(raw).replace(/[^\d.]/g, "");
+  if (!cleanNumbers) return "Rs. 0";
+  return `Rs. ${Number(cleanNumbers).toLocaleString("en-PK")}`;
 };
 
-export default function ProductCard({ product, className = '' }) {
-    const { addToCart } = useCart();
-    const categoryLabel = Array.isArray(product.Category) ? product.Category[0] : (product.Category || product.category || '');
-    const colors = getCategoryColor(categoryLabel);
+/**
+ * Determines the discount badge (top-left).
+ * Shows "X% OFF" when an original/compare price exists.
+ */
+function getDiscountBadge(product) {
+  const price = product.Price || product.price || 0;
+  const originalPrice =
+    product.originalPrice || product.OriginalPrice ||
+    product.comparePrice || product.ComparePrice || 0;
 
-    return (
-        <Card className={`bg-white min-h-[380px] w-full rounded-2xl overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] hover:-translate-y-2 shadow-[0_4px_12px_rgba(0,0,0,0.03)] hover:shadow-[0_20px_40px_rgba(10,61,46,0.12)] border-0 ring-0 hover:ring-0 flex flex-col justify-between group will-change-transform ${className}`}>
-            <Link href={`/products/${product.slug || product._id || product.id}`} className="block relative aspect-square bg-gray-50/50 cursor-pointer w-full overflow-hidden shrink-0">
-                {categoryLabel && (
-                    <Badge
-                        variant="outline"
-                        className={`absolute top-2 left-2 z-10 text-[10px] font-bold uppercase tracking-wide shadow-sm ${colors.badge}`}
-                    >
-                        {categoryLabel}
-                    </Badge>
-                )}
-                {(product.Image || product.image) && (
-                    <Image
-                        src={product.Image || product.image}
-                        alt={product.Name || product.name || 'product'}
-                        fill
-                        sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                        className="object-cover transition-transform duration-500 group-hover:scale-105"
-                        unoptimized
-                    />
-                )}
-            </Link>
-            <CardContent className="p-4 flex flex-col flex-grow justify-between relative">
-                <Link href={`/products/${product.slug || product._id || product.id}`} className="block cursor-pointer">
-                    <h3 className="text-sm font-semibold text-gray-800 mb-0.5 leading-tight hover:text-[#10b981] transition-colors line-clamp-1 h-5 overflow-hidden" title={product.Name || product.name}>
-                        {product.Name || product.name || 'Unknown'}
-                    </h3>
-                </Link>
-                {product.Description || product.description ? (
-                    <p className="text-xs text-gray-500 line-clamp-2 h-8 overflow-hidden mb-1">
-                        {product.Description || product.description}
-                    </p>
-                ) : (
-                    <div className="h-8 mb-1"></div>
-                )}
-                <div className="mt-4 mb-[2px]">
-                    <p className="text-xl font-extrabold text-[#072C21] mb-3 tracking-tight">
-                        {formatPrice(product.Price || product.price)}
-                    </p>
-                    <Button
-                        onClick={(e) => {
-                            e.preventDefault();
-                            addToCart(product);
-                        }}
-                        className="w-full text-sm font-semibold rounded-xl bg-[#0A3D2E] hover:bg-[#10b981] text-white transition-colors duration-300"
-                        size="default"
-                    >
-                        <ShoppingCart className="w-4 h-4 mr-2" />
-                        Add to Cart
-                    </Button>
-                </div>
-            </CardContent>
-        </Card>
-    );
+  if (originalPrice > 0 && originalPrice > price) {
+    const discount = Math.round(((originalPrice - price) / originalPrice) * 100);
+    return `${discount}% OFF`;
+  }
+
+  // Dummy discount — stable random based on product name
+  const name = product.Name || product.name || "";
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = ((hash << 5) - hash) + name.charCodeAt(i);
+    hash |= 0;
+  }
+  const dummyOptions = [10, 15, 20, 25, 30, 35, 40, 45, 50];
+  const dummyDiscount = dummyOptions[Math.abs(hash) % dummyOptions.length];
+  return `${dummyDiscount}% OFF`;
+}
+
+/**
+ * Determines the status badge (top-right).
+ * Priority: Best Selling → Trending → New (last 30 days).
+ * Each has a unique color.
+ */
+function getStatusBadge(product) {
+  // Best Selling
+  if (product.isBestSelling || product.bestSelling || product.isBestseller) {
+    return {
+      label: "Best Selling",
+      className: "bg-amber-100 text-amber-800 border-amber-200",
+    };
+  }
+
+  // Trending
+  if (product.isTrending || product.trending) {
+    return {
+      label: "Trending",
+      className: "bg-orange-100 text-orange-800 border-orange-200",
+    };
+  }
+
+  // New — products created within the last 30 days
+  const createdAt = product.createdAt || product.created_at;
+  if (createdAt) {
+    const daysSinceCreated =
+      (Date.now() - new Date(createdAt).getTime()) / (1000 * 60 * 60 * 24);
+    if (daysSinceCreated <= 30) {
+      return {
+        label: "New",
+        className: "bg-emerald-100 text-emerald-800 border-emerald-200",
+      };
+    }
+  }
+
+  return null;
+}
+
+export default function ProductCard({ product, className = "" }) {
+  const { addToCart } = useCart();
+
+  const productName = product.Name || product.name || "Unknown";
+  const productDescription = product.Description || product.description || "";
+  const productImage = product.Image || product.image;
+  const productPrice = product.Price || product.price || 0;
+  const productSlug = product.slug || product._id || product.id;
+  const productHref = `/products/${productSlug}`;
+
+  const discountLabel = getDiscountBadge(product);
+  const statusBadge = getStatusBadge(product);
+
+  return (
+    <Card
+      className={cn(
+        "group relative flex flex-col gap-0 overflow-hidden rounded-xl",
+        "bg-card border-0 ring-0 shadow-none transition-shadow duration-300",
+        "hover:shadow-md",
+        "py-0",
+        className
+      )}
+    >
+      {/* Image Section */}
+      <Link
+        href={productHref}
+        className="relative block aspect-square w-full overflow-hidden bg-muted/30"
+      >
+        {/* Discount Badge — top left */}
+        {discountLabel && (
+          <Badge
+            className={cn(
+              "absolute left-2.5 top-2.5 z-10",
+              "rounded-md px-2 py-1 text-[10px] font-bold uppercase tracking-wider",
+              "bg-blue-100 text-blue-700 border-blue-200",
+              "backdrop-blur-sm shadow-sm"
+            )}
+          >
+            {discountLabel}
+          </Badge>
+        )}
+
+        {/* Status Badge — top right (New / Best Selling / Trending) */}
+        {statusBadge && (
+          <Badge
+            className={cn(
+              "absolute right-2.5 top-2.5 z-10",
+              "rounded-md px-2 py-1 text-[10px] font-bold tracking-wider",
+              "backdrop-blur-sm shadow-sm",
+              statusBadge.className
+            )}
+          >
+            {statusBadge.label}
+          </Badge>
+        )}
+
+        {/* Product Image */}
+        {productImage ? (
+          <Image
+            src={productImage}
+            alt={productName}
+            fill
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+            unoptimized
+          />
+        ) : (
+          <div className="flex size-full items-center justify-center bg-muted/50">
+            <ShoppingCart className="size-10 text-muted-foreground/30" />
+          </div>
+        )}
+      </Link>
+
+      {/* Content Section — white background */}
+      <CardContent className="flex flex-col gap-1.5 bg-white p-3 pt-3">
+        {/* Product Title */}
+        <Link href={productHref} className="block text-left">
+          <h3
+            className="line-clamp-1 text-sm font-semibold leading-tight text-primary"
+            title={productName}
+          >
+            {productName}
+          </h3>
+        </Link>
+
+        {/* Description */}
+        {productDescription ? (
+          <p className="line-clamp-1 text-xs text-muted-foreground">
+            {productDescription}
+          </p>
+        ) : (
+          <div className="h-4" />
+        )}
+
+        {/* Price Row + Add to Cart */}
+        <div className="flex items-center justify-between gap-2 pt-1">
+          <p className="text-base font-bold tracking-tight text-foreground">
+            {formatPrice(productPrice)}
+          </p>
+          <Button
+            variant="outline"
+            size="icon-sm"
+            onClick={(e) => {
+              e.preventDefault();
+              addToCart(product);
+            }}
+            className="size-8 rounded-lg cursor-pointer hover:translate-y-0 shadow-none hover:shadow-none"
+          >
+            <ShoppingCart className="size-4" />
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
 }

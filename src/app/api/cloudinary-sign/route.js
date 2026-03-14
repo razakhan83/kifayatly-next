@@ -1,5 +1,5 @@
-import { v2 as cloudinary } from 'cloudinary';
-import { NextResponse } from 'next/server';
+import { v2 as cloudinary } from "cloudinary";
+import { NextResponse } from "next/server";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -13,16 +13,16 @@ export async function GET() {
     const signature = cloudinary.utils.api_sign_request(
       {
         timestamp: timestamp,
-        folder: 'kifayatly_products',
+        folder: "kifayatly_products",
       },
-      process.env.CLOUDINARY_API_SECRET
+      process.env.CLOUDINARY_API_SECRET,
     );
 
-    return NextResponse.json({ 
-      signature, 
+    return NextResponse.json({
+      signature,
       timestamp,
       cloudName: process.env.CLOUDINARY_CLOUD_NAME,
-      apiKey: process.env.CLOUDINARY_API_KEY
+      apiKey: process.env.CLOUDINARY_API_KEY,
     });
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });

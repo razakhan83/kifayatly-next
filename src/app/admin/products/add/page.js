@@ -1,13 +1,13 @@
-'use client';
-import { useState, useCallback, useEffect } from 'react';
-import { toast } from 'sonner';
+"use client";
+import { useState, useCallback, useEffect } from "react";
+import { toast } from "sonner";
 
 export default function AddProduct() {
-  const [Name, setName] = useState('');
-  const [Description, setDescription] = useState('');
-  const [Price, setPrice] = useState('');
+  const [Name, setName] = useState("");
+  const [Description, setDescription] = useState("");
+  const [Price, setPrice] = useState("");
   const [Categories, setCategories] = useState([]); // array of selected category names
-  const [stockQuantity, setStockQuantity] = useState('');
+  const [stockQuantity, setStockQuantity] = useState("");
   const [images, setImages] = useState([]); // Array of { url, public_id, file, isNew }
   const [saving, setSaving] = useState(false);
   const [isLive, setIsLive] = useState(false);
@@ -16,62 +16,77 @@ export default function AddProduct() {
 
   const [allCategories, setAllCategories] = useState([]);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
-  const [newCatName, setNewCatName] = useState('');
+  const [newCatName, setNewCatName] = useState("");
   const [isAddingCat, setIsAddingCat] = useState(false);
 
   const fetchCategories = useCallback(async () => {
     try {
-      const res = await fetch('/api/categories');
+      const res = await fetch("/api/categories");
       const data = await res.json();
       if (data.success) setAllCategories(data.data);
     } catch (err) {
-      console.error('Failed to fetch categories:', err);
+      console.error("Failed to fetch categories:", err);
     }
   }, []);
 
-  useEffect(() => { fetchCategories(); }, [fetchCategories]);
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
 
   const handleAddCategory = async (e) => {
     e.preventDefault();
     if (!newCatName.trim()) return;
     setIsAddingCat(true);
     try {
-      const res = await fetch('/api/categories', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/categories", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: newCatName.trim() }),
       });
       const data = await res.json();
       if (data.success) {
-        showToast('Category added!', 'success');
-        setNewCatName('');
+        showToast("Category added!", "success");
+        setNewCatName("");
         setIsCategoryModalOpen(false);
         fetchCategories();
       } else {
-        showToast(data.error || 'Failed to add category', 'error');
+        showToast(data.error || "Failed to add category", "error");
       }
     } catch {
-      showToast('Error adding category', 'error');
+      showToast("Error adding category", "error");
     } finally {
       setIsAddingCat(false);
     }
   };
 
   const toggleCategory = (catName) => {
-    setCategories(prev =>
-      prev.includes(catName) ? prev.filter(c => c !== catName) : [...prev, catName]
+    setCategories((prev) =>
+      prev.includes(catName)
+        ? prev.filter((c) => c !== catName)
+        : [...prev, catName],
     );
   };
 
-  const handleDragOver = useCallback((e) => { e.preventDefault(); setIsDragOver(true); }, []);
-  const handleDragLeave = useCallback((e) => { e.preventDefault(); setIsDragOver(false); }, []);
-  
+  const handleDragOver = useCallback((e) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  }, []);
+  const handleDragLeave = useCallback((e) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  }, []);
+
   const processFiles = (filesList) => {
-    const validFiles = Array.from(filesList).filter(f => f.type.startsWith('image/'));
-    validFiles.forEach(file => {
+    const validFiles = Array.from(filesList).filter((f) =>
+      f.type.startsWith("image/"),
+    );
+    validFiles.forEach((file) => {
       const reader = new FileReader();
       reader.onload = (ev) => {
-        setImages(prev => [...prev, { url: ev.target.result, file, isNew: true }]);
+        setImages((prev) => [
+          ...prev,
+          { url: ev.target.result, file, isNew: true },
+        ]);
       };
       reader.readAsDataURL(file);
     });
@@ -89,20 +104,20 @@ export default function AddProduct() {
   };
 
   const removeImage = (indexToRemove) => {
-      setImages(prev => prev.filter((_, idx) => idx !== indexToRemove));
+    setImages((prev) => prev.filter((_, idx) => idx !== indexToRemove));
   };
 
-  const showToast = (message, type = 'success') => {
-    if (type === 'error') toast.error(message);
+  const showToast = (message, type = "success") => {
+    if (type === "error") toast.error(message);
     else toast.success(message);
   };
 
   const clearForm = () => {
-    setName('');
-    setDescription('');
-    setPrice('');
+    setName("");
+    setDescription("");
+    setPrice("");
     setCategories([]);
-    setStockQuantity('');
+    setStockQuantity("");
     setImages([]);
     setIsLive(false);
   };
@@ -111,7 +126,7 @@ export default function AddProduct() {
     e.preventDefault();
 
     if (!Name || !Price || Categories.length === 0) {
-      showToast('Name, Price and at least one Category are required.', 'error');
+      showToast("Name, Price and at least one Category are required.", "error");
       return;
     }
 
@@ -119,73 +134,80 @@ export default function AddProduct() {
     let finalImages = [];
 
     try {
-        const newImages = images.filter(img => img.isNew);
-        let signData = null;
-        
-        if (newImages.length > 0) {
-            const signRes = await fetch('/api/cloudinary-sign');
-            signData = await signRes.json();
-            if (!signRes.ok) throw new Error(signData.error || 'Failed to get signature');
-        }
+      const newImages = images.filter((img) => img.isNew);
+      let signData = null;
 
-        for (const img of images) {
-            if (!img.isNew) {
-                finalImages.push(img.url);
-            } else {
-                const { signature, timestamp, cloudName, apiKey } = signData;
-                const uploadFormData = new FormData();
-                uploadFormData.append('file', img.url);
-                uploadFormData.append('api_key', apiKey);
-                uploadFormData.append('timestamp', timestamp);
-                uploadFormData.append('signature', signature);
-                uploadFormData.append('folder', 'kifayatly_products');
+      if (newImages.length > 0) {
+        const signRes = await fetch("/api/cloudinary-sign");
+        signData = await signRes.json();
+        if (!signRes.ok)
+          throw new Error(signData.error || "Failed to get signature");
+      }
 
-                const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-                    method: 'POST',
-                    body: uploadFormData,
-                });
-                const uploadData = await uploadRes.json();
-                if (uploadData.secure_url) {
-                    finalImages.push(uploadData.secure_url);
-                } else {
-                    throw new Error(uploadData.error?.message || 'Upload error');
-                }
-            }
+      for (const img of images) {
+        if (!img.isNew) {
+          finalImages.push(img.url);
+        } else {
+          const { signature, timestamp, cloudName, apiKey } = signData;
+          const uploadFormData = new FormData();
+          uploadFormData.append("file", img.url);
+          uploadFormData.append("api_key", apiKey);
+          uploadFormData.append("timestamp", timestamp);
+          uploadFormData.append("signature", signature);
+          uploadFormData.append("folder", "kifayatly_products");
+
+          const uploadRes = await fetch(
+            `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+            {
+              method: "POST",
+              body: uploadFormData,
+            },
+          );
+          const uploadData = await uploadRes.json();
+          if (uploadData.secure_url) {
+            finalImages.push(uploadData.secure_url);
+          } else {
+            throw new Error(uploadData.error?.message || "Upload error");
+          }
         }
+      }
     } catch (err) {
-        showToast('Error uploading images: ' + err.message, 'error');
-        setSaving(false);
-        return;
+      showToast("Error uploading images: " + err.message, "error");
+      setSaving(false);
+      return;
     }
 
-    const primaryImage = finalImages.length > 0 ? finalImages[0] : '';
+    const primaryImage = finalImages.length > 0 ? finalImages[0] : "";
 
     const payload = {
       Name,
       Description,
       Price: Number(Price),
       ImageURL: primaryImage, // backwards compat
-      Images: finalImages,    // array of urls
+      Images: finalImages, // array of urls
       Category: Categories,
       stockQuantity: Number(stockQuantity) || 0,
       isLive,
     };
 
     try {
-      const res = await fetch('/api/products', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/products", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        showToast('Product saved! Toggle it Live when ready.', 'success');
+        showToast("Product saved! Toggle it Live when ready.", "success");
         clearForm();
       } else {
-        showToast(data.message || data.error || 'Failed to save product', 'error');
+        showToast(
+          data.message || data.error || "Failed to save product",
+          "error",
+        );
       }
     } catch (err) {
-      showToast('Network error while saving product.', 'error');
+      showToast("Network error while saving product.", "error");
     } finally {
       setSaving(false);
     }
@@ -193,18 +215,22 @@ export default function AddProduct() {
 
   return (
     <div className="w-full pb-10">
-
-
       <div className="mb-6 md:mb-8">
-        <h1 className="text-2xl md:text-3xl font-black text-gray-900">Add New Product</h1>
-        <p className="text-sm md:text-base text-gray-500 mt-1">Create a new product. Toggle it Live when ready to publish.</p>
+        <h1 className="text-2xl md:text-3xl font-black text-gray-900">
+          Add New Product
+        </h1>
+        <p className="text-sm md:text-base text-gray-500 mt-1">
+          Create a new product. Toggle it Live when ready to publish.
+        </p>
       </div>
 
       <div className="bg-white p-4 md:p-8 rounded-2xl shadow-sm border border-gray-100 max-w-2xl">
         <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
           {/* Product Name */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Product Name</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Product Name
+            </label>
             <input
               type="text"
               value={Name}
@@ -217,7 +243,9 @@ export default function AddProduct() {
 
           {/* Price */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Price (Rs)</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Price (Rs)
+            </label>
             <input
               type="number"
               value={Price}
@@ -232,7 +260,9 @@ export default function AddProduct() {
           {/* Category - Multi-select */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="block text-sm font-semibold text-gray-700">Categories</label>
+              <label className="block text-sm font-semibold text-gray-700">
+                Categories
+              </label>
               <button
                 type="button"
                 onClick={() => setIsCategoryModalOpen(true)}
@@ -243,7 +273,9 @@ export default function AddProduct() {
             </div>
             <div className="flex flex-wrap gap-2 p-3 bg-gray-50 border border-gray-200 rounded-lg min-h-[52px]">
               {allCategories.length === 0 ? (
-                <p className="text-xs text-gray-400 self-center">No categories yet. Click "Manage Categories" to add one.</p>
+                <p className="text-xs text-gray-400 self-center">
+                  No categories yet. Click "Manage Categories" to add one.
+                </p>
               ) : (
                 allCategories.map((cat) => {
                   const selected = Categories.includes(cat.name);
@@ -252,9 +284,11 @@ export default function AddProduct() {
                       key={cat._id}
                       type="button"
                       onClick={() => toggleCategory(cat.name)}
-                      className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${selected ? 'bg-emerald-500 text-white border-emerald-500 shadow-sm' : 'bg-white text-gray-600 border-gray-200 hover:border-emerald-300 hover:text-emerald-600'}`}
+                      className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${selected ? "bg-emerald-500 text-white border-emerald-500 shadow-sm" : "bg-white text-gray-600 border-gray-200 hover:border-emerald-300 hover:text-emerald-600"}`}
                     >
-                      {selected && <i className="fa-solid fa-check mr-1 text-[10px]"></i>}
+                      {selected && (
+                        <i className="fa-solid fa-check mr-1 text-[10px]"></i>
+                      )}
                       {cat.name}
                     </button>
                   );
@@ -262,69 +296,108 @@ export default function AddProduct() {
               )}
             </div>
             {Categories.length === 0 && allCategories.length > 0 && (
-              <p className="text-xs text-orange-400 mt-1">Select at least one category above.</p>
+              <p className="text-xs text-orange-400 mt-1">
+                Select at least one category above.
+              </p>
             )}
           </div>
 
           {/* isLive Toggle */}
           <div className="flex items-center justify-between p-4 bg-gray-50 border border-gray-200 rounded-xl">
             <div>
-              <p className="text-sm font-semibold text-gray-700">Publish as Live</p>
+              <p className="text-sm font-semibold text-gray-700">
+                Publish as Live
+              </p>
               <p className="text-xs text-gray-500 mt-0.5">
-                {isLive ? '🟢 Will be visible to customers immediately' : '🔴 Draft — hidden from store until toggled Live'}
+                {isLive
+                  ? "🟢 Will be visible to customers immediately"
+                  : "🔴 Draft — hidden from store until toggled Live"}
               </p>
             </div>
             <button
               type="button"
               onClick={() => setIsLive(!isLive)}
-              className={`relative w-12 h-6 rounded-full transition-colors duration-300 focus:outline-none ${isLive ? 'bg-emerald-500' : 'bg-gray-300'}`}
+              className={`relative w-12 h-6 rounded-full transition-colors duration-300 focus:outline-none ${isLive ? "bg-emerald-500" : "bg-gray-300"}`}
               aria-label="Toggle Live"
             >
-              <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-300 ${isLive ? 'translate-x-6' : 'translate-x-0'}`} />
+              <span
+                className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-300 ${isLive ? "translate-x-6" : "translate-x-0"}`}
+              />
             </button>
           </div>
 
           {/* Image Upload */}
           <div>
             <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-semibold text-gray-700">Product Images</label>
-                <div className="relative overflow-hidden cursor-pointer text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100">
-                    <i className="fa-solid fa-plus-circle"></i> Add More Images
-                    <input type="file" multiple accept="image/*" onChange={handleFileSelect} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-                </div>
+              <label className="block text-sm font-semibold text-gray-700">
+                Product Images
+              </label>
+              <div className="relative overflow-hidden cursor-pointer text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100">
+                <i className="fa-solid fa-plus-circle"></i> Add More Images
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={handleFileSelect}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                />
+              </div>
             </div>
-            
+
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
-                {images.map((img, idx) => (
-                    <div key={idx} className="relative aspect-square rounded-xl border border-gray-200 overflow-hidden group bg-gray-50">
-                        <img src={img.url} alt="Preview" className="w-full h-full object-cover" />
-                        <button 
-                            type="button" 
-                            onClick={() => removeImage(idx)} 
-                            className="absolute top-2 right-2 w-7 h-7 bg-white/90 text-red-500 rounded-full flex items-center justify-center shadow-md hover:bg-red-500 hover:text-white transition-colors opacity-0 group-hover:opacity-100"
-                        >
-                            <i className="fa-solid fa-trash text-xs"></i>
-                        </button>
-                        {idx === 0 && <span className="absolute bottom-2 left-2 text-[10px] bg-black/60 text-white px-2 py-0.5 rounded-full font-bold shadow-sm">Primary</span>}
-                    </div>
-                ))}
+              {images.map((img, idx) => (
+                <div
+                  key={idx}
+                  className="relative aspect-square rounded-xl border border-gray-200 overflow-hidden group bg-gray-50"
+                >
+                  <img
+                    src={img.url}
+                    alt="Preview"
+                    className="w-full h-full object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeImage(idx)}
+                    className="absolute top-2 right-2 w-7 h-7 bg-white/90 text-red-500 rounded-full flex items-center justify-center shadow-md hover:bg-red-500 hover:text-white transition-colors opacity-0 group-hover:opacity-100"
+                  >
+                    <i className="fa-solid fa-trash text-xs"></i>
+                  </button>
+                  {idx === 0 && (
+                    <span className="absolute bottom-2 left-2 text-[10px] bg-black/60 text-white px-2 py-0.5 rounded-full font-bold shadow-sm">
+                      Primary
+                    </span>
+                  )}
+                </div>
+              ))}
             </div>
 
             <div
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
-              className={`relative border-2 border-dashed rounded-xl p-6 text-center transition-all duration-200 cursor-pointer ${isDragOver ? 'border-emerald-500 bg-emerald-50 scale-102' : 'border-emerald-300 hover:border-emerald-400 hover:bg-gray-50'}`}
+              className={`relative border-2 border-dashed rounded-xl p-6 text-center transition-all duration-200 cursor-pointer ${isDragOver ? "border-emerald-500 bg-emerald-50 scale-102" : "border-emerald-300 hover:border-emerald-400 hover:bg-gray-50"}`}
             >
-              <input type="file" multiple accept="image/*" onChange={handleFileSelect} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={handleFileSelect}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              />
               <div className="space-y-3">
                 <div className="w-14 h-14 mx-auto bg-emerald-100 rounded-full flex items-center justify-center">
                   <i className="fa-solid fa-cloud-upload-alt text-xl text-emerald-600"></i>
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-gray-700">Drag & Drop Images Here</p>
-                  <p className="text-xs text-gray-500">or click to browse multiple files</p>
-                  <p className="text-[10px] text-gray-400 mt-1">PNG, JPG up to 10MB each</p>
+                  <p className="text-sm font-semibold text-gray-700">
+                    Drag & Drop Images Here
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    or click to browse multiple files
+                  </p>
+                  <p className="text-[10px] text-gray-400 mt-1">
+                    PNG, JPG up to 10MB each
+                  </p>
                 </div>
               </div>
             </div>
@@ -332,7 +405,9 @@ export default function AddProduct() {
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Description</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Description
+            </label>
             <textarea
               value={Description}
               onChange={(e) => setDescription(e.target.value)}
@@ -344,7 +419,9 @@ export default function AddProduct() {
 
           {/* Stock Quantity */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Stock Quantity</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Stock Quantity
+            </label>
             <input
               type="number"
               value={stockQuantity}
@@ -358,10 +435,24 @@ export default function AddProduct() {
 
           {/* Buttons */}
           <div className="flex gap-4 mt-6 md:mt-8">
-            <button type="submit" disabled={saving} className="flex-1 min-w-[140px] h-[45px] bg-emerald-600 text-white font-bold rounded-xl flex items-center justify-center hover:bg-emerald-700 shadow-sm transition-all active:scale-95 disabled:opacity-60">
-              {saving ? <><i className="fa-solid fa-spinner fa-spin mr-2"></i>Saving...</> : 'Save Product'}
+            <button
+              type="submit"
+              disabled={saving}
+              className="flex-1 min-w-[140px] h-[45px] bg-emerald-600 text-white font-bold rounded-xl flex items-center justify-center hover:bg-emerald-700 shadow-sm transition-all active:scale-95 disabled:opacity-60"
+            >
+              {saving ? (
+                <>
+                  <i className="fa-solid fa-spinner fa-spin mr-2"></i>Saving...
+                </>
+              ) : (
+                "Save Product"
+              )}
             </button>
-            <button type="button" onClick={clearForm} className="flex-1 min-w-[140px] h-[45px] bg-gray-200 text-gray-700 font-bold rounded-xl flex items-center justify-center hover:bg-gray-300 shadow-sm transition-all active:scale-95">
+            <button
+              type="button"
+              onClick={clearForm}
+              className="flex-1 min-w-[140px] h-[45px] bg-gray-200 text-gray-700 font-bold rounded-xl flex items-center justify-center hover:bg-gray-300 shadow-sm transition-all active:scale-95"
+            >
               Clear
             </button>
           </div>
@@ -371,38 +462,74 @@ export default function AddProduct() {
       {/* Category Modal */}
       {isCategoryModalOpen && (
         <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setIsCategoryModalOpen(false)}></div>
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setIsCategoryModalOpen(false)}
+          ></div>
           <div className="relative bg-white w-[92%] sm:w-[512px] rounded-3xl shadow-2xl animate-in fade-in zoom-in duration-200 max-h-[85vh] flex flex-col overflow-hidden">
             <div className="flex items-center justify-between p-5 md:p-6 border-b bg-gray-50/50 shrink-0">
-              <h2 className="text-xl font-bold text-gray-900 truncate pr-4">Manage Categories</h2>
-              <button type="button" onClick={() => setIsCategoryModalOpen(false)} className="w-10 h-10 flex flex-shrink-0 items-center justify-center rounded-full hover:bg-gray-200 text-gray-400 hover:text-gray-600 transition-all active:scale-90">
+              <h2 className="text-xl font-bold text-gray-900 truncate pr-4">
+                Manage Categories
+              </h2>
+              <button
+                type="button"
+                onClick={() => setIsCategoryModalOpen(false)}
+                className="w-10 h-10 flex flex-shrink-0 items-center justify-center rounded-full hover:bg-gray-200 text-gray-400 hover:text-gray-600 transition-all active:scale-90"
+              >
                 <i className="fa-solid fa-xmark text-lg"></i>
               </button>
             </div>
             <div className="flex-1 overflow-y-auto p-5 md:p-8">
               <form onSubmit={handleAddCategory} className="space-y-4">
                 <div className="bg-emerald-50/30 p-4 rounded-2xl border border-emerald-100/50">
-                  <label className="block text-sm font-bold text-emerald-900 mb-2">New Category Name</label>
+                  <label className="block text-sm font-bold text-emerald-900 mb-2">
+                    New Category Name
+                  </label>
                   <div className="flex flex-col sm:flex-row gap-3">
-                    <input type="text" value={newCatName} onChange={(e) => setNewCatName(e.target.value)} className="w-full sm:flex-1 bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 font-medium" placeholder="e.g. Health & Beauty" required />
-                    <button type="submit" disabled={isAddingCat} className="w-full sm:w-auto bg-[#0EB981] text-white px-6 py-3 rounded-xl font-black text-sm hover:bg-[#0da874] shadow-lg shadow-emerald-500/20 disabled:opacity-50 transition-all flex items-center justify-center gap-2 shrink-0 active:scale-95">
-                      {isAddingCat ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-plus"></i>} Add
+                    <input
+                      type="text"
+                      value={newCatName}
+                      onChange={(e) => setNewCatName(e.target.value)}
+                      className="w-full sm:flex-1 bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 font-medium"
+                      placeholder="e.g. Health & Beauty"
+                      required
+                    />
+                    <button
+                      type="submit"
+                      disabled={isAddingCat}
+                      className="w-full sm:w-auto bg-[#0EB981] text-white px-6 py-3 rounded-xl font-black text-sm hover:bg-[#0da874] shadow-lg shadow-emerald-500/20 disabled:opacity-50 transition-all flex items-center justify-center gap-2 shrink-0 active:scale-95"
+                    >
+                      {isAddingCat ? (
+                        <i className="fa-solid fa-spinner fa-spin"></i>
+                      ) : (
+                        <i className="fa-solid fa-plus"></i>
+                      )}{" "}
+                      Add
                     </button>
                   </div>
                 </div>
               </form>
               <div className="mt-8">
-                <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Current Catalog Categories</h3>
+                <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">
+                  Current Catalog Categories
+                </h3>
                 <div className="grid grid-cols-1 gap-2">
                   {allCategories.length === 0 ? (
                     <div className="text-center py-10 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
                       <i className="fa-solid fa-layer-group text-3xl text-gray-200 mb-2 block"></i>
-                      <p className="text-sm text-gray-400">No categories found.</p>
+                      <p className="text-sm text-gray-400">
+                        No categories found.
+                      </p>
                     </div>
                   ) : (
                     allCategories.map((cat) => (
-                      <div key={cat._id} className="flex items-center justify-between bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:border-emerald-200 transition-all group overflow-hidden">
-                        <span className="text-sm font-semibold text-gray-700 break-words pr-4 min-w-0 flex-1 leading-tight">{cat.name}</span>
+                      <div
+                        key={cat._id}
+                        className="flex items-center justify-between bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:border-emerald-200 transition-all group overflow-hidden"
+                      >
+                        <span className="text-sm font-semibold text-gray-700 break-words pr-4 min-w-0 flex-1 leading-tight">
+                          {cat.name}
+                        </span>
                         <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                           <i className="fa-solid fa-check text-xs"></i>
                         </div>
@@ -413,7 +540,11 @@ export default function AddProduct() {
               </div>
             </div>
             <div className="p-4 md:p-6 bg-gray-50 border-t flex justify-center shrink-0">
-              <button type="button" onClick={() => setIsCategoryModalOpen(false)} className="w-full sm:w-auto px-12 py-3.5 bg-black text-white text-sm font-black rounded-xl hover:bg-gray-900 transition-all shadow-xl active:scale-95">
+              <button
+                type="button"
+                onClick={() => setIsCategoryModalOpen(false)}
+                className="w-full sm:w-auto px-12 py-3.5 bg-black text-white text-sm font-black rounded-xl hover:bg-gray-900 transition-all shadow-xl active:scale-95"
+              >
                 DONE & CLOSE
               </button>
             </div>

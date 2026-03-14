@@ -54,7 +54,7 @@ export default function CategoryProductSlider({ categoryId, categoryLabel, produ
 
     return (
         <div className="w-full mb-4">
-            <div className="flex justify-between items-center mb-6 px-2">
+            <div className="flex justify-between items-center mb-6">
                 <h2 className={`text-2xl md:text-3xl font-bold ${colors.text} tracking-tight`}>
                     {categoryLabel}
                 </h2>
@@ -70,11 +70,11 @@ export default function CategoryProductSlider({ categoryId, categoryLabel, produ
                 )}
             </div>
 
-            <div className="relative group/slider">
+            <div className="relative group/slider px-6">
                 {/* Left Arrow */}
                 <button
                     onClick={scrollPrev}
-                    className="absolute left-1 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white text-gray-800 w-10 h-10 rounded-full shadow-md border border-gray-100 flex items-center justify-center opacity-0 group-hover/slider:opacity-100 transition-all duration-300 transform -translate-x-4 group-hover/slider:translate-x-0 focus:outline-none will-change-transform"
+                    className="absolute -left-1 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white text-gray-800 w-10 h-10 rounded-full shadow-md border border-gray-100 flex items-center justify-center opacity-0 group-hover/slider:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover/slider:translate-x-0 focus:outline-none will-change-transform"
                     aria-label="Previous products"
                 >
                     <ChevronLeft className="w-5 h-5" />
@@ -83,15 +83,15 @@ export default function CategoryProductSlider({ categoryId, categoryLabel, produ
                 {/* Right Arrow */}
                 <button
                     onClick={scrollNext}
-                    className="absolute right-1 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white text-gray-800 w-10 h-10 rounded-full shadow-md border border-gray-100 flex items-center justify-center opacity-0 group-hover/slider:opacity-100 transition-all duration-300 transform translate-x-4 group-hover/slider:translate-x-0 focus:outline-none will-change-transform"
+                    className="absolute -right-1 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white text-gray-800 w-10 h-10 rounded-full shadow-md border border-gray-100 flex items-center justify-center opacity-0 group-hover/slider:opacity-100 transition-all duration-300 transform translate-x-2 group-hover/slider:translate-x-0 focus:outline-none will-change-transform"
                     aria-label="Next products"
                 >
                     <ChevronRight className="w-5 h-5" />
                 </button>
 
                 {/* Embla Slider */}
-                <div ref={emblaRef} className="overflow-hidden px-2">
-                    <div className="flex gap-4 transition-transform duration-500 ease-[cubic-bezier(0.25,1,0.5,1)]">
+                <div ref={emblaRef} className="overflow-hidden -my-4">
+                    <div className="flex gap-4 py-4 transition-transform duration-500 ease-[cubic-bezier(0.25,1,0.5,1)]">
                         {categoryProducts.map((p, idx) => (
                             <div
                                 key={`${p.slug || p._id || p.id || 'item'}-${idx}`}
