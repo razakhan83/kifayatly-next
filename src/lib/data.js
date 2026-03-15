@@ -9,6 +9,12 @@ import Product from '@/models/Product';
 import Settings from '@/models/Settings';
 import dbConnect from '@/lib/dbConnect';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryImage';
+import {
+  getProductCategories,
+  getProductCategoryNames,
+  hasProductCategory,
+  normalizeCategoryId,
+} from '@/lib/productCategories';
 import { normalizeProductImages } from '@/lib/productImages';
 
 const SETTINGS_KEY = 'site-settings';
@@ -30,26 +36,18 @@ function normalizeMediaItem(item, sortOrder = 0, fallbackItem = null) {
   };
 }
 
-export function normalizeCategoryId(value = '') {
-  return String(value)
-    .toLowerCase()
-    .replace(/&/g, 'and')
-    .replace(/\s+/g, '-')
-    .replace(/[^a-z0-9-]/g, '')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '');
-}
-
 function serializeProduct(product) {
+  const { Image, ImageURL, ...safeProduct } = product;
+
   return {
-    ...product,
-    _id: product._id.toString(),
-    id: product.slug || product._id.toString(),
-    slug: product.slug || product._id.toString(),
-    Category: Array.isArray(product.Category) ? product.Category : product.Category ? [product.Category] : [],
-    Images: normalizeProductImages(product.Images, product.ImageURL || product.Image || ''),
-    createdAt: product.createdAt ? new Date(product.createdAt).toISOString() : null,
-    updatedAt: product.updatedAt ? new Date(product.updatedAt).toISOString() : null,
+    ...safeProduct,
+    _id: safeProduct._id.toString(),
+    id: safeProduct.slug || safeProduct._id.toString(),
+    slug: safeProduct.slug || safeProduct._id.toString(),
+    Category: getProductCategories(safeProduct),
+    Images: normalizeProductImages(safeProduct.Images),
+    createdAt: safeProduct.createdAt ? new Date(safeProduct.createdAt).toISOString() : null,
+    updatedAt: safeProduct.updatedAt ? new Date(safeProduct.updatedAt).toISOString() : null,
   };
 }
 
@@ -125,7 +123,10 @@ async function getLiveProductsRaw() {
 
   await dbConnect();
 
-  const products = await Product.find({ isLive: true }).sort({ createdAt: -1 }).lean();
+  const products = await Product.find({ isLive: true })
+    .populate('Category')
+    .sort({ createdAt: -1 })
+    .lean();
   return products.map(serializeProduct);
 }
 
@@ -137,7 +138,10 @@ async function getAllProductsRaw() {
 
   await dbConnect();
 
-  const products = await Product.find({}).sort({ createdAt: -1 }).lean();
+  const products = await Product.find({})
+    .populate('Category')
+    .sort({ createdAt: -1 })
+    .lean();
   return products.map(serializeProduct);
 }
 
@@ -237,10 +241,10 @@ async function getCategoriesRaw() {
   const categoryMap = new Map();
 
   for (const product of products) {
-    for (const category of product.Category) {
-      const trimmed = String(category || '').trim();
+    for (const category of getProductCategories(product)) {
+      const trimmed = String(category.name || '').trim();
       if (!trimmed) continue;
-      const id = normalizeCategoryId(trimmed);
+      const id = category.id || normalizeCategoryId(trimmed);
       if (!categoryMap.has(id)) {
         categoryMap.set(id, {
           id,
@@ -311,9 +315,7 @@ export async function getHomeSections() {
   const sections = categories
     .map((category) => {
       const items = products
-        .filter((product) =>
-          product.Category.some((value) => normalizeCategoryId(value) === category.id),
-        )
+        .filter((product) => hasProductCategory(product, category.id))
         .slice(0, 12)
         .map(toProductCardItem);
 
@@ -337,22 +339,22 @@ export async function getProductsList({ category = 'all', search = '', sort = 'n
   const products = await getLiveProductsRaw();
   const normalizedSearch = String(search || '').trim().toLowerCase();
 
-  let filtered = products;
+  let searchMatched = products;
 
   if (normalizedSearch) {
-    filtered = filtered.filter((product) => {
+    searchMatched = searchMatched.filter((product) => {
       const name = String(product.Name || '').toLowerCase();
-      const categories = product.Category.map((value) => String(value || '').toLowerCase());
+      const categories = getProductCategoryNames(product).map((value) => String(value || '').toLowerCase());
       return name.includes(normalizedSearch) || categories.some((value) => value.includes(normalizedSearch));
     });
   }
 
+  let filtered = searchMatched;
+
   if (category === 'new-arrivals') {
     filtered = [...filtered].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
   } else if (category && category !== 'all') {
-    filtered = filtered.filter((product) =>
-      product.Category.some((value) => normalizeCategoryId(value) === category),
-    );
+    filtered = filtered.filter((product) => hasProductCategory(product, category));
   }
 
   const sorted = [...filtered];
@@ -374,9 +376,9 @@ export async function getProductsList({ category = 'all', search = '', sort = 'n
   const items = sorted.slice(start, start + safeLimit).map(toProductCardItem);
 
   const categoryCounts = new Map();
-  for (const product of filtered) {
-    for (const value of product.Category) {
-      const id = normalizeCategoryId(value);
+  for (const product of searchMatched) {
+    for (const value of getProductCategories(product)) {
+      const id = value.id || value._id;
       categoryCounts.set(id, (categoryCounts.get(id) || 0) + 1);
     }
   }
@@ -411,7 +413,7 @@ export async function getProductBySlug(slug) {
 
     await dbConnect();
 
-    const product = await Product.findOne({ slug: productSlug, isLive: true }).lean();
+    const product = await Product.findOne({ slug: productSlug, isLive: true }).populate('Category').lean();
     return product ? serializeProduct(product) : null;
   }
 
@@ -421,13 +423,12 @@ export async function getProductBySlug(slug) {
 
 export async function getRelatedProducts({ category = '', excludeSlug = '', limit = 8 } = {}) {
   const products = await getLiveProductsRaw();
-  const normalizedCategory = normalizeCategoryId(category);
 
   return products
     .filter((product) => product.slug !== excludeSlug)
     .filter((product) => {
-      if (!normalizedCategory) return true;
-      return product.Category.some((value) => normalizeCategoryId(value) === normalizedCategory);
+      if (!category) return true;
+      return hasProductCategory(product, category);
     })
     .slice(0, limit)
     .map(toProductCardItem);
@@ -435,7 +436,7 @@ export async function getRelatedProducts({ category = '', excludeSlug = '', limi
 
 export async function getAdminProducts() {
   await dbConnect();
-  const products = await Product.find({}).sort({ createdAt: -1 }).lean();
+  const products = await Product.find({}).populate('Category').sort({ createdAt: -1 }).lean();
   const serializedProducts = products.map(serializeProduct);
   return serializedProducts.map(toAdminProductRow);
 }

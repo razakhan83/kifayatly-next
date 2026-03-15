@@ -5,6 +5,7 @@ import { ArrowRight, Search, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { getProductCategoryNames } from "@/lib/productCategories";
 import { cn } from "@/lib/utils";
 import { getPrimaryProductImage } from "@/lib/productImages";
 import { getBlurPlaceholderProps } from "@/lib/imagePlaceholder";
@@ -76,9 +77,7 @@ export default function SearchField({
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-semibold text-foreground">{product.Name || product.name}</p>
                       <p className="truncate text-xs text-muted-foreground">
-                        {Array.isArray(product.Category)
-                          ? product.Category.join(", ")
-                          : product.Category || "Uncategorized"}
+                        {getProductCategoryNames(product).join(", ") || "Uncategorized"}
                       </p>
                     </div>
                     <ArrowRight className="size-4 text-muted-foreground" />

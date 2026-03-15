@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { useCart } from '@/context/CartContext';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { getProductCategoryNames } from '@/lib/productCategories';
 import { getPrimaryProductImage } from '@/lib/productImages';
 import { getBlurPlaceholderProps } from '@/lib/imagePlaceholder';
 
@@ -18,13 +19,7 @@ export default function ProductModal({ product, onClose }) {
         return `Rs. ${Number(cleanNumbers).toLocaleString('en-PK')}`;
     };
 
-    const categories = Array.isArray(product.Category)
-        ? product.Category
-        : product.Category
-            ? [product.Category]
-            : product.category
-                ? [product.category]
-                : [];
+    const categories = getProductCategoryNames(product);
     const primaryImage = getPrimaryProductImage(product);
 
     return (

@@ -6,8 +6,9 @@ import dbConnect from '@/lib/dbConnect';
 import Order from '@/models/Order';
 import Product from '@/models/Product';
 
-export async function GET() {
+export async function GET(request) {
     try {
+        void request.headers.get('host');
         const session = await getServerSession(authOptions);
         if (!session || !isAdminEmail(session.user?.email)) {
             return NextResponse.json(
@@ -128,6 +129,9 @@ export async function GET() {
             },
         });
     } catch (error) {
+        if (error?.digest === 'NEXT_PRERENDER_INTERRUPTED') {
+            throw error;
+        }
         console.error('Dashboard API Error:', error);
         return NextResponse.json(
             { success: false, error: error.message },

@@ -6,16 +6,11 @@ import Autoplay from 'embla-carousel-autoplay';
 import { motion } from 'framer-motion';
 import ProductCard from '@/components/ProductCard';
 import { Button } from '@/components/ui/button';
+import { hasProductCategory } from '@/lib/productCategories';
 import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 
 export default function CategoryProductSlider({ categoryId, categoryLabel, products, onViewAll, skipFilter = false }) {
-    const categoryProducts = skipFilter ? products : products.filter(p => {
-        const cats = Array.isArray(p.Category) ? p.Category : (p.Category ? [p.Category] : []);
-        return cats.some(cat => {
-            const pCat = (cat || '').trim().toLowerCase().replace(/&/g, 'and').replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-');
-            return pCat === categoryId;
-        });
-    });
+    const categoryProducts = skipFilter ? products : products.filter((product) => hasProductCategory(product, categoryId));
 
     const [emblaRef, emblaApi] = useEmblaCarousel(
         {

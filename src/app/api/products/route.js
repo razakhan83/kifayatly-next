@@ -1,10 +1,12 @@
-import { revalidateTag } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { isAdminEmail } from '@/lib/admin';
 import dbConnect from '@/lib/dbConnect';
+import Category from '@/models/Category';
 import Product from '@/models/Product';
+import { getProductCategories } from '@/lib/productCategories';
 import { normalizeProductImages } from '@/lib/productImages';
 import { ensureProductImagesBlur } from '@/lib/serverImageBlur';
 
@@ -22,16 +24,20 @@ const slugify = (text) => {
 export async function GET() {
     try {
         await dbConnect();
-        const products = await Product.find({}).sort({ createdAt: -1 }).lean();
+        const products = await Product.find({}).populate('Category').sort({ createdAt: -1 }).lean();
 
         // Format objectId to string securely
-        const safeProducts = products.map(p => ({
-            ...p,
-            _id: p._id.toString(),
-            id: p.slug || p._id.toString(),
-            Category: Array.isArray(p.Category) ? p.Category : (p.Category ? [p.Category] : []),
-            Images: normalizeProductImages(p.Images, p.ImageURL || p.Image || ''),
-        }));
+        const safeProducts = products.map((p) => {
+            const { Image, ImageURL, ...safeProduct } = p;
+
+            return {
+                ...safeProduct,
+                _id: safeProduct._id.toString(),
+                id: safeProduct.slug || safeProduct._id.toString(),
+                Category: getProductCategories(safeProduct),
+                Images: normalizeProductImages(safeProduct.Images),
+            };
+        });
 
         return NextResponse.json({ success: true, data: safeProducts });
     } catch (error) {
@@ -60,15 +66,22 @@ export async function POST(req) {
         const body = await req.json();
         console.log('[API] Body received:', { Name: body.Name, Category: body.Category, Price: body.Price, Images: body.Images?.length });
 
-        let { Name, Description, Price, ImageURL, Images, cloudinary_id, Category, stockQuantity, slug, isLive } = body;
+        let { Name, Description, Price, Images, cloudinary_id, Category: categoryInput, stockQuantity, slug, isLive } = body;
 
-        if (!Name || !Price || !Category) {
+        if (!Name || !Price || !categoryInput) {
             console.log('[API] ❌ Validation failed: Missing required fields');
             return NextResponse.json({ success: false, message: 'Please provide Name, Price, and Category' }, { status: 400 });
         }
 
         // Normalize Category to always be an array
-        const categoryArray = Array.isArray(Category) ? Category : [Category].filter(Boolean);
+        const categoryIds = Array.isArray(categoryInput) ? categoryInput : [categoryInput].filter(Boolean);
+        const categories = await Category.find({ _id: { $in: categoryIds } }, '_id').lean();
+        const validCategoryIdSet = new Set(categories.map((category) => category._id.toString()));
+        const categoryArray = categoryIds.filter((id) => validCategoryIdSet.has(String(id)));
+
+        if (categoryArray.length === 0) {
+            return NextResponse.json({ success: false, message: 'Please provide valid categories' }, { status: 400 });
+        }
 
         // Auto-generate slug if missing or empty
         let uniqueSlug = slug || slugify(Name);
@@ -86,18 +99,12 @@ export async function POST(req) {
         const stockStatus = (stockQuantity || 0) > 0 ? 'In Stock' : 'Out of Stock';
         console.log('[API] 📦 Stock Quantity:', stockQuantity, '-> Status:', stockStatus);
 
-        const normalizedImages = await ensureProductImagesBlur(
-            normalizeProductImages(Images, ImageURL || ''),
-            ImageURL || '',
-        );
-        const primaryImage = normalizedImages[0]?.url || ImageURL || '';
+        const normalizedImages = await ensureProductImagesBlur(normalizeProductImages(Images));
 
         const product = await Product.create({
             Name,
             Description,
             Price,
-            ImageURL: primaryImage,
-            Image: primaryImage,
             Images: normalizedImages,
             cloudinary_id,
             Category: categoryArray,
@@ -107,11 +114,26 @@ export async function POST(req) {
             isLive: isLive === true || isLive === 'true' ? true : false,
         });
 
+        await product.populate('Category');
+
         console.log('[API] ✅ Product saved:', product._id);
 
         revalidateTag('products', { expire: 0 });
+        revalidateTag(`product-${uniqueSlug}`, { expire: 0 });
         revalidateTag('admin-dashboard', { expire: 0 });
-        return NextResponse.json({ success: true, data: product }, { status: 201 });
+        revalidatePath('/admin/products');
+        revalidatePath('/products');
+        revalidatePath(`/products/${uniqueSlug}`);
+        return NextResponse.json({
+            success: true,
+            data: {
+                ...product.toObject(),
+                _id: product._id.toString(),
+                id: product.slug || product._id.toString(),
+                Category: getProductCategories(product.toObject()),
+                Images: normalizeProductImages(product.Images),
+            },
+        }, { status: 201 });
     } catch (error) {
         console.error('[API] ❌ Error:', error.message);
         return NextResponse.json({ success: false, error: error.message }, { status: 500 });

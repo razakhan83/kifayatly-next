@@ -72,10 +72,10 @@ export default function ProductsPageHeader({
         </div>
       </div>
 
-      <div className="h-28 md:h-32" aria-hidden="true" />
+      <div className="h-22 md:h-24" aria-hidden="true" />
 
-      <div className="container mx-auto mb-4 max-w-7xl px-4">
-        <Breadcrumb className="mb-4">
+      <div className="container mx-auto mb-3 max-w-7xl px-4">
+        <Breadcrumb className="mb-3">
           <BreadcrumbList>
             <BreadcrumbItem>
               <BreadcrumbLink href="/">Home</BreadcrumbLink>

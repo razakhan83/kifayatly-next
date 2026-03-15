@@ -10,7 +10,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { uploadImageDataUrl } from '@/lib/cloudinaryUpload';
-import { normalizeProductImages } from '@/lib/productImages';
+import { getProductCategories } from '@/lib/productCategories';
+import { moveProductImageToFront, normalizeProductImages } from '@/lib/productImages';
 import { getBlurPlaceholderProps } from '@/lib/imagePlaceholder';
 import { cn } from '@/lib/utils';
 
@@ -31,7 +32,7 @@ export default function EditProduct({ id }) {
   const [Name, setName] = useState('');
   const [Description, setDescription] = useState('');
   const [Price, setPrice] = useState('');
-  const [Categories, setCategories] = useState([]); // array
+  const [Categories, setCategories] = useState([]); // array of selected category ids
   const [stockQuantity, setStockQuantity] = useState('');
   const [images, setImages] = useState([]); // Array of { url, blurDataURL, publicId, file, isNew }
   const [isLive, setIsLive] = useState(false);
@@ -73,12 +74,11 @@ export default function EditProduct({ id }) {
           setName(p.Name || '');
           setDescription(p.Description || '');
           setPrice(p.Price || '');
-          setCategories(Array.isArray(p.Category) ? p.Category : (p.Category ? [p.Category] : []));
+          setCategories(getProductCategories(p).map((category) => category._id || category.id));
           setStockQuantity(p.stockQuantity ?? '');
           
           const existingImages = normalizeProductImages(
             p.Images,
-            p.ImageURL || p.Image || '',
           ).map((image) => ({ ...image, isNew: false }));
           setImages(existingImages);
           
@@ -146,9 +146,9 @@ export default function EditProduct({ id }) {
     reader.readAsDataURL(file);
   };
 
-  const toggleCategory = (catName) => {
+  const toggleCategory = (categoryId) => {
     setCategories(prev =>
-      prev.includes(catName) ? prev.filter(c => c !== catName) : [...prev, catName]
+      prev.includes(categoryId) ? prev.filter(c => c !== categoryId) : [...prev, categoryId]
     );
   };
 
@@ -181,6 +181,10 @@ export default function EditProduct({ id }) {
       setImages(prev => prev.filter((_, idx) => idx !== indexToRemove));
   };
 
+  const makeImagePrimary = (indexToMove) => {
+      setImages(prev => moveProductImageToFront(prev, indexToMove));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!Name || !Price || Categories.length === 0) {
@@ -211,8 +215,6 @@ export default function EditProduct({ id }) {
         return;
     }
 
-    const primaryImage = finalImages.length > 0 ? finalImages[0].url : '';
-
     try {
       const res = await fetch(`/api/products/${id}`, {
         method: 'PUT',
@@ -221,7 +223,6 @@ export default function EditProduct({ id }) {
           Name,
           Description,
           Price: Number(Price),
-          ImageURL: primaryImage, // backward compatibility
           Images: finalImages,
           Category: Categories,
           stockQuantity: Number(stockQuantity) || 0,
@@ -315,12 +316,12 @@ export default function EditProduct({ id }) {
                 <p className="self-center text-xs text-muted-foreground">No categories found. Add one.</p>
               ) : (
                 allCategories.map((cat) => {
-                  const selected = Categories.includes(cat.name);
+                  const selected = Categories.includes(cat._id);
                   return (
                     <button
                       key={cat._id}
                       type="button"
-                      onClick={() => toggleCategory(cat.name)}
+                      onClick={() => toggleCategory(cat._id)}
                       className={selectionChipClass(selected)}
                     >
                       {selected && <Check className="mr-1 size-3" />}
@@ -384,7 +385,16 @@ export default function EditProduct({ id }) {
                         >
                             <Trash2 className="size-3.5" />
                         </button>
-                        {idx === 0 && <span className="absolute bottom-2 left-2 rounded-md bg-foreground/80 px-2 py-0.5 text-[10px] font-bold text-background shadow-sm">Primary</span>}
+                        {idx !== 0 ? (
+                          <button
+                            type="button"
+                            onClick={() => makeImagePrimary(idx)}
+                            className="absolute bottom-2 left-2 rounded-md border border-border bg-background/95 px-2 py-1 text-[10px] font-bold text-foreground shadow-sm opacity-0 transition-all hover:border-primary hover:text-primary group-hover:opacity-100"
+                          >
+                            Set Main
+                          </button>
+                        ) : null}
+                        {idx === 0 ? <span className="absolute bottom-2 left-2 rounded-md bg-foreground/80 px-2 py-0.5 text-[10px] font-bold text-background shadow-sm">Main Image</span> : null}
                     </div>
                 ))}
             </div>
@@ -409,6 +419,7 @@ export default function EditProduct({ id }) {
                   <p className="text-sm font-semibold text-foreground">Drag & Drop Images Here</p>
                   <p className="text-xs text-muted-foreground">or click to browse multiple files</p>
                   <p className="mt-1 text-[10px] text-muted-foreground">PNG, JPG up to 10MB each</p>
+                  <p className="mt-1 text-[10px] text-muted-foreground">Use "Set Main" on a preview to move it to the first slot.</p>
                 </div>
               </div>
             </div>

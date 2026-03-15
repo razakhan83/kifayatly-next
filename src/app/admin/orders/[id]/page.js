@@ -1,9 +1,7 @@
 import Link from 'next/link';
 import { connection } from 'next/server';
 import { notFound } from 'next/navigation';
-import { Suspense } from 'react';
 
-import { AdminTableSkeleton } from '@/components/AdminDashboardSkeleton';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { getOrderById } from '@/lib/data';
@@ -20,11 +18,7 @@ export default async function AdminOrderDetailPage({ params }) {
   await requireAdmin();
   const { id } = await params;
 
-  return (
-    <Suspense fallback={<AdminTableSkeleton rows={4} />}>
-      <OrderDetailContent id={id} />
-    </Suspense>
-  );
+  return <OrderDetailContent id={id} />;
 }
 
 async function OrderDetailContent({ id }) {

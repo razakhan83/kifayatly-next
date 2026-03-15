@@ -19,7 +19,6 @@ function normalizeCartItem(item) {
     Price: Number(item.Price || item.price || 0),
     Category: Array.isArray(item.Category) ? item.Category : item.Category ? [item.Category] : [],
     Images: item.Images || [],
-    ImageURL: item.ImageURL || item.Image || '',
     quantity: Math.max(1, Number(item.quantity || 1)),
   };
 }

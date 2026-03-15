@@ -37,20 +37,15 @@ const ProductSchema = new mongoose.Schema(
             type: Number,
             required: [true, 'Please provide a price.'],
         },
-        ImageURL: {
-            type: String,
-            required: false,
-        },
-        Image: {
-            type: String,
-            required: false,
-        },
         Images: {
             type: [ProductImageSchema],
             default: []
         },
         Category: {
-            type: [String],
+            type: [{
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Category',
+            }],
             required: [true, 'Please provide at least one category.'],
             default: [],
         },

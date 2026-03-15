@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { startTransition, useMemo, useState } from "react";
-import { Check, ImageIcon, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { startTransition, useEffect, useMemo, useState } from "react";
+import { ImageIcon, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { deleteProductAction, toggleProductLiveAction } from "@/app/actions";
@@ -19,6 +19,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { getProductCategoryNames } from "@/lib/productCategories";
 import { getPrimaryProductImage } from "@/lib/productImages";
 import { getBlurPlaceholderProps } from "@/lib/imagePlaceholder";
 
@@ -29,13 +31,17 @@ export default function AdminProductsClient({ initialProducts }) {
   const [deleting, setDeleting] = useState(false);
   const [togglingId, setTogglingId] = useState(null);
 
+  useEffect(() => {
+    setProducts(initialProducts);
+  }, [initialProducts]);
+
   const filteredProducts = useMemo(() => {
     if (!searchQuery.trim()) return products;
     const query = searchQuery.toLowerCase();
     return products.filter(
       (product) =>
         product.Name?.toLowerCase().includes(query) ||
-        product.Category.some((category) => category.toLowerCase().includes(query)),
+        getProductCategoryNames(product).some((category) => category.toLowerCase().includes(query)),
     );
   }, [products, searchQuery]);
 
@@ -133,7 +139,7 @@ export default function AdminProductsClient({ initialProducts }) {
                   <h3 className="line-clamp-2 text-base font-semibold text-foreground">{product.Name}</h3>
                   <p className="mt-1 text-lg font-bold text-primary">{formatPrice(product.Price)}</p>
                   <div className="mt-2 flex flex-wrap gap-1.5">
-                    {product.Category.filter(Boolean).map((category) => (
+                    {getProductCategoryNames(product).map((category) => (
                       <Badge key={category} variant="secondary">{category}</Badge>
                     ))}
                   </div>
@@ -141,15 +147,17 @@ export default function AdminProductsClient({ initialProducts }) {
               </div>
 
               <div className="mt-4 flex items-center justify-between gap-3">
-                <button
-                  onClick={() => handleToggleLive(product)}
-                  disabled={togglingId === product._id}
-                  className={`inline-flex min-w-24 items-center justify-center rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                    product.isLive ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-                  }`}
-                >
-                  {product.isLive ? "Live" : "Draft"}
-                </button>
+                <div className="flex items-center gap-3">
+                  <Switch
+                    checked={product.isLive}
+                    disabled={togglingId === product._id}
+                    onCheckedChange={() => handleToggleLive(product)}
+                    aria-label={`Toggle ${product.Name} live status`}
+                  />
+                  <span className="text-sm font-medium text-muted-foreground">
+                    {product.isLive ? "Live" : "Draft"}
+                  </span>
+                </div>
                 <div className="flex gap-2">
                   <Link href={`/admin/products/edit/${product._id}`}>
                     <Button variant="outline" size="icon">
@@ -205,7 +213,7 @@ export default function AdminProductsClient({ initialProducts }) {
                   <td className="px-6 py-4 text-sm font-semibold text-primary">{formatPrice(product.Price)}</td>
                   <td className="px-6 py-4">
                     <div className="flex max-w-[180px] flex-wrap gap-1.5">
-                      {product.Category.filter(Boolean).map((category) => (
+                      {getProductCategoryNames(product).map((category) => (
                         <Badge key={category} variant="secondary">{category}</Badge>
                       ))}
                     </div>
@@ -216,22 +224,17 @@ export default function AdminProductsClient({ initialProducts }) {
                     </Badge>
                   </td>
                   <td className="px-6 py-4 text-center">
-                    <button
-                      onClick={() => handleToggleLive(product)}
-                      disabled={togglingId === product._id}
-                      className={`inline-flex min-w-24 items-center justify-center rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                        product.isLive ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-                      }`}
-                    >
-                      {product.isLive ? (
-                        <>
-                          <Check className="mr-2 size-4" />
-                          Live
-                        </>
-                      ) : (
-                        "Draft"
-                      )}
-                    </button>
+                    <div className="inline-flex items-center gap-3">
+                      <Switch
+                        checked={product.isLive}
+                        disabled={togglingId === product._id}
+                        onCheckedChange={() => handleToggleLive(product)}
+                        aria-label={`Toggle ${product.Name} live status`}
+                      />
+                      <span className="min-w-10 text-left text-sm font-medium text-muted-foreground">
+                        {product.isLive ? "Live" : "Draft"}
+                      </span>
+                    </div>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center justify-center gap-2">

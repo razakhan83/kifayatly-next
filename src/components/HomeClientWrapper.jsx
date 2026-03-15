@@ -7,6 +7,7 @@ import HeroSlider from "@/components/HeroSlider";
 import HomeCategories from "@/components/HomeCategories";
 import ProductGridClient from "@/components/ProductGridClient";
 import SearchField from "@/components/SearchField";
+import { getProductCategoryNames } from "@/lib/productCategories";
 
 export default function HomeClientWrapper({ products, heroSlides, categories = [], sections = [] }) {
   const wrapperRef = useRef(null);
@@ -36,11 +37,7 @@ export default function HomeClientWrapper({ products, heroSlides, categories = [
     return products
       .filter((product) => {
         const name = (product.Name || product.name || "").toLowerCase();
-        const categories = Array.isArray(product.Category)
-          ? product.Category
-          : product.Category
-            ? [product.Category]
-            : [];
+        const categories = getProductCategoryNames(product);
         return (
           name.includes(term) ||
           categories.some((category) => (category || "").toLowerCase().includes(term))

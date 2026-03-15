@@ -1,9 +1,7 @@
 import Link from 'next/link';
 import { connection } from 'next/server';
-import { Suspense } from 'react';
 import { ArrowRight, Box, CircleDollarSign, Inbox, ShoppingBag, Users } from 'lucide-react';
 
-import { AdminDashboardSkeleton } from '@/components/AdminDashboardSkeleton';
 import { Button } from '@/components/ui/button';
 import { getAdminDashboardData } from '@/lib/data';
 import { requireAdmin } from '@/lib/requireAdmin';
@@ -19,11 +17,7 @@ export default async function AdminDashboardPage() {
   await connection();
   await requireAdmin();
 
-  return (
-    <Suspense fallback={<AdminDashboardSkeleton />}>
-      <DashboardContent />
-    </Suspense>
-  );
+  return <DashboardContent />;
 }
 
 async function DashboardContent() {

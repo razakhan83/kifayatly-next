@@ -9,6 +9,7 @@ import { useCart } from "@/context/CartContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { getProductCategoryNames, hasProductCategory, normalizeCategoryId } from "@/lib/productCategories";
 import { cn } from "@/lib/utils";
 
 function ProductGridContent({
@@ -40,13 +41,7 @@ function ProductGridContent({
     if (!term) return [...initialProducts];
     return initialProducts.filter((product) => {
       const name = (product.Name || product.name || "").toLowerCase();
-      const categories = Array.isArray(product.Category)
-        ? product.Category
-        : product.Category
-          ? [product.Category]
-          : product.category
-            ? [product.category]
-            : [];
+      const categories = getProductCategoryNames(product);
       return name.includes(term) || categories.some((category) => (category || "").toLowerCase().includes(term));
     });
   }, [initialProducts, searchTerm]);
@@ -54,13 +49,7 @@ function ProductGridContent({
   const dynamicCategories = useMemo(() => {
     const categories = new Map();
     searchFilteredProducts.forEach((product) => {
-      const values = Array.isArray(product.Category)
-        ? product.Category
-        : product.Category
-          ? [product.Category]
-          : product.category
-            ? [product.category]
-            : [];
+      const values = getProductCategoryNames(product);
       values.forEach((category) => {
         const trimmed = (category || "").trim();
         if (!trimmed) return;
@@ -70,7 +59,7 @@ function ProductGridContent({
     return Array.from(categories.values())
       .sort()
       .map((category) => ({
-        id: category.toLowerCase().replace(/&/g, "and").replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "").replace(/-+/g, "-"),
+        id: normalizeCategoryId(category),
         label: category,
       }));
   }, [searchFilteredProducts]);
@@ -83,22 +72,7 @@ function ProductGridContent({
     }
 
     if (activeCategory !== "all") {
-      base = base.filter((product) => {
-        const categories = Array.isArray(product.Category)
-          ? product.Category
-          : product.Category
-            ? [product.Category]
-            : product.category
-              ? [product.category]
-              : [];
-        return categories.some((category) => category
-          .trim()
-          .toLowerCase()
-          .replace(/&/g, "and")
-          .replace(/\s+/g, "-")
-          .replace(/[^a-z0-9-]/g, "")
-          .replace(/-+/g, "-") === activeCategory);
-      });
+      base = base.filter((product) => hasProductCategory(product, activeCategory));
     }
 
     if (sortBy === "price-low") {

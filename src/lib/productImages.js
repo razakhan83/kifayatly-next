@@ -35,11 +35,26 @@ export function normalizeProductImages(images, fallbackImage = "") {
   return fallback ? [fallback] : [];
 }
 
+export function moveProductImageToFront(images, index) {
+  if (!Array.isArray(images)) return [];
+
+  const safeIndex = Number(index);
+  if (!Number.isInteger(safeIndex) || safeIndex < 0 || safeIndex >= images.length) {
+    return [...images];
+  }
+
+  if (safeIndex === 0) {
+    return [...images];
+  }
+
+  const nextImages = [...images];
+  const [selectedImage] = nextImages.splice(safeIndex, 1);
+  nextImages.unshift(selectedImage);
+  return nextImages;
+}
+
 export function getPrimaryProductImage(product) {
-  const normalizedImages = normalizeProductImages(
-    product?.Images,
-    product?.ImageURL || product?.Image || product?.image || "",
-  );
+  const normalizedImages = normalizeProductImages(product?.Images);
 
   return normalizedImages[0] || null;
 }

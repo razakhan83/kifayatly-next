@@ -1,9 +1,7 @@
 import Link from 'next/link';
 import { connection } from 'next/server';
-import { Suspense } from 'react';
 import { Eye, Receipt } from 'lucide-react';
 
-import { AdminTableSkeleton } from '@/components/AdminDashboardSkeleton';
 import { Badge } from '@/components/ui/badge';
 import { getOrdersList } from '@/lib/data';
 import { requireAdmin } from '@/lib/requireAdmin';
@@ -22,11 +20,7 @@ export default async function AdminOrdersPage() {
   await connection();
   await requireAdmin();
 
-  return (
-    <Suspense fallback={<AdminTableSkeleton />}>
-      <OrdersContent />
-    </Suspense>
-  );
+  return <OrdersContent />;
 }
 
 async function OrdersContent() {

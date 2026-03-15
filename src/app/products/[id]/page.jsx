@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { getProductBySlug, getRelatedProducts } from '@/lib/data';
 import { getCategoryColor } from '@/lib/categoryColors';
+import { getProductCategories } from '@/lib/productCategories';
 
 const formatPrice = (raw) => `Rs. ${Number(raw || 0).toLocaleString('en-PK')}`;
 
@@ -81,16 +82,12 @@ async function ProductPageContent({ slug }) {
     notFound();
   }
 
-  const categoryLabel = product.Category[0] || '';
-  const categorySlug = categoryLabel
-    .toLowerCase()
-    .replace(/&/g, 'and')
-    .replace(/\s+/g, '-')
-    .replace(/[^a-z0-9-]/g, '')
-    .replace(/-+/g, '-');
+  const primaryCategory = getProductCategories(product)[0];
+  const categoryLabel = primaryCategory?.name || '';
+  const categorySlug = primaryCategory?.id || '';
   const colors = getCategoryColor(categoryLabel);
   const relatedProducts = await getRelatedProducts({
-    category: categoryLabel,
+    category: categorySlug,
     excludeSlug: product.slug,
     limit: 8,
   });

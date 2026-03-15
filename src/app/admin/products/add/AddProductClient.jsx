@@ -1,7 +1,7 @@
 "use client";
 import Image from "next/image";
 import { useState, useCallback, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Check, CloudUpload, Layers3, Loader2, Plus, PlusCircle, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { uploadImageDataUrl } from "@/lib/cloudinaryUpload";
 import { getBlurPlaceholderProps } from "@/lib/imagePlaceholder";
+import { moveProductImageToFront } from "@/lib/productImages";
 import { cn } from "@/lib/utils";
 
 const selectionChipClass = (selected) =>
@@ -25,10 +26,11 @@ const uploadActionClass =
 
 export default function AddProduct() {
   const router = useRouter();
+  const pathname = usePathname();
   const [Name, setName] = useState("");
   const [Description, setDescription] = useState("");
   const [Price, setPrice] = useState("");
-  const [Categories, setCategories] = useState([]); // array of selected category names
+  const [Categories, setCategories] = useState([]); // array of selected category ids
   const [stockQuantity, setStockQuantity] = useState("");
   const [images, setImages] = useState([]); // Array of { url, blurDataURL, publicId, file, isNew }
   const [saving, setSaving] = useState(false);
@@ -107,11 +109,11 @@ export default function AddProduct() {
     reader.readAsDataURL(file);
   };
 
-  const toggleCategory = (catName) => {
+  const toggleCategory = (categoryId) => {
     setCategories((prev) =>
-      prev.includes(catName)
-        ? prev.filter((c) => c !== catName)
-        : [...prev, catName],
+      prev.includes(categoryId)
+        ? prev.filter((c) => c !== categoryId)
+        : [...prev, categoryId],
     );
   };
 
@@ -152,6 +154,10 @@ export default function AddProduct() {
     setImages((prev) => prev.filter((_, idx) => idx !== indexToRemove));
   };
 
+  const makeImagePrimary = (indexToMove) => {
+    setImages((prev) => moveProductImageToFront(prev, indexToMove));
+  };
+
   const showToast = (message, type = "success") => {
     if (type === "error") toast.error(message);
     else toast.success(message);
@@ -165,7 +171,17 @@ export default function AddProduct() {
     setStockQuantity("");
     setImages([]);
     setIsLive(false);
+    setIsDragOver(false);
+    setIsCategoryModalOpen(false);
+    setNewCatName("");
+    setNewCatImage("");
   };
+
+  useEffect(() => {
+    if (pathname === "/admin/products/add") {
+      clearForm();
+    }
+  }, [pathname]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -197,13 +213,10 @@ export default function AddProduct() {
       return;
     }
 
-    const primaryImage = finalImages.length > 0 ? finalImages[0].url : "";
-
     const payload = {
       Name,
       Description,
       Price: Number(Price),
-      ImageURL: primaryImage, // backwards compat
       Images: finalImages,
       Category: Categories,
       stockQuantity: Number(stockQuantity) || 0,
@@ -293,12 +306,12 @@ export default function AddProduct() {
                 </p>
               ) : (
                 allCategories.map((cat) => {
-                  const selected = Categories.includes(cat.name);
+                  const selected = Categories.includes(cat._id);
                   return (
                     <button
                       key={cat._id}
                       type="button"
-                      onClick={() => toggleCategory(cat.name)}
+                      onClick={() => toggleCategory(cat._id)}
                       className={selectionChipClass(selected)}
                     >
                       {selected && (
@@ -384,9 +397,18 @@ export default function AddProduct() {
                   >
                     <Trash2 className="size-3.5" />
                   </button>
+                  {idx !== 0 ? (
+                    <button
+                      type="button"
+                      onClick={() => makeImagePrimary(idx)}
+                      className="absolute bottom-2 left-2 rounded-md border border-border bg-background/95 px-2 py-1 text-[10px] font-bold text-foreground shadow-sm opacity-0 transition-all hover:border-primary hover:text-primary group-hover:opacity-100"
+                    >
+                      Set Main
+                    </button>
+                  ) : null}
                   {idx === 0 && (
                     <span className="absolute bottom-2 left-2 rounded-md bg-foreground/80 px-2 py-0.5 text-[10px] font-bold text-background shadow-sm">
-                      Primary
+                      Main Image
                     </span>
                   )}
                 </div>
@@ -424,6 +446,9 @@ export default function AddProduct() {
                   </p>
                   <p className="mt-1 text-[10px] text-muted-foreground">
                     PNG, JPG up to 10MB each
+                  </p>
+                  <p className="mt-1 text-[10px] text-muted-foreground">
+                    Choose "Set Main" on any preview to move it to the first slot.
                   </p>
                 </div>
               </div>
