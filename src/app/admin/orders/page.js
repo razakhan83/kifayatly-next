@@ -1,41 +1,34 @@
-'use client';
-
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
-import { Receipt, Eye } from 'lucide-react';
+import { Suspense } from 'react';
+import { Eye, Receipt } from 'lucide-react';
 
+import { AdminTableSkeleton } from '@/components/AdminDashboardSkeleton';
 import { Badge } from '@/components/ui/badge';
+import { getOrdersList } from '@/lib/data';
+import { requireAdmin } from '@/lib/requireAdmin';
 
-export default function AdminOrdersPage() {
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
+const statusVariant = {
+  Pending: 'accent',
+  Shipped: 'secondary',
+  Delivered: 'emerald',
+};
 
-  useEffect(() => {
-    fetchOrders();
-  }, []);
+const formatPrice = (price) => `PKR ${Number(price).toLocaleString('en-PK')}`;
+const formatDate = (dateStr) => new Date(dateStr).toLocaleDateString('en-PK', { year: 'numeric', month: 'short', day: 'numeric' });
+const formatTime = (dateStr) => new Date(dateStr).toLocaleTimeString('en-PK', { hour: '2-digit', minute: '2-digit', hour12: true });
 
-  async function fetchOrders() {
-    try {
-      setLoading(true);
-      const res = await fetch('/api/orders');
-      const data = await res.json();
-      if (data.success) setOrders(data.data);
-    } catch (error) {
-      console.error('Failed to fetch orders:', error);
-    } finally {
-      setLoading(false);
-    }
-  }
+export default async function AdminOrdersPage() {
+  await requireAdmin();
 
-  const formatPrice = (price) => `PKR ${Number(price).toLocaleString('en-PK')}`;
-  const formatDate = (dateStr) => new Date(dateStr).toLocaleDateString('en-PK', { year: 'numeric', month: 'short', day: 'numeric' });
-  const formatTime = (dateStr) => new Date(dateStr).toLocaleTimeString('en-PK', { hour: '2-digit', minute: '2-digit', hour12: true });
+  return (
+    <Suspense fallback={<AdminTableSkeleton />}>
+      <OrdersContent />
+    </Suspense>
+  );
+}
 
-  const statusVariant = {
-    Pending: 'accent',
-    Shipped: 'secondary',
-    Delivered: 'emerald',
-  };
+async function OrdersContent() {
+  const orders = await getOrdersList();
 
   return (
     <div>
@@ -58,15 +51,7 @@ export default function AdminOrdersPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {loading ? (
-                [...Array(5)].map((_, index) => (
-                  <tr key={index}>
-                    <td colSpan={6} className="px-4 py-4">
-                      <div className="h-10 animate-pulse rounded-xl bg-muted" />
-                    </td>
-                  </tr>
-                ))
-              ) : orders.length === 0 ? (
+              {orders.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-4 py-16 text-center">
                     <Receipt className="mx-auto mb-3 size-8 text-muted-foreground" />

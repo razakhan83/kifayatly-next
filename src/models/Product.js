@@ -1,5 +1,27 @@
 import mongoose from 'mongoose';
 
+const ProductImageSchema = new mongoose.Schema(
+    {
+        url: {
+            type: String,
+            required: true,
+            trim: true,
+        },
+        blurDataURL: {
+            type: String,
+            default: '',
+        },
+        publicId: {
+            type: String,
+            default: '',
+            trim: true,
+        },
+    },
+    {
+        _id: false,
+    }
+);
+
 const ProductSchema = new mongoose.Schema(
     {
         Name: {
@@ -24,7 +46,7 @@ const ProductSchema = new mongoose.Schema(
             required: false,
         },
         Images: {
-            type: [String],
+            type: [ProductImageSchema],
             default: []
         },
         Category: {

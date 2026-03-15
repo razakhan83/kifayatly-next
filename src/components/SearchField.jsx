@@ -6,6 +6,8 @@ import { ArrowRight, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { getPrimaryProductImage } from "@/lib/productImages";
+import { getBlurPlaceholderProps } from "@/lib/imagePlaceholder";
 
 export default function SearchField({
   value,
@@ -60,13 +62,14 @@ export default function SearchField({
                     className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-muted"
                   >
                     <div className="relative size-12 overflow-hidden rounded-lg border border-border bg-muted">
-                      {(product.Image || product.image) ? (
+                      {getPrimaryProductImage(product)?.url ? (
                         <Image
-                          src={product.Image || product.image}
+                          src={getPrimaryProductImage(product).url}
                           alt={product.Name || product.name || "product"}
                           fill
                           sizes="48px"
                           className="object-cover"
+                          {...getBlurPlaceholderProps(getPrimaryProductImage(product).blurDataURL)}
                           unoptimized
                         />
                       ) : null}

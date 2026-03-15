@@ -1,60 +1,76 @@
+import { Suspense } from 'react';
+
 import ProductGridClient from '@/components/ProductGridClient';
 import ProductsPageHeader from '@/components/ProductsPageHeader';
 import ProductsPageSkeleton from '@/components/ProductsPageSkeleton';
-import { getProducts } from '@/lib/data';
-import { Suspense } from 'react';
-
-function normalizeCategoryId(category) {
-    return category
-        .toLowerCase()
-        .replace(/&/g, 'and')
-        .replace(/\s+/g, '-')
-        .replace(/[^a-z0-9-]/g, '')
-        .replace(/-+/g, '-');
-}
-
-function buildCategoryList(products) {
-    return Array.from(
-        new Map(
-            products
-                .flatMap((product) => (Array.isArray(product.Category) ? product.Category : product.Category ? [product.Category] : []))
-                .filter(Boolean)
-                .map((category) => [normalizeCategoryId(category), { id: normalizeCategoryId(category), label: category }])
-        ).values()
-    ).sort((a, b) => a.label.localeCompare(b.label));
-}
+import { getProductsList } from '@/lib/data';
 
 function buildSuspenseKey(searchParams) {
-    return JSON.stringify({
-        category: searchParams?.category || 'all',
-        search: searchParams?.search || '',
-    });
+  return JSON.stringify({
+    category: searchParams?.category || 'all',
+    search: searchParams?.search || '',
+    sort: searchParams?.sort || 'newest',
+    page: searchParams?.page || '1',
+  });
 }
 
-export default async function Products({ searchParams }) {
-    const resolvedSearchParams = (await searchParams) || {};
+export async function generateMetadata({ searchParams }) {
+  const params = (await searchParams) || {};
+  const category = params.category || 'all';
+  const search = params.search || '';
 
-    return (
-        <Suspense key={buildSuspenseKey(resolvedSearchParams)} fallback={<ProductsPageSkeleton />}>
-            <ProductsContent searchParams={resolvedSearchParams} />
-        </Suspense>
-    );
+  if (search) {
+    return {
+      title: `Search results for "${search}"`,
+      description: `Browse matching China Unique Store products for "${search}".`,
+    };
+  }
+
+  if (category && category !== 'all') {
+    return {
+      title: category === 'new-arrivals' ? 'New Arrivals' : 'Products',
+      description: 'Browse products by category at China Unique Store.',
+    };
+  }
+
+  return {
+    title: 'All Products',
+    description: 'Browse the complete China Unique Store catalog.',
+  };
+}
+
+export default async function ProductsPage({ searchParams }) {
+  const resolvedSearchParams = (await searchParams) || {};
+
+  return (
+    <Suspense key={buildSuspenseKey(resolvedSearchParams)} fallback={<ProductsPageSkeleton />}>
+      <ProductsContent searchParams={resolvedSearchParams} />
+    </Suspense>
+  );
 }
 
 async function ProductsContent({ searchParams }) {
-    const products = await getProducts();
-    const activeCategory = searchParams?.category || 'all';
-    const searchTerm = searchParams?.search || '';
-    const categories = buildCategoryList(products);
+  const data = await getProductsList({
+    category: searchParams.category || 'all',
+    search: searchParams.search || '',
+    sort: searchParams.sort || 'newest',
+    page: Number(searchParams.page || 1),
+    limit: 24,
+  });
 
-    return (
-        <div>
-            <ProductsPageHeader categories={categories} activeCategory={activeCategory} searchTerm={searchTerm} />
-            <ProductList products={products} activeCategory={activeCategory} searchTerm={searchTerm} />
-        </div>
-    );
-}
-
-function ProductList({ products, activeCategory, searchTerm }) {
-    return <ProductGridClient initialProducts={products} hideCategoryBar activeCategoryOverride={activeCategory} forceSearchTerm={searchTerm} />;
+  return (
+    <div>
+      <ProductsPageHeader
+        categories={data.categories}
+        activeCategory={data.activeCategory}
+        searchTerm={data.searchTerm}
+      />
+      <ProductGridClient
+        initialProducts={data.items}
+        hideCategoryBar
+        activeCategoryOverride={data.activeCategory}
+        forceSearchTerm={data.searchTerm}
+      />
+    </div>
+  );
 }

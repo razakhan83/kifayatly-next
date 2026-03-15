@@ -8,7 +8,7 @@ import HomeCategories from "@/components/HomeCategories";
 import ProductGridClient from "@/components/ProductGridClient";
 import SearchField from "@/components/SearchField";
 
-export default function HomeClientWrapper({ products, heroSlides, categories = [] }) {
+export default function HomeClientWrapper({ products, heroSlides, categories = [], sections = [] }) {
   const wrapperRef = useRef(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -98,7 +98,7 @@ export default function HomeClientWrapper({ products, heroSlides, categories = [
         </div>
       ) : (
         <div className="animate-fadeIn">
-          <HomeCategories products={products} categories={categories} />
+          <HomeCategories sections={sections} />
         </div>
       )}
     </>

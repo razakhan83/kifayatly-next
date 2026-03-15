@@ -1,47 +1,104 @@
+import { revalidateTag, updateTag } from 'next/cache';
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { isAdminEmail } from '@/lib/admin';
 import dbConnect from '@/lib/dbConnect';
 import Product from '@/models/Product';
+import { normalizeProductImages } from '@/lib/productImages';
 
-// PUT (update) a product by ID - Protected Admin Route
-export async function PUT(req, { params }) {
+export async function GET(_request, { params }) {
+    try {
+        await dbConnect();
+
+        const { id } = await params;
+        const product = await Product.findById(id).lean();
+
+        if (!product) {
+            return NextResponse.json({ success: false, message: 'Product not found' }, { status: 404 });
+        }
+
+        return NextResponse.json({
+            success: true,
+            data: {
+                ...product,
+                _id: product._id.toString(),
+                id: product.slug || product._id.toString(),
+                Category: Array.isArray(product.Category) ? product.Category : (product.Category ? [product.Category] : []),
+                Images: normalizeProductImages(product.Images, product.ImageURL || product.Image || ''),
+            },
+        });
+    } catch (error) {
+        return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    }
+}
+
+export async function PUT(request, { params }) {
     try {
         const session = await getServerSession(authOptions);
-        if (!session || session.user?.email !== process.env.ADMIN_EMAIL) {
+        if (!session || !isAdminEmail(session.user?.email)) {
             return NextResponse.json({ success: false, message: 'Unauthorized Access' }, { status: 401 });
         }
 
         await dbConnect();
 
         const { id } = await params;
-        const body = await req.json();
+        const body = await request.json();
+        const existingProduct = await Product.findById(id);
 
-        // If stockQuantity is being updated, auto-compute StockStatus
-        if (body.stockQuantity !== undefined) {
-            body.StockStatus = body.stockQuantity > 0 ? 'In Stock' : 'Out of Stock';
-        }
-
-        const updatedProduct = await Product.findByIdAndUpdate(id, body, {
-            new: true,
-            runValidators: true,
-        });
-
-        if (!updatedProduct) {
+        if (!existingProduct) {
             return NextResponse.json({ success: false, message: 'Product not found' }, { status: 404 });
         }
 
-        return NextResponse.json({ success: true, data: updatedProduct });
+        if (Object.keys(body).length === 1 && Object.prototype.hasOwnProperty.call(body, 'isLive')) {
+            existingProduct.isLive = body.isLive === true || body.isLive === 'true';
+            await existingProduct.save();
+            updateTag('products');
+            if (existingProduct.slug) {
+                updateTag(`product-${existingProduct.slug}`);
+            }
+            revalidateTag('admin-dashboard');
+
+            return NextResponse.json({ success: true, data: existingProduct });
+        }
+
+        const categoryArray = Array.isArray(body.Category)
+            ? body.Category
+            : [body.Category].filter(Boolean);
+
+        const normalizedImages = normalizeProductImages(body.Images, body.ImageURL || '');
+        const primaryImage = normalizedImages[0]?.url || body.ImageURL || '';
+        const stockQuantity = Number(body.stockQuantity) || 0;
+
+        existingProduct.Name = body.Name;
+        existingProduct.Description = body.Description;
+        existingProduct.Price = Number(body.Price);
+        existingProduct.ImageURL = primaryImage;
+        existingProduct.Image = primaryImage;
+        existingProduct.Images = normalizedImages;
+        existingProduct.Category = categoryArray;
+        existingProduct.stockQuantity = stockQuantity;
+        existingProduct.StockStatus = stockQuantity > 0 ? 'In Stock' : 'Out of Stock';
+        existingProduct.isLive = body.isLive === true || body.isLive === 'true';
+
+        await existingProduct.save();
+        updateTag('products');
+        if (existingProduct.slug) {
+            updateTag(`product-${existingProduct.slug}`);
+        }
+        revalidateTag('admin-dashboard');
+
+        return NextResponse.json({ success: true, data: existingProduct });
     } catch (error) {
         return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 }
 
 // DELETE a product by ID - Protected Admin Route
-export async function DELETE(req, { params }) {
+export async function DELETE(_request, { params }) {
     try {
         const session = await getServerSession(authOptions);
-        if (!session || session.user?.email !== process.env.ADMIN_EMAIL) {
+        if (!session || !isAdminEmail(session.user?.email)) {
             return NextResponse.json({ success: false, message: 'Unauthorized Access' }, { status: 401 });
         }
 
@@ -54,9 +111,14 @@ export async function DELETE(req, { params }) {
             return NextResponse.json({ success: false, message: 'Product not found' }, { status: 404 });
         }
 
+        updateTag('products');
+        if (deletedProduct.slug) {
+            updateTag(`product-${deletedProduct.slug}`);
+        }
+        revalidateTag('admin-dashboard');
+
         return NextResponse.json({ success: true, message: 'Product deleted successfully' });
     } catch (error) {
         return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 }
-

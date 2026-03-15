@@ -1,3 +1,4 @@
+import { updateTag } from 'next/cache';
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -60,6 +61,7 @@ export async function POST(req) {
       imagePublicId: body.imagePublicId || "",
       sortOrder: body.sortOrder ?? count,
     });
+    updateTag('categories');
     return NextResponse.json(
       { success: true, data: category },
       { status: 201 },

@@ -3,6 +3,8 @@ import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import useEmblaCarousel from 'embla-carousel-react';
 import { ImageIcon } from 'lucide-react';
+import { normalizeProductImage } from '@/lib/productImages';
+import { getBlurPlaceholderProps } from '@/lib/imagePlaceholder';
 
 export default function ProductGallery({ images }) {
     const [selectedIndex, setSelectedIndex] = useState(0);
@@ -43,19 +45,24 @@ export default function ProductGallery({ images }) {
         );
     }
 
+    const normalizedImages = images
+        .map(normalizeProductImage)
+        .filter(Boolean);
+
     return (
         <div className="flex flex-col gap-3 w-full">
             <div className="surface-card relative aspect-square overflow-hidden rounded-xl" ref={emblaMainRef}>
                 <div className="flex h-full touch-pan-y">
-                    {images.map((img, index) => (
+                    {normalizedImages.map((image, index) => (
                         <div className="relative flex-[0_0_100%] min-w-0 h-full" key={index}>
                             <Image
-                                src={img}
+                                src={image.url}
                                 alt={`Product Image ${index + 1}`}
                                 fill
                                 className="object-cover transition-transform duration-[700ms] ease-[cubic-bezier(0.25,1,0.5,1)] hover:scale-105"
+                                {...getBlurPlaceholderProps(image.blurDataURL)}
                                 unoptimized
-                                priority={index === 0}
+                                preload={index === 0}
                             />
                         </div>
                     ))}
@@ -63,10 +70,10 @@ export default function ProductGallery({ images }) {
             </div>
 
             {/* Thumbnails */}
-            {images.length > 1 && (
+            {normalizedImages.length > 1 && (
                 <div className="overflow-hidden" ref={emblaThumbsRef}>
                     <div className="flex gap-2">
-                        {images.map((img, index) => (
+                        {normalizedImages.map((image, index) => (
                             <div
                                 key={index}
                                 onClick={() => onThumbClick(index)}
@@ -76,10 +83,11 @@ export default function ProductGallery({ images }) {
                             >
                                 <div className="absolute inset-0 bg-gray-100"></div>
                                 <Image
-                                    src={img}
+                                    src={image.url}
                                     alt={`Thumbnail ${index + 1}`}
                                     fill
                                     className="object-cover"
+                                    {...getBlurPlaceholderProps(image.blurDataURL)}
                                     unoptimized
                                 />
                             </div>

@@ -22,6 +22,7 @@ import {
 import { useRouter } from "next/navigation";
 
 import { getCategoryColor } from "@/lib/categoryColors";
+import { getBlurPlaceholderProps } from "@/lib/imagePlaceholder";
 
 const CATEGORY_ICONS = {
   "kitchen accessories": UtensilsCrossed,
@@ -93,6 +94,7 @@ export default function CategoryIconCarousel({ categories }) {
                         fill
                         sizes="112px"
                         className="object-cover"
+                        {...getBlurPlaceholderProps()}
                         unoptimized
                       />
                     ) : (

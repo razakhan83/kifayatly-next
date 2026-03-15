@@ -1,0 +1,13 @@
+const FALLBACK_BLUR_DATA_URL =
+  "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDQwIDQwIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImEiIHgxPSIwJSIgeDI9IjEwMCUiIHkxPSIwJSIgeTI9IjEwMCUiPjxzdG9wIHN0b3AtY29sb3I9IiNlZWYyZjciIG9mZnNldD0iMCUiLz48c3RvcCBzdG9wLWNvbG9yPSIjZDVkZGVhIiBvZmZzZXQ9IjEwMCUiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIGZpbGw9InVybCgjYSkiLz48L3N2Zz4=";
+
+export function getBlurPlaceholder(blurDataURL = "") {
+  return blurDataURL || FALLBACK_BLUR_DATA_URL;
+}
+
+export function getBlurPlaceholderProps(blurDataURL = "") {
+  return {
+    placeholder: "blur",
+    blurDataURL: getBlurPlaceholder(blurDataURL),
+  };
+}

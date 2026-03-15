@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { AnimatePresence, motion } from 'framer-motion';
+import { getBlurPlaceholderProps } from '@/lib/imagePlaceholder';
 
 export default function HeroSlider({ slides = [] }) {
     const [selectedIndex, setSelectedIndex] = useState(0);
@@ -49,6 +50,7 @@ export default function HeroSlider({ slides = [] }) {
                                     sizes="100vw"
                                     priority={selectedIndex === 0}
                                     className="object-cover"
+                                    {...getBlurPlaceholderProps()}
                                     unoptimized
                                 />
                             </div>
@@ -63,6 +65,7 @@ export default function HeroSlider({ slides = [] }) {
                                     sizes="100vw"
                                     priority={selectedIndex === 0}
                                     className="object-cover"
+                                    {...getBlurPlaceholderProps()}
                                     unoptimized
                                 />
                             </div>

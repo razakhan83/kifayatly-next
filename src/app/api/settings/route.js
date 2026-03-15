@@ -1,6 +1,8 @@
+import { updateTag } from 'next/cache';
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { isAdminEmail } from '@/lib/admin';
 import dbConnect from '@/lib/dbConnect';
 import Settings from '@/models/Settings';
 
@@ -32,7 +34,7 @@ export async function GET() {
 export async function PUT(req) {
     try {
         const session = await getServerSession(authOptions);
-        if (!session || session.user?.email !== process.env.ADMIN_EMAIL) {
+        if (!session || !isAdminEmail(session.user?.email)) {
             return NextResponse.json({ success: false, message: 'Unauthorized Access' }, { status: 401 });
         }
 
@@ -67,6 +69,7 @@ export async function PUT(req) {
         ).lean();
 
         settings._id = settings._id.toString();
+        updateTag('settings');
 
         return NextResponse.json({ success: true, data: settings });
     } catch (error) {
