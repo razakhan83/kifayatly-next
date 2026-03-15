@@ -184,7 +184,7 @@ export default function ProductCard({ product, className = "" }) {
               e.preventDefault();
               addToCart(product);
             }}
-            className="size-8 cursor-pointer shadow-none hover:translate-y-0 hover:shadow-none"
+            className="size-8 cursor-pointer shadow-none transition-all duration-300 hover:scale-110 hover:border-primary/30 hover:bg-primary/12 hover:text-primary hover:shadow-none"
           >
             <ShoppingCart className="size-4" />
           </Button>

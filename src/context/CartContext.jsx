@@ -71,9 +71,6 @@ function CartProviderContent({ children }) {
 
     const removeFromCart = (product) => {
         setCart(prev => prev.filter(item => (item.Name || item.name) !== (product.Name || product.name)));
-        toast('Item removed from cart', {
-            description: product.Name || product.name,
-        });
     };
 
     const updateQuantity = (product, newQuantity) => {

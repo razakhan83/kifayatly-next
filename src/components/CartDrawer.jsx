@@ -2,7 +2,9 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { Minus, Plus, ShoppingBag, Trash2, Truck, ArrowRight, MessageCircle } from 'lucide-react';
+import { Minus, Plus, ShoppingBag, Trash2, Truck, ArrowRight } from 'lucide-react';
+import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
+import { AnimatePresence, motion } from 'framer-motion';
 
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
@@ -48,8 +50,17 @@ export default function CartDrawer() {
 
         <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto pr-1">
           {cart.length ? (
-            cart.map((item, index) => (
-              <div key={`${item.id || item._id || item.Name || index}`} className="surface-card rounded-xl p-3">
+            <AnimatePresence mode="popLayout">
+              {cart.map((item, index) => (
+                <motion.div
+                  key={item.slug || item._id || item.id || item.Name || item.name || index}
+                  layout
+                  initial={{ opacity: 1, x: 0 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 300 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                  className="surface-card rounded-xl p-3"
+                >
                 <div className="flex gap-3">
                   <div className="relative size-20 overflow-hidden rounded-lg border border-border bg-muted">
                     {(item.Image || item.image) ? (
@@ -101,8 +112,9 @@ export default function CartDrawer() {
                     </div>
                   </div>
                 </div>
-              </div>
-            ))
+                </motion.div>
+              ))}
+            </AnimatePresence>
           ) : (
             <div className="surface-card flex flex-1 flex-col items-center justify-center rounded-xl px-6 py-12 text-center">
               <div className="mb-4 flex size-16 items-center justify-center rounded-xl bg-primary/10 text-primary">
@@ -134,8 +146,8 @@ export default function CartDrawer() {
               </div>
             </div>
 
-            <Button variant="secondary" className="w-full" onClick={handleWhatsAppDirectCheckout}>
-              <MessageCircle data-icon="inline-start" />
+            <Button className="w-full border-[#25D366] bg-[#25D366] text-white transition-colors duration-200 hover:bg-[#1ebe57]" onClick={handleWhatsAppDirectCheckout}>
+              <WhatsAppIcon className="size-5" />
               Order on WhatsApp
             </Button>
             <Link href="/checkout" onClick={() => setIsCartOpen(false)} className="w-full">

@@ -26,7 +26,7 @@ export async function getProducts() {
 export async function getCategories() {
     try {
         await dbConnect();
-        const dbCategories = await Category.find({}).sort({ name: 1 }).lean();
+        const dbCategories = await Category.find({}).sort({ sortOrder: 1, name: 1 }).lean();
         const normalizedDbCategories = dbCategories.map((category) => ({
             _id: category._id.toString(),
             id: category.slug || category.name.toLowerCase().replace(/&/g, 'and').replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-'),

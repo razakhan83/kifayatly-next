@@ -1,13 +1,14 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
+import Autoplay from 'embla-carousel-autoplay';
+import { motion } from 'framer-motion';
 import ProductCard from '@/components/ProductCard';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 
 export default function CategoryProductSlider({ categoryId, categoryLabel, products, onViewAll }) {
-    // Filter products for this category
     const categoryProducts = products.filter(p => {
         const cats = Array.isArray(p.Category) ? p.Category : (p.Category ? [p.Category] : []);
         return cats.some(cat => {
@@ -16,13 +17,29 @@ export default function CategoryProductSlider({ categoryId, categoryLabel, produ
         });
     });
 
-    const [emblaRef, emblaApi] = useEmblaCarousel({
-        loop: true,
-        align: 'start',
-        slidesToScroll: 1,
-        containScroll: 'trimSnaps',
-        dragFree: false,
-    });
+    const [emblaRef, emblaApi] = useEmblaCarousel(
+        {
+            loop: true,
+            align: 'start',
+            slidesToScroll: 1,
+            containScroll: 'trimSnaps',
+            dragFree: false,
+        },
+        [Autoplay({ delay: 5000, stopOnInteraction: true, stopOnMouseEnter: true })]
+    );
+
+    // Bounce key increments each time Embla settles after a slide,
+    // triggering a spring overshoot animation on visible cards.
+    const [bounceKey, setBounceKey] = useState(0);
+
+    useEffect(() => {
+        if (!emblaApi) return;
+        const onSettle = () => setBounceKey(k => k + 1);
+        emblaApi.on('settle', onSettle);
+        return () => {
+            emblaApi.off('settle', onSettle);
+        };
+    }, [emblaApi]);
 
     const scrollPrev = useCallback(() => emblaApi?.scrollPrev(), [emblaApi]);
     const scrollNext = useCallback(() => emblaApi?.scrollNext(), [emblaApi]);
@@ -65,14 +82,23 @@ export default function CategoryProductSlider({ categoryId, categoryLabel, produ
                 </button>
 
                 <div ref={emblaRef} className="overflow-hidden -my-4">
-                    <div className="flex gap-4 py-4 transition-transform duration-500 ease-[cubic-bezier(0.25,1,0.5,1)]">
+                    <div className="flex gap-4 py-4">
                         {categoryProducts.map((p, idx) => (
-                            <div
+                            <motion.div
                                 key={`${p.slug || p._id || p.id || 'item'}-${idx}`}
-                                className="flex-[0_0_42vw] md:flex-[0_0_22vw] max-w-[280px] min-w-0"
+                                initial={false}
+                                animate={{ x: 0 }}
+                                transition={{
+                                    type: 'spring',
+                                    stiffness: 100,
+                                    damping: 20,
+                                    mass: 1,
+                                }}
+                                style={{ x: bounceKey > 0 ? -5 : 0 }}
+                                className="flex-[0_0_42vw] md:flex-[0_0_22vw] max-w-[280px] min-w-0 will-change-transform"
                             >
                                 <ProductCard product={p} />
-                            </div>
+                            </motion.div>
                         ))}
                     </div>
                 </div>

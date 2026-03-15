@@ -1,6 +1,8 @@
 import HomeClientWrapper from '@/components/HomeClientWrapper';
 import { getCategories, getProducts } from '@/lib/data';
 
+export const dynamic = 'force-dynamic';
+
 export default async function Home() {
   const heroSlides = [
     { mobileSrc: '/hero1.webp', pcSrc: '/hero1pc.webp', alt: 'Kitchen Promotion 1' },

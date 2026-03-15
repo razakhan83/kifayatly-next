@@ -2,31 +2,23 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
-import useEmblaCarousel from 'embla-carousel-react';
-import Autoplay from 'embla-carousel-autoplay';
+import { AnimatePresence, motion } from 'framer-motion';
 
 export default function HeroSlider({ slides = [] }) {
     const [selectedIndex, setSelectedIndex] = useState(0);
-    const [emblaRef, emblaApi] = useEmblaCarousel(
-        { loop: true, skipSnaps: false },
-        [Autoplay({ delay: 5000, stopOnInteraction: false, stopOnMouseEnter: true })]
-    );
 
-    const onSelect = useCallback(() => {
-        if (!emblaApi) return;
-        setSelectedIndex(emblaApi.selectedScrollSnap());
-    }, [emblaApi]);
-
+    // Auto-advance every 5 seconds
     useEffect(() => {
-        if (!emblaApi) return;
-        emblaApi.on('select', onSelect);
-        onSelect();
-        return () => emblaApi.off('select', onSelect);
-    }, [emblaApi, onSelect]);
+        if (!slides || slides.length <= 1) return;
+        const interval = setInterval(() => {
+            setSelectedIndex(prev => (prev + 1) % slides.length);
+        }, 5000);
+        return () => clearInterval(interval);
+    }, [slides]);
 
     const scrollTo = useCallback((index) => {
-        if (emblaApi) emblaApi.scrollTo(index);
-    }, [emblaApi]);
+        setSelectedIndex(index);
+    }, []);
 
     if (!slides || slides.length === 0) return null;
 
@@ -35,45 +27,48 @@ export default function HeroSlider({ slides = [] }) {
             data-testid="hero-main-slider"
             className="relative mb-4 w-full overflow-hidden border-b border-border bg-card md:mb-0"
         >
-            <div
-                ref={emblaRef}
-                className="h-[54vh] min-h-[320px] w-full overflow-hidden bg-card md:h-[460px] lg:h-[560px]"
-            >
-                <div className="flex h-full">
-                    {slides.map((slide, index) => (
-                        <div key={index} className="relative h-full min-w-0 flex-[0_0_100%] overflow-hidden bg-card transition-transform duration-700 ease-[cubic-bezier(0.25,1,0.5,1)]">
-                            <div className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-r from-primary/18 via-transparent to-transparent"></div>
+            <div className="relative h-[54vh] min-h-[320px] w-full overflow-hidden bg-card md:h-[460px] lg:h-[560px]">
+                {/* All slides stacked, only active one is visible via AnimatePresence */}
+                <AnimatePresence mode="sync">
+                    <motion.div
+                        key={selectedIndex}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 1.5, ease: 'linear' }}
+                        className="absolute inset-0"
+                    >
+                        <div className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-r from-primary/18 via-transparent to-transparent"></div>
 
-                            {slide?.mobileSrc && (
-                                <div className="relative w-full h-full md:hidden">
-                                    <Image
-                                        src={slide.mobileSrc}
-                                        alt={slide.alt || `Slide ${index + 1}`}
-                                        fill
-                                        sizes="100vw"
-                                        priority={index === 0}
-                                        className="object-cover"
-                                        unoptimized
-                                    />
-                                </div>
-                            )}
+                        {slides[selectedIndex]?.mobileSrc && (
+                            <div className="relative w-full h-full md:hidden">
+                                <Image
+                                    src={slides[selectedIndex].mobileSrc}
+                                    alt={slides[selectedIndex].alt || `Slide ${selectedIndex + 1}`}
+                                    fill
+                                    sizes="100vw"
+                                    priority={selectedIndex === 0}
+                                    className="object-cover"
+                                    unoptimized
+                                />
+                            </div>
+                        )}
 
-                            {slide?.pcSrc && (
-                                <div className="relative w-full h-full hidden md:block">
-                                    <Image
-                                        src={slide.pcSrc}
-                                        alt={slide.alt || `Slide ${index + 1}`}
-                                        fill
-                                        sizes="100vw"
-                                        priority={index === 0}
-                                        className="object-cover"
-                                        unoptimized
-                                    />
-                                </div>
-                            )}
-                        </div>
-                    ))}
-                </div>
+                        {slides[selectedIndex]?.pcSrc && (
+                            <div className="relative w-full h-full hidden md:block">
+                                <Image
+                                    src={slides[selectedIndex].pcSrc}
+                                    alt={slides[selectedIndex].alt || `Slide ${selectedIndex + 1}`}
+                                    fill
+                                    sizes="100vw"
+                                    priority={selectedIndex === 0}
+                                    className="object-cover"
+                                    unoptimized
+                                />
+                            </div>
+                        )}
+                    </motion.div>
+                </AnimatePresence>
             </div>
 
             <div className="absolute bottom-5 left-1/2 z-10 flex -translate-x-1/2 gap-2">
