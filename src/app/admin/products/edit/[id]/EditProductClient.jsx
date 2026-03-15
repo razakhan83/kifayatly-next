@@ -5,9 +5,25 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, Check, CloudUpload, Loader2, Plus, PlusCircle, Trash2, X } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { uploadImageDataUrl } from '@/lib/cloudinaryUpload';
 import { normalizeProductImages } from '@/lib/productImages';
 import { getBlurPlaceholderProps } from '@/lib/imagePlaceholder';
+import { cn } from '@/lib/utils';
+
+const selectionChipClass = (selected) =>
+  cn(
+    'inline-flex items-center rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors',
+    selected
+      ? 'border-primary bg-primary text-primary-foreground shadow-[0_12px_30px_rgba(10,61,46,0.14)]'
+      : 'border-border bg-background text-muted-foreground hover:border-primary/30 hover:text-foreground',
+  );
+
+const uploadActionClass =
+  'relative overflow-hidden inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground';
 
 export default function EditProduct({ id }) {
   const router = useRouter();
@@ -87,10 +103,12 @@ export default function EditProduct({ id }) {
     try {
       let uploadedCategoryImage = '';
       let uploadedCategoryImagePublicId = '';
+      let uploadedCategoryBlurDataURL = '';
       if (newCatImage) {
-        const uploaded = await uploadImageDataUrl(newCatImage, 'kifayatly_products');
+        const uploaded = await uploadImageDataUrl(newCatImage, 'kifayatly_categories');
         uploadedCategoryImage = uploaded.url;
         uploadedCategoryImagePublicId = uploaded.publicId;
+        uploadedCategoryBlurDataURL = uploaded.blurDataURL;
       }
       const res = await fetch('/api/categories', {
         method: 'POST',
@@ -99,6 +117,8 @@ export default function EditProduct({ id }) {
           name: newCatName.trim(),
           image: uploadedCategoryImage,
           imagePublicId: uploadedCategoryImagePublicId,
+          blurDataURL: uploadedCategoryBlurDataURL,
+          imageDataUrl: newCatImage || '',
         }),
       });
       const data = await res.json();
@@ -226,8 +246,8 @@ export default function EditProduct({ id }) {
     return (
       <div className="w-full pb-10 flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
-          <Loader2 className="mx-auto mb-4 size-10 animate-spin text-emerald-500" />
-          <p className="text-gray-500 font-medium">Loading product...</p>
+          <Loader2 className="mx-auto mb-4 size-10 animate-spin text-primary" />
+          <p className="font-medium text-muted-foreground">Loading product...</p>
         </div>
       </div>
     );
@@ -239,26 +259,26 @@ export default function EditProduct({ id }) {
 
       {/* Page Header */}
       <div className="mb-6 md:mb-8 flex items-center gap-4">
-        <Link href="/admin/products" className="flex items-center justify-center w-9 h-9 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all">
-          <ArrowLeft className="size-4 text-gray-600" />
+        <Link href="/admin/products" className={cn(buttonVariants({ variant: 'outline', size: 'icon-sm' }), 'rounded-xl')}>
+          <ArrowLeft className="size-4" />
         </Link>
         <div>
-          <h1 className="text-2xl md:text-3xl font-black text-gray-900">Edit Product</h1>
-          <p className="text-sm text-gray-500 mt-1">Update product details.</p>
+          <h1 className="text-2xl font-black tracking-tight text-foreground md:text-3xl">Edit Product</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Update product details.</p>
         </div>
       </div>
 
       {/* Form Card */}
-      <div className="bg-white p-4 md:p-8 rounded-2xl shadow-sm border border-gray-100 max-w-2xl">
+      <div className="surface-card max-w-2xl rounded-[calc(var(--radius-xl)+0.5rem)] p-4 shadow-[0_24px_60px_rgba(10,61,46,0.08)] md:p-8">
         <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
           {/* Product Name */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Product Name</label>
-            <input
+            <Label className="mb-2">Product Name</Label>
+            <Input
               type="text"
               value={Name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#10b981]/50"
+              className="h-11 px-4"
               placeholder="e.g., Luxury Tea Set"
               required
             />
@@ -266,12 +286,12 @@ export default function EditProduct({ id }) {
 
           {/* Price */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Price (Rs)</label>
-            <input
+            <Label className="mb-2">Price (Rs)</Label>
+            <Input
               type="number"
               value={Price}
               onChange={(e) => setPrice(e.target.value)}
-              className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#10b981]/50"
+              className="h-11 px-4"
               placeholder="0.00"
               step="0.01"
               required
@@ -281,18 +301,18 @@ export default function EditProduct({ id }) {
           {/* Category - Multi-select */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="block text-sm font-semibold text-gray-700">Categories</label>
+              <Label>Categories</Label>
               <button
                 type="button"
                 onClick={() => setIsCategoryModalOpen(true)}
-                className="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-primary transition-colors hover:text-primary/80"
               >
                 <PlusCircle className="size-3.5" /> Manage Categories
               </button>
             </div>
-            <div className="flex flex-wrap gap-2 p-3 bg-gray-50 border border-gray-200 rounded-lg min-h-[52px]">
+            <div className="flex min-h-[52px] flex-wrap gap-2 rounded-xl border border-border bg-muted/35 p-3">
               {allCategories.length === 0 ? (
-                <p className="text-xs text-gray-400 self-center">No categories found. Add one →</p>
+                <p className="self-center text-xs text-muted-foreground">No categories found. Add one.</p>
               ) : (
                 allCategories.map((cat) => {
                   const selected = Categories.includes(cat.name);
@@ -301,7 +321,7 @@ export default function EditProduct({ id }) {
                       key={cat._id}
                       type="button"
                       onClick={() => toggleCategory(cat.name)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${selected ? 'bg-emerald-500 text-white border-emerald-500 shadow-sm' : 'bg-white text-gray-600 border-gray-200 hover:border-emerald-300 hover:text-emerald-600'}`}
+                      className={selectionChipClass(selected)}
                     >
                       {selected && <Check className="mr-1 size-3" />}
                       {cat.name}
@@ -311,33 +331,36 @@ export default function EditProduct({ id }) {
               )}
             </div>
             {Categories.length === 0 && (
-              <p className="text-xs text-red-400 mt-1">Please select at least one category.</p>
+              <p className="mt-1 text-xs text-destructive/80">Please select at least one category.</p>
             )}
           </div>
 
           {/* isLive Toggle */}
-          <div className="flex items-center justify-between p-4 bg-gray-50 border border-gray-200 rounded-xl">
+          <div className="flex items-center justify-between rounded-xl border border-border bg-muted/35 p-4">
             <div>
-              <p className="text-sm font-semibold text-gray-700">Visibility</p>
-              <p className="text-xs text-gray-500 mt-0.5">
+              <p className="text-sm font-semibold text-foreground">Visibility</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
                 {isLive ? '🟢 Live — visible to customers' : '🔴 Draft — hidden from store'}
               </p>
             </div>
             <button
               type="button"
               onClick={() => setIsLive(!isLive)}
-              className={`relative w-12 h-6 rounded-lg transition-colors duration-300 focus:outline-none ${isLive ? 'bg-emerald-500' : 'bg-gray-300'}`}
+              className={cn(
+                'relative h-6 w-12 rounded-lg transition-colors duration-300 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/20',
+                isLive ? 'bg-primary' : 'bg-border',
+              )}
               aria-label="Toggle Live"
             >
-              <span className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-md bg-white shadow transition-transform duration-300 ${isLive ? 'translate-x-6' : 'translate-x-0'}`} />
+              <span className={cn('absolute left-0.5 top-0.5 h-5 w-5 rounded-md bg-background shadow transition-transform duration-300', isLive ? 'translate-x-6' : 'translate-x-0')} />
             </button>
           </div>
 
           {/* Image Upload */}
           <div>
             <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-semibold text-gray-700">Product Images</label>
-                <div className="relative overflow-hidden cursor-pointer text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100">
+                <Label>Product Images</Label>
+                <div className={uploadActionClass}>
                     <PlusCircle className="size-3.5" /> Add More Images
                     <input type="file" multiple accept="image/*" onChange={handleFileSelect} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                 </div>
@@ -345,7 +368,7 @@ export default function EditProduct({ id }) {
             
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
                 {images.map((img, idx) => (
-                    <div key={idx} className="relative aspect-square rounded-xl border border-gray-200 overflow-hidden group bg-gray-50">
+                    <div key={idx} className="group relative aspect-square overflow-hidden rounded-xl border border-border bg-muted/40">
                         <Image
                           src={img.url}
                           alt="Preview"
@@ -353,16 +376,15 @@ export default function EditProduct({ id }) {
                           sizes="(max-width: 640px) 50vw, 25vw"
                           className="object-cover"
                           {...getBlurPlaceholderProps(img.blurDataURL)}
-                          unoptimized
                         />
                         <button 
                             type="button" 
                             onClick={() => removeImage(idx)} 
-                            className="absolute top-2 right-2 flex h-7 w-7 items-center justify-center rounded-lg bg-white/90 text-red-500 shadow-md transition-colors hover:bg-red-500 hover:text-white opacity-0 group-hover:opacity-100"
+                            className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-lg border border-border bg-background/95 text-destructive shadow-sm opacity-0 transition-all hover:bg-destructive hover:text-destructive-foreground group-hover:opacity-100"
                         >
                             <Trash2 className="size-3.5" />
                         </button>
-                        {idx === 0 && <span className="absolute bottom-2 left-2 rounded-md bg-black/60 px-2 py-0.5 text-[10px] font-bold text-white shadow-sm">Primary</span>}
+                        {idx === 0 && <span className="absolute bottom-2 left-2 rounded-md bg-foreground/80 px-2 py-0.5 text-[10px] font-bold text-background shadow-sm">Primary</span>}
                     </div>
                 ))}
             </div>
@@ -371,17 +393,22 @@ export default function EditProduct({ id }) {
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
-              className={`relative border-2 border-dashed rounded-xl p-6 text-center transition-all duration-200 cursor-pointer ${isDragOver ? 'border-emerald-500 bg-emerald-50 scale-102' : 'border-emerald-300 hover:border-emerald-400 hover:bg-gray-50'}`}
+              className={cn(
+                'relative cursor-pointer rounded-xl border-2 border-dashed p-6 text-center transition-all duration-200',
+                isDragOver
+                  ? 'border-primary bg-primary/8'
+                  : 'border-border bg-muted/20 hover:border-primary/35 hover:bg-muted/35',
+              )}
             >
               <input type="file" multiple accept="image/*" onChange={handleFileSelect} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
               <div className="space-y-3">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-emerald-100">
-                  <CloudUpload className="size-6 text-emerald-600" />
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <CloudUpload className="size-6" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-gray-700">Drag & Drop Images Here</p>
-                  <p className="text-xs text-gray-500">or click to browse multiple files</p>
-                  <p className="text-[10px] text-gray-400 mt-1">PNG, JPG up to 10MB each</p>
+                  <p className="text-sm font-semibold text-foreground">Drag & Drop Images Here</p>
+                  <p className="text-xs text-muted-foreground">or click to browse multiple files</p>
+                  <p className="mt-1 text-[10px] text-muted-foreground">PNG, JPG up to 10MB each</p>
                 </div>
               </div>
             </div>
@@ -389,24 +416,24 @@ export default function EditProduct({ id }) {
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Description</label>
-            <textarea
+            <Label className="mb-2">Description</Label>
+            <Textarea
               value={Description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#10b981]/50 resize-none"
+              className="min-h-28 resize-none px-4 py-3"
               placeholder="Enter product description..."
               rows="4"
-            ></textarea>
+            />
           </div>
 
           {/* Stock Quantity */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Stock Quantity</label>
-            <input
+            <Label className="mb-2">Stock Quantity</Label>
+            <Input
               type="number"
               value={stockQuantity}
               onChange={(e) => setStockQuantity(e.target.value)}
-              className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#10b981]/50"
+              className="h-11 px-4"
               placeholder="0"
               min="0"
             />
@@ -414,16 +441,17 @@ export default function EditProduct({ id }) {
 
           {/* Buttons */}
           <div className="flex gap-4 mt-6 md:mt-8">
-            <button
+            <Button
               type="submit"
               disabled={saving}
-              className="flex-1 min-w-[140px] h-[45px] bg-emerald-600 text-white font-bold rounded-xl flex items-center justify-center hover:bg-emerald-700 shadow-sm transition-all active:scale-95 disabled:opacity-60"
+              size="lg"
+              className="min-w-[140px] flex-1 rounded-xl"
             >
               {saving ? <><Loader2 className="mr-2 size-4 animate-spin" />Saving...</> : 'Save Changes'}
-            </button>
+            </Button>
             <Link
               href="/admin/products"
-              className="flex-1 min-w-[140px] h-[45px] bg-gray-200 text-gray-700 font-bold rounded-xl flex items-center justify-center hover:bg-gray-300 shadow-sm transition-all active:scale-95 text-center"
+              className={cn(buttonVariants({ variant: 'outline', size: 'lg' }), 'min-w-[140px] flex-1 rounded-xl text-center')}
             >
               Cancel
             </Link>
@@ -434,27 +462,27 @@ export default function EditProduct({ id }) {
       {/* Category Modal */}
       {isCategoryModalOpen && (
         <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setIsCategoryModalOpen(false)}></div>
-          <div className="relative bg-white w-[92%] sm:w-[512px] rounded-3xl shadow-2xl max-h-[85vh] flex flex-col overflow-hidden">
-            <div className="flex items-center justify-between p-5 border-b bg-gray-50/50">
-              <h2 className="text-xl font-bold text-gray-900">Manage Categories</h2>
-              <button type="button" onClick={() => setIsCategoryModalOpen(false)} className="flex h-10 w-10 items-center justify-center rounded-lg text-gray-400 transition-all hover:bg-gray-200 hover:text-gray-600">
+          <div className="absolute inset-0 bg-primary/20 backdrop-blur-[2px]" onClick={() => setIsCategoryModalOpen(false)}></div>
+          <div className="relative flex max-h-[85vh] w-[92%] flex-col overflow-hidden rounded-[calc(var(--radius-xl)+0.75rem)] border border-border bg-card shadow-[0_28px_80px_rgba(10,61,46,0.16)] sm:w-[512px]">
+            <div className="flex items-center justify-between border-b border-border bg-muted/35 p-5">
+              <h2 className="text-xl font-bold text-foreground">Manage Categories</h2>
+              <button type="button" onClick={() => setIsCategoryModalOpen(false)} className="flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground transition-colors hover:text-foreground">
                 <X className="size-5" />
               </button>
             </div>
             <div className="flex-1 overflow-y-auto p-5">
               <form onSubmit={handleAddCategory} className="space-y-4">
-                <div className="bg-emerald-50/30 p-4 rounded-2xl border border-emerald-100/50">
-                  <label className="block text-sm font-bold text-emerald-900 mb-2">New Category Name</label>
+                <div className="rounded-2xl border border-border bg-muted/25 p-4">
+                  <Label className="mb-2 text-foreground">New Category Name</Label>
                   <div className="flex flex-col gap-3">
-                    <input type="text" value={newCatName} onChange={(e) => setNewCatName(e.target.value)} className="w-full sm:flex-1 bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50" placeholder="e.g. Health & Beauty" required />
+                    <Input type="text" value={newCatName} onChange={(e) => setNewCatName(e.target.value)} className="w-full px-4 sm:flex-1" placeholder="e.g. Health & Beauty" required />
                     <div className="flex items-center gap-3">
-                      <label className="flex h-12 cursor-pointer items-center justify-center rounded-xl border border-emerald-200 bg-white px-4 text-sm font-semibold text-emerald-700 transition-colors hover:bg-emerald-50">
+                      <label className={cn(uploadActionClass, 'h-12 rounded-xl px-4 text-sm')}>
                         Category Image
                         <input type="file" accept="image/*" onChange={handleCategoryImageSelect} className="hidden" />
                       </label>
                       {newCatImage ? (
-                        <div className="relative h-12 w-12 overflow-hidden rounded-xl border border-emerald-100">
+                        <div className="relative h-12 w-12 overflow-hidden rounded-xl border border-border">
                           <Image
                             src={newCatImage}
                             alt="Category preview"
@@ -462,46 +490,44 @@ export default function EditProduct({ id }) {
                             sizes="48px"
                             className="object-cover"
                             {...getBlurPlaceholderProps()}
-                            unoptimized
                           />
                         </div>
                       ) : null}
-                      <button type="submit" disabled={isAddingCat} className="w-full sm:w-auto bg-[#0EB981] text-white px-6 py-3 rounded-xl font-black text-sm hover:bg-[#0da874] disabled:opacity-50 transition-all flex items-center justify-center gap-2">
+                      <Button type="submit" disabled={isAddingCat} className="w-full rounded-xl px-6 sm:w-auto">
                         {isAddingCat ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />} Add
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 </div>
               </form>
               <div className="mt-6 grid grid-cols-1 gap-2">
                 {allCategories.map((cat) => (
-                  <div key={cat._id} className="flex items-center justify-between bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
+                  <div key={cat._id} className="flex items-center justify-between rounded-xl border border-border bg-background p-3">
                     <div className="flex min-w-0 flex-1 items-center gap-3">
                       {cat.image ? (
-                        <div className="relative h-10 w-10 overflow-hidden rounded-full border border-gray-100">
-                          <Image
-                            src={cat.image}
-                            alt={cat.name}
-                            fill
-                            sizes="40px"
-                            className="object-cover"
-                            {...getBlurPlaceholderProps()}
-                            unoptimized
-                          />
+                        <div className="relative h-10 w-10 overflow-hidden rounded-full border border-border">
+                              <Image
+                                src={cat.image}
+                                alt={cat.name}
+                                fill
+                                sizes="40px"
+                                className="object-cover"
+                                {...getBlurPlaceholderProps(cat.blurDataURL)}
+                              />
                         </div>
                       ) : (
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-sm font-bold text-emerald-700">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
                           {cat.name?.charAt(0) || '?'}
                         </div>
                       )}
-                      <span className="text-sm font-semibold text-gray-700">{cat.name}</span>
+                      <span className="text-sm font-semibold text-foreground">{cat.name}</span>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
-            <div className="p-4 bg-gray-50 border-t">
-              <button type="button" onClick={() => setIsCategoryModalOpen(false)} className="w-full px-12 py-3 bg-black text-white text-sm font-black rounded-xl hover:bg-gray-900 transition-all">DONE & CLOSE</button>
+            <div className="border-t border-border bg-muted/35 p-4">
+              <Button type="button" onClick={() => setIsCategoryModalOpen(false)} variant="outline" size="lg" className="w-full rounded-xl px-12">Done & Close</Button>
             </div>
           </div>
         </div>

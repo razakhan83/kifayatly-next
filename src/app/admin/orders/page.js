@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { connection } from 'next/server';
 import { Suspense } from 'react';
 import { Eye, Receipt } from 'lucide-react';
 
@@ -18,6 +19,7 @@ const formatDate = (dateStr) => new Date(dateStr).toLocaleDateString('en-PK', { 
 const formatTime = (dateStr) => new Date(dateStr).toLocaleTimeString('en-PK', { hour: '2-digit', minute: '2-digit', hour12: true });
 
 export default async function AdminOrdersPage() {
+  await connection();
   await requireAdmin();
 
   return (

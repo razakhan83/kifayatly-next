@@ -10,9 +10,7 @@ function getBufferFromDataUrl(dataUrl) {
   return Buffer.from(matches[2], "base64");
 }
 
-export async function generateBlurDataURLFromDataUrl(dataUrl) {
-  const inputBuffer = getBufferFromDataUrl(dataUrl);
-
+async function generateBlurDataURLFromBuffer(inputBuffer) {
   const outputBuffer = await sharp(inputBuffer)
     .resize(24, 24, { fit: "inside" })
     .blur(0.6)
@@ -20,4 +18,20 @@ export async function generateBlurDataURLFromDataUrl(dataUrl) {
     .toBuffer();
 
   return `data:image/jpeg;base64,${outputBuffer.toString("base64")}`;
+}
+
+export async function generateBlurDataURLFromDataUrl(dataUrl) {
+  const inputBuffer = getBufferFromDataUrl(dataUrl);
+  return generateBlurDataURLFromBuffer(inputBuffer);
+}
+
+export async function generateBlurDataURLFromRemoteUrl(url) {
+  const response = await fetch(url, { cache: "no-store" });
+  if (!response.ok) {
+    throw new Error(`Failed to fetch remote image for blur generation (${response.status})`);
+  }
+
+  const arrayBuffer = await response.arrayBuffer();
+  const inputBuffer = Buffer.from(arrayBuffer);
+  return generateBlurDataURLFromBuffer(inputBuffer);
 }

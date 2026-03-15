@@ -1,8 +1,14 @@
-import { updateTag } from 'next/cache';
+import { revalidateTag } from 'next/cache';
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { isAdminEmail } from "@/lib/admin";
 import dbConnect from "@/lib/dbConnect";
+import { optimizeCloudinaryUrl } from "@/lib/cloudinaryImage";
+import {
+  generateBlurDataURLFromDataUrl,
+  generateBlurDataURLFromRemoteUrl,
+} from "@/lib/imagePlaceholders";
 import Category from "@/models/Category";
 import mongoose from "mongoose";
 
@@ -19,11 +25,15 @@ function slugifyCategory(name = "") {
 export async function GET() {
   try {
     await dbConnect();
-    const categories = await Category.find({}).sort({ sortOrder: 1, name: 1 });
+    const categories = await Category.find({}).sort({ sortOrder: 1, name: 1 }).lean();
     return NextResponse.json({
       success: true,
       count: categories.length,
-      data: categories,
+      data: categories.map((category) => ({
+        ...category,
+        _id: category._id.toString(),
+        image: optimizeCloudinaryUrl(category.image || ''),
+      })),
     });
   } catch (error) {
     return NextResponse.json(
@@ -37,7 +47,7 @@ export async function GET() {
 export async function POST(req) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user?.email !== process.env.ADMIN_EMAIL) {
+    if (!session || !isAdminEmail(session.user?.email)) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
@@ -53,17 +63,37 @@ export async function POST(req) {
 
     // Auto-assign sortOrder to end of list
     const count = await Category.countDocuments();
+    const image = String(body.image || "").trim();
+    const imagePublicId = String(body.imagePublicId || "").trim();
+    let blurDataURL = String(body.blurDataURL || "").trim();
+
+    if (image && !blurDataURL && body.imageDataUrl) {
+      blurDataURL = await generateBlurDataURLFromDataUrl(body.imageDataUrl);
+    }
+
+    if (image && !blurDataURL) {
+      blurDataURL = await generateBlurDataURLFromRemoteUrl(image);
+    }
 
     const category = await Category.create({
       name: body.name.trim(),
       slug: slugifyCategory(body.name),
-      image: body.image || "",
-      imagePublicId: body.imagePublicId || "",
+      image,
+      imagePublicId,
+      blurDataURL,
       sortOrder: body.sortOrder ?? count,
     });
-    updateTag('categories');
+    revalidateTag('categories', 'max');
     return NextResponse.json(
-      { success: true, data: category },
+      {
+        success: true,
+        data: {
+          ...category.toObject(),
+          _id: category._id.toString(),
+          image: optimizeCloudinaryUrl(category.image || ""),
+          blurDataURL: category.blurDataURL || "",
+        },
+      },
       { status: 201 },
     );
   } catch (error) {
@@ -85,7 +115,7 @@ export async function POST(req) {
 export async function PUT(req) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user?.email !== process.env.ADMIN_EMAIL) {
+    if (!session || !isAdminEmail(session.user?.email)) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
@@ -111,6 +141,7 @@ export async function PUT(req) {
 
     // Return the freshly-sorted list so the frontend can use it directly
     const updated = await Category.find({}).sort({ sortOrder: 1, name: 1 }).lean();
+    revalidateTag('categories', 'max');
     return NextResponse.json({ success: true, message: "Sort order updated", data: updated });
   } catch (error) {
     return NextResponse.json(
@@ -124,7 +155,7 @@ export async function PUT(req) {
 export async function DELETE(req) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user?.email !== process.env.ADMIN_EMAIL) {
+    if (!session || !isAdminEmail(session.user?.email)) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
@@ -147,6 +178,7 @@ export async function DELETE(req) {
       );
     }
 
+    revalidateTag('categories', 'max');
     return NextResponse.json({ success: true, message: "Category deleted" });
   } catch (error) {
     return NextResponse.json(

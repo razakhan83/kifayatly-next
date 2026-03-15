@@ -14,7 +14,11 @@ const SheetPortal = DialogPrimitive.Portal
 const SheetOverlay = React.forwardRef(({ className, ...props }, ref) => (
   <DialogPrimitive.Overlay
     ref={ref}
-    className={cn("fixed inset-0 z-50 bg-primary/25 backdrop-blur-[2px] data-[state=open]:animate-fadeIn", className)}
+    data-slot="sheet-overlay"
+    className={cn(
+      "fixed inset-0 z-50 bg-black/30 backdrop-blur-md",
+      className
+    )}
     {...props}
   />
 ))
@@ -32,8 +36,10 @@ const SheetContent = React.forwardRef(({ side = "right", className, children, hi
     <SheetOverlay />
     <DialogPrimitive.Content
       ref={ref}
+      data-slot="sheet-content"
+      data-side={side}
       className={cn(
-        "fixed z-50 flex flex-col gap-4 bg-card p-5 text-card-foreground shadow-[0_24px_80px_rgba(10,61,46,0.18)] data-[state=open]:animate-fadeIn",
+        "fixed z-50 flex flex-col gap-4 bg-card p-5 text-card-foreground shadow-[0_24px_80px_rgba(10,61,46,0.18)]",
         side === "right" || side === "left" ? "rounded-none" : "rounded-b-xl",
         sheetVariants[side],
         className

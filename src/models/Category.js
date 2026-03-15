@@ -23,6 +23,11 @@ const CategorySchema = new mongoose.Schema(
       default: "",
       trim: true,
     },
+    blurDataURL: {
+      type: String,
+      default: "",
+      trim: true,
+    },
     sortOrder: {
       type: Number,
       default: 0,

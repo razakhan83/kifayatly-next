@@ -1,9 +1,11 @@
+import { optimizeCloudinaryUrl } from '@/lib/cloudinaryImage';
+
 export function normalizeProductImage(image) {
   if (!image) return null;
 
   if (typeof image === "string") {
     return {
-      url: image,
+      url: optimizeCloudinaryUrl(image),
       blurDataURL: "",
       publicId: "",
     };
@@ -11,7 +13,7 @@ export function normalizeProductImage(image) {
 
   if (typeof image === "object" && typeof image.url === "string") {
     return {
-      url: image.url,
+      url: optimizeCloudinaryUrl(image.url),
       blurDataURL: image.blurDataURL || "",
       publicId: image.publicId || image.public_id || "",
     };

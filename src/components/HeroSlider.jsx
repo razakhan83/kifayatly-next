@@ -1,93 +1,152 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import Image from 'next/image';
-import { AnimatePresence, motion } from 'framer-motion';
+
 import { getBlurPlaceholderProps } from '@/lib/imagePlaceholder';
 
+function resolveViewport() {
+  if (typeof window === 'undefined') return 'desktop';
+  if (window.innerWidth < 768) return 'mobile';
+  if (window.innerWidth < 1024) return 'tablet';
+  return 'desktop';
+}
+
+function getActiveAsset(slide, viewport) {
+  const desktopAsset = slide?.desktopImage || null;
+  const tabletAsset = slide?.tabletImage || desktopAsset;
+  const mobileAsset = slide?.mobileImage || desktopAsset;
+
+  if (viewport === 'mobile') {
+    return {
+      src: mobileAsset?.url || slide?.mobileSrc || slide?.image || slide?.src || '',
+      blurDataURL: mobileAsset?.blurDataURL || desktopAsset?.blurDataURL || slide?.blurDataURL || '',
+    };
+  }
+
+  if (viewport === 'tablet') {
+    return {
+      src: tabletAsset?.url || slide?.tabletSrc || slide?.pcSrc || slide?.image || slide?.src || '',
+      blurDataURL: tabletAsset?.blurDataURL || desktopAsset?.blurDataURL || slide?.blurDataURL || '',
+    };
+  }
+
+  return {
+    src: desktopAsset?.url || slide?.pcSrc || slide?.image || slide?.src || '',
+    blurDataURL: desktopAsset?.blurDataURL || slide?.blurDataURL || '',
+  };
+}
+
 export default function HeroSlider({ slides = [] }) {
-    const [selectedIndex, setSelectedIndex] = useState(0);
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [previousIndex, setPreviousIndex] = useState(null);
+  const [viewport, setViewport] = useState('desktop');
+  const [imageLoaded, setImageLoaded] = useState(false);
 
-    // Auto-advance every 5 seconds
-    useEffect(() => {
-        if (!slides || slides.length <= 1) return;
-        const interval = setInterval(() => {
-            setSelectedIndex(prev => (prev + 1) % slides.length);
-        }, 5000);
-        return () => clearInterval(interval);
-    }, [slides]);
+  const activeSlide = slides[selectedIndex] || null;
+  const activeAsset = getActiveAsset(activeSlide, viewport);
+  const previousSlide = previousIndex === null ? null : slides[previousIndex] || null;
+  const previousAsset = getActiveAsset(previousSlide, viewport);
 
-    const scrollTo = useCallback((index) => {
-        setSelectedIndex(index);
-    }, []);
+  useEffect(() => {
+    const syncViewport = () => setViewport(resolveViewport());
 
-    if (!slides || slides.length === 0) return null;
+    syncViewport();
+    window.addEventListener('resize', syncViewport);
+    return () => window.removeEventListener('resize', syncViewport);
+  }, []);
 
-    return (
-        <section
-            data-testid="hero-main-slider"
-            className="relative mb-4 w-full overflow-hidden border-b border-border bg-card md:mb-0"
+  useEffect(() => {
+    if (!slides || slides.length <= 1) return;
+    const interval = setInterval(() => {
+      setSelectedIndex((prev) => {
+        setPreviousIndex(prev);
+        return (prev + 1) % slides.length;
+      });
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [slides, selectedIndex]);
+
+  useEffect(() => {
+    if (previousIndex === null) return undefined;
+    const timer = window.setTimeout(() => setPreviousIndex(null), 1100);
+    return () => window.clearTimeout(timer);
+  }, [previousIndex, selectedIndex, viewport]);
+
+  useEffect(() => {
+    setImageLoaded(false);
+  }, [selectedIndex, viewport, activeAsset.src]);
+
+  const scrollTo = useCallback((index) => {
+    if (index === selectedIndex) return;
+    setPreviousIndex(selectedIndex);
+    setSelectedIndex(index);
+  }, [selectedIndex]);
+
+  if (!slides || slides.length === 0 || !activeAsset.src) return null;
+
+  return (
+    <section
+      data-testid="hero-main-slider"
+      className="relative w-full overflow-hidden bg-black"
+    >
+      <div className="relative h-[54vh] min-h-[320px] w-full overflow-hidden bg-black md:h-[460px] lg:h-[560px]">
+        {previousAsset.src ? (
+          <div className="absolute inset-0 animate-fadeOutHero">
+            <Image
+              src={previousAsset.src}
+              alt={previousSlide?.alt || `Slide ${previousIndex + 1}`}
+              fill
+              sizes="100vw"
+              className="object-cover"
+              {...getBlurPlaceholderProps(previousAsset.blurDataURL)}
+            />
+          </div>
+        ) : null}
+
+        <div
+          key={`${selectedIndex}-${viewport}-${activeAsset.src}`}
+          className={`absolute inset-0 ${previousAsset.src ? 'animate-fadeInHero' : ''}`}
         >
-            <div className="relative h-[54vh] min-h-[320px] w-full overflow-hidden bg-card md:h-[460px] lg:h-[560px]">
-                {/* All slides stacked, only active one is visible via AnimatePresence */}
-                <AnimatePresence mode="sync">
-                    <motion.div
-                        key={selectedIndex}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 1.5, ease: 'linear' }}
-                        className="absolute inset-0"
-                    >
-                        <div className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-r from-primary/18 via-transparent to-transparent"></div>
+          <div
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-500 ease-out"
+            style={{
+              backgroundImage: `url("${activeAsset.blurDataURL}")`,
+              opacity: imageLoaded ? 0 : 1,
+              filter: 'blur(18px)',
+              transform: 'scale(1.08)',
+            }}
+          />
+          <Image
+            src={activeAsset.src}
+            alt={activeSlide?.alt || `Slide ${selectedIndex + 1}`}
+            fill
+            sizes="100vw"
+            priority={selectedIndex === 0}
+            className={`object-cover transition-opacity duration-500 ease-out ${
+              imageLoaded ? 'opacity-100' : 'opacity-0'
+            }`}
+            onLoad={() => setImageLoaded(true)}
+            {...getBlurPlaceholderProps(activeAsset.blurDataURL)}
+          />
+        </div>
 
-                        {slides[selectedIndex]?.mobileSrc && (
-                            <div className="relative w-full h-full md:hidden">
-                                <Image
-                                    src={slides[selectedIndex].mobileSrc}
-                                    alt={slides[selectedIndex].alt || `Slide ${selectedIndex + 1}`}
-                                    fill
-                                    sizes="100vw"
-                                    priority={selectedIndex === 0}
-                                    className="object-cover"
-                                    {...getBlurPlaceholderProps()}
-                                    unoptimized
-                                />
-                            </div>
-                        )}
+      </div>
 
-                        {slides[selectedIndex]?.pcSrc && (
-                            <div className="relative w-full h-full hidden md:block">
-                                <Image
-                                    src={slides[selectedIndex].pcSrc}
-                                    alt={slides[selectedIndex].alt || `Slide ${selectedIndex + 1}`}
-                                    fill
-                                    sizes="100vw"
-                                    priority={selectedIndex === 0}
-                                    className="object-cover"
-                                    {...getBlurPlaceholderProps()}
-                                    unoptimized
-                                />
-                            </div>
-                        )}
-                    </motion.div>
-                </AnimatePresence>
-            </div>
-
-            <div className="absolute bottom-5 left-1/2 z-10 flex -translate-x-1/2 gap-2">
-                {slides.map((_, index) => (
-                    <button
-                        key={index}
-                        onClick={() => scrollTo(index)}
-                        className={`h-2.5 w-7 rounded-md transition-all duration-300 ${
-                            selectedIndex === index
-                                ? 'bg-white shadow-[0_0_14px_rgba(255,255,255,0.75)]'
-                                : 'bg-white/50'
-                        }`}
-                        aria-label={`Go to slide ${index + 1}`}
-                    />
-                ))}
-            </div>
-        </section>
-    );
+      <div className="absolute bottom-5 left-1/2 z-10 flex -translate-x-1/2 gap-2">
+        {slides.map((_, index) => (
+          <button
+            key={index}
+            onClick={() => scrollTo(index)}
+            className={`rounded-full transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+              selectedIndex === index
+                ? 'h-2 w-5 bg-white shadow-[0_8px_20px_rgba(255,255,255,0.22)]'
+                : 'h-2 w-2 bg-white/45 hover:bg-white/65'
+            }`}
+            aria-label={`Go to slide ${index + 1}`}
+          />
+        ))}
+      </div>
+    </section>
+  );
 }

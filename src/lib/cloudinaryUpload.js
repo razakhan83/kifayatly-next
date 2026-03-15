@@ -1,5 +1,7 @@
+import { optimizeCloudinaryUrl } from '@/lib/cloudinaryImage';
+
 export async function uploadImageDataUrl(dataUrl, folder = "kifayatly_products") {
-  const signRes = await fetch("/api/cloudinary-sign");
+  const signRes = await fetch(`/api/cloudinary-sign?folder=${encodeURIComponent(folder)}`);
   const signData = await signRes.json();
   if (!signRes.ok) {
     throw new Error(signData.error || "Failed to get upload signature");
@@ -36,9 +38,13 @@ export async function uploadImageDataUrl(dataUrl, folder = "kifayatly_products")
     );
   }
 
+  if (!placeholderData.blurDataURL) {
+    throw new Error("Blur placeholder generation returned an empty result");
+  }
+
   return {
-    url: uploadData.secure_url,
+    url: optimizeCloudinaryUrl(uploadData.secure_url),
     publicId: uploadData.public_id || "",
-    blurDataURL: placeholderData.blurDataURL || "",
+    blurDataURL: placeholderData.blurDataURL,
   };
 }

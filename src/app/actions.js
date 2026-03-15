@@ -12,6 +12,53 @@ import { getServerSession } from 'next-auth';
 
 const SETTINGS_KEY = 'site-settings';
 
+function normalizeCoverImages(input) {
+  if (!Array.isArray(input)) return [];
+
+  return input
+    .map((item, index) => {
+      const normalizeAsset = (asset, fallback = null) => {
+        const source = asset && typeof asset === 'object' ? asset : {};
+        const fallbackSource = fallback && typeof fallback === 'object' ? fallback : {};
+        const url = String(source.url || fallbackSource.url || '').trim();
+        if (!url) return null;
+
+        return {
+          url,
+          publicId: String(source.publicId || fallbackSource.publicId || '').trim(),
+          blurDataURL: String(source.blurDataURL || fallbackSource.blurDataURL || '').trim(),
+        };
+      };
+
+      const legacyDesktop = {
+        url: item?.desktopImage?.url || item?.url || item?.image || '',
+        publicId: item?.desktopImage?.publicId || item?.publicId || item?.public_id || '',
+        blurDataURL: item?.desktopImage?.blurDataURL || item?.blurDataURL || '',
+      };
+      const desktopImage = normalizeAsset(legacyDesktop);
+      if (!desktopImage) return null;
+      const tabletImage = normalizeAsset(item?.tabletImage);
+      const mobileImage = normalizeAsset(item?.mobileImage);
+
+      const normalizedItem = {
+        desktopImage,
+        alt: String(item?.alt || '').trim(),
+        sortOrder: Number(item?.sortOrder ?? index) || 0,
+      };
+
+      if (tabletImage) {
+        normalizedItem.tabletImage = tabletImage;
+      }
+
+      if (mobileImage) {
+        normalizedItem.mobileImage = mobileImage;
+      }
+
+      return normalizedItem;
+    })
+    .filter(Boolean);
+}
+
 function makeOrderId() {
   return `ORD-${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).slice(2, 5).toUpperCase()}`;
 }
@@ -77,12 +124,13 @@ export async function saveStoreSettingsAction(nextSettings) {
     'freeShippingThreshold',
     'announcementBarEnabled',
     'announcementBarText',
+    'coverImages',
   ];
 
   const updates = {};
   for (const field of allowedFields) {
     if (nextSettings[field] !== undefined) {
-      updates[field] = nextSettings[field];
+      updates[field] = field === 'coverImages' ? normalizeCoverImages(nextSettings[field]) : nextSettings[field];
     }
   }
 

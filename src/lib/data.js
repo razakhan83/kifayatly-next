@@ -3,13 +3,32 @@ import 'server-only';
 import { cacheLife, cacheTag } from 'next/cache';
 
 import Category from '@/models/Category';
+import CoverPhoto from '@/models/CoverPhoto';
 import Order from '@/models/Order';
 import Product from '@/models/Product';
 import Settings from '@/models/Settings';
 import dbConnect from '@/lib/dbConnect';
+import { optimizeCloudinaryUrl } from '@/lib/cloudinaryImage';
 import { normalizeProductImages } from '@/lib/productImages';
 
 const SETTINGS_KEY = 'site-settings';
+const COVER_PHOTOS_KEY = 'home-cover-photos';
+
+function normalizeMediaItem(item, sortOrder = 0, fallbackItem = null) {
+  if ((!item || typeof item !== 'object') && (!fallbackItem || typeof fallbackItem !== 'object')) return null;
+
+  const source = item && typeof item === 'object' ? item : {};
+  const fallback = fallbackItem && typeof fallbackItem === 'object' ? fallbackItem : {};
+  const url = String(source.url || source.image || fallback.url || fallback.image || '').trim();
+  if (!url) return null;
+
+  return {
+    url: optimizeCloudinaryUrl(url),
+    publicId: String(source.publicId || source.public_id || fallback.publicId || fallback.public_id || '').trim(),
+    blurDataURL: String(source.blurDataURL || fallback.blurDataURL || '').trim(),
+    sortOrder: Number(source.sortOrder ?? sortOrder) || 0,
+  };
+}
 
 export function normalizeCategoryId(value = '') {
   return String(value)
@@ -150,6 +169,48 @@ async function getSettingsRaw() {
   };
 }
 
+async function getCoverPhotosRaw() {
+  'use cache';
+
+  cacheLife('hours');
+  cacheTag('cover-photos');
+
+  await dbConnect();
+
+  let coverPhoto = await CoverPhoto.findOne({ singletonKey: COVER_PHOTOS_KEY }).lean();
+  if (!coverPhoto) {
+    coverPhoto = await CoverPhoto.create({ singletonKey: COVER_PHOTOS_KEY });
+    coverPhoto = coverPhoto.toObject();
+  }
+
+  return Array.isArray(coverPhoto.slides)
+    ? coverPhoto.slides
+        .map((item, index) => {
+          const desktopImage = normalizeMediaItem(
+            item.desktopImage || {
+              url: item.url,
+              publicId: item.publicId,
+              blurDataURL: item.blurDataURL,
+            },
+            index,
+          );
+          if (!desktopImage) return null;
+          const tabletImage = normalizeMediaItem(item.tabletImage, index, desktopImage);
+          const mobileImage = normalizeMediaItem(item.mobileImage, index, desktopImage);
+
+          return {
+            desktopImage,
+            tabletImage,
+            mobileImage,
+            alt: String(item.alt || '').trim(),
+            sortOrder: Number(item.sortOrder ?? index) || 0,
+          };
+        })
+        .filter(Boolean)
+        .sort((a, b) => a.sortOrder - b.sortOrder)
+    : [];
+}
+
 async function getCategoriesRaw() {
   'use cache';
 
@@ -165,8 +226,9 @@ async function getCategoriesRaw() {
       _id: category._id.toString(),
       id: category.slug || normalizeCategoryId(category.name),
       label: category.name,
-      image: category.image || '',
+      image: optimizeCloudinaryUrl(category.image || ''),
       imagePublicId: category.imagePublicId || '',
+      blurDataURL: category.blurDataURL || '',
       sortOrder: category.sortOrder ?? 0,
     }));
   }
@@ -185,6 +247,7 @@ async function getCategoriesRaw() {
           label: trimmed,
           image: '',
           imagePublicId: '',
+          blurDataURL: '',
         });
       }
     }
@@ -197,12 +260,53 @@ export async function getStoreSettings() {
   return getSettingsRaw();
 }
 
+export async function getAdminCoverPhotos() {
+  await dbConnect();
+
+  let coverPhoto = await CoverPhoto.findOne({ singletonKey: COVER_PHOTOS_KEY }).lean();
+  if (!coverPhoto) {
+    coverPhoto = await CoverPhoto.create({ singletonKey: COVER_PHOTOS_KEY });
+    coverPhoto = coverPhoto.toObject();
+  }
+
+  return Array.isArray(coverPhoto.slides)
+    ? coverPhoto.slides
+        .map((item, index) => {
+          const desktopImage = normalizeMediaItem(
+            item.desktopImage || {
+              url: item.url,
+              publicId: item.publicId,
+              blurDataURL: item.blurDataURL,
+            },
+            index,
+          );
+          if (!desktopImage) return null;
+          const tabletImage = normalizeMediaItem(item.tabletImage, index, desktopImage);
+          const mobileImage = normalizeMediaItem(item.mobileImage, index, desktopImage);
+
+          return {
+            desktopImage,
+            tabletImage,
+            mobileImage,
+            alt: String(item.alt || '').trim(),
+            sortOrder: Number(item.sortOrder ?? index) || 0,
+          };
+        })
+        .filter(Boolean)
+        .sort((a, b) => a.sortOrder - b.sortOrder)
+    : [];
+}
+
 export async function getStoreCategories() {
   return getCategoriesRaw();
 }
 
 export async function getHomeSections() {
-  const [products, categories] = await Promise.all([getLiveProductsRaw(), getCategoriesRaw()]);
+  const [products, categories, coverPhotos] = await Promise.all([
+    getLiveProductsRaw(),
+    getCategoriesRaw(),
+    getCoverPhotosRaw(),
+  ]);
   const featuredProducts = products.slice(0, 8).map(toProductCardItem);
   const sections = categories
     .map((category) => {
@@ -222,6 +326,7 @@ export async function getHomeSections() {
 
   return {
     categories,
+    coverPhotos,
     featuredProducts,
     searchProducts: products.map(toProductCardItem),
     sections,
@@ -329,82 +434,77 @@ export async function getRelatedProducts({ category = '', excludeSlug = '', limi
 }
 
 export async function getAdminProducts() {
-  const products = await getAllProductsRaw();
-  return products.map(toAdminProductRow);
+  await dbConnect();
+  const products = await Product.find({}).sort({ createdAt: -1 }).lean();
+  const serializedProducts = products.map(serializeProduct);
+  return serializedProducts.map(toAdminProductRow);
 }
 
 export async function getOrdersList() {
-  async function getOrders() {
-    'use cache';
-
-    cacheLife('minutes');
-    cacheTag('orders');
-
-    await dbConnect();
-    const orders = await Order.find({}).sort({ createdAt: -1 }).lean();
-    return orders.map(toOrderSummaryRow);
-  }
-
-  return getOrders();
+  await dbConnect();
+  const orders = await Order.find({}).sort({ createdAt: -1 }).lean();
+  return orders.map(toOrderSummaryRow);
 }
 
 export async function getOrderById(id) {
-  async function getOrder(orderId) {
-    'use cache';
-
-    cacheLife('minutes');
-    cacheTag('orders');
-    cacheTag(`order-${orderId}`);
-
-    await dbConnect();
-    const order = await Order.findById(orderId).lean();
-    return order ? toOrderSummaryRow(order) : null;
-  }
-
-  return getOrder(String(id || ''));
+  await dbConnect();
+  const order = await Order.findById(String(id || '')).lean();
+  return order ? toOrderSummaryRow(order) : null;
 }
 
 export async function getAdminDashboardData() {
-  async function getDashboard() {
-    'use cache';
+  await dbConnect();
 
-    cacheLife('minutes');
-    cacheTag('admin-dashboard');
-    cacheTag('orders');
-    cacheTag('products');
+  const [
+    totalOrders,
+    pendingOrders,
+    totalProducts,
+    liveProducts,
+    revenueAgg,
+    customersAgg,
+    recentOrders,
+  ] = await Promise.all([
+    Order.countDocuments(),
+    Order.countDocuments({ status: 'Pending' }),
+    Product.countDocuments(),
+    Product.countDocuments({ isLive: true }),
+    Order.aggregate([{ $group: { _id: null, total: { $sum: '$totalAmount' } } }]),
+    Order.aggregate([{ $group: { _id: '$customerPhone' } }, { $count: 'count' }]),
+    Order.find({}).sort({ createdAt: -1 }).limit(5).lean(),
+  ]);
 
-    await dbConnect();
-
-    const [
+  return {
+    summary: {
       totalOrders,
       pendingOrders,
       totalProducts,
       liveProducts,
-      revenueAgg,
-      customersAgg,
-      recentOrders,
-    ] = await Promise.all([
-      Order.countDocuments(),
-      Order.countDocuments({ status: 'Pending' }),
-      Product.countDocuments(),
-      Product.countDocuments({ isLive: true }),
-      Order.aggregate([{ $group: { _id: null, total: { $sum: '$totalAmount' } } }]),
-      Order.aggregate([{ $group: { _id: '$customerPhone' } }, { $count: 'count' }]),
-      Order.find({}).sort({ createdAt: -1 }).limit(5).lean(),
-    ]);
+      totalRevenue: Number(revenueAgg[0]?.total || 0),
+      totalCustomers: Number(customersAgg[0]?.count || 0),
+    },
+    recentOrders: recentOrders.map(toOrderSummaryRow),
+  };
+}
 
-    return {
-      summary: {
-        totalOrders,
-        pendingOrders,
-        totalProducts,
-        liveProducts,
-        totalRevenue: Number(revenueAgg[0]?.total || 0),
-        totalCustomers: Number(customersAgg[0]?.count || 0),
-      },
-      recentOrders: recentOrders.map(toOrderSummaryRow),
-    };
+export async function getAdminSettings() {
+  await dbConnect();
+
+  let settings = await Settings.findOne({ singletonKey: SETTINGS_KEY }).lean();
+  if (!settings) {
+    settings = await Settings.create({ singletonKey: SETTINGS_KEY });
+    settings = settings.toObject();
   }
 
-  return getDashboard();
+  return {
+    _id: settings._id.toString(),
+    storeName: settings.storeName || 'China Unique Store',
+    supportEmail: settings.supportEmail || '',
+    businessAddress: settings.businessAddress || '',
+    whatsappNumber: settings.whatsappNumber || '923001234567',
+    karachiDeliveryFee: Number(settings.karachiDeliveryFee || 200),
+    outsideKarachiDeliveryFee: Number(settings.outsideKarachiDeliveryFee || 250),
+    freeShippingThreshold: Number(settings.freeShippingThreshold || 3000),
+    announcementBarEnabled: settings.announcementBarEnabled ?? true,
+    announcementBarText: settings.announcementBarText || '',
+  };
 }

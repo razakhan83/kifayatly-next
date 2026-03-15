@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+@view-transition {
+  navigation: auto;
+}
+
 @theme inline {
   --font-sans: var(--font-geist-sans), "Geist", system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), "Geist Mono", monospace;
@@ -135,12 +139,170 @@
   }
 }
 
+@keyframes fade-out {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes sheet-in-right {
+  from {
+    opacity: 0;
+    transform: translate3d(28px, 0, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes sheet-in-left {
+  from {
+    opacity: 0;
+    transform: translate3d(-28px, 0, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes sheet-out-right {
+  from {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translate3d(28px, 0, 0);
+  }
+}
+
+@keyframes sheet-out-left {
+  from {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translate3d(-28px, 0, 0);
+  }
+}
+
+@keyframes hero-fade-in {
+  from {
+    opacity: 0;
+    transform: scale(1.02);
+    filter: saturate(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+    filter: saturate(1);
+  }
+}
+
+@keyframes hero-fade-out {
+  from {
+    opacity: 0.92;
+    transform: scale(1);
+    filter: saturate(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: scale(1.012);
+    filter: saturate(0.98);
+  }
+}
+
 .animate-fadeIn {
   animation: fade-in 220ms ease-out both;
 }
 
+.animate-fadeOut {
+  animation: fade-out 220ms ease-out both;
+}
+
 .animate-fadeInUp {
   animation: fade-up 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-sheetInRight {
+  animation: sheet-in-right 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: opacity, transform;
+}
+
+.animate-sheetInLeft {
+  animation: sheet-in-left 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: opacity, transform;
+}
+
+.animate-sheetOutRight {
+  animation: sheet-out-right 260ms cubic-bezier(0.4, 0, 0.2, 1) both;
+  will-change: opacity, transform;
+}
+
+.animate-sheetOutLeft {
+  animation: sheet-out-left 260ms cubic-bezier(0.4, 0, 0.2, 1) both;
+  will-change: opacity, transform;
+}
+
+.animate-fadeInHero {
+  animation: hero-fade-in 1250ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: opacity, transform, filter;
+}
+
+.animate-fadeOutHero {
+  animation: hero-fade-out 1250ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: opacity, transform, filter;
+}
+
+[data-slot="sheet-overlay"][data-state="open"] {
+  animation: fade-in 220ms ease-out both;
+}
+
+[data-slot="sheet-overlay"][data-state="closed"] {
+  animation: fade-out 220ms ease-out both;
+}
+
+[data-slot="sheet-content"][data-side="right"][data-state="open"] {
+  animation: sheet-in-right 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: opacity, transform;
+}
+
+[data-slot="sheet-content"][data-side="right"][data-state="closed"] {
+  animation: sheet-out-right 260ms cubic-bezier(0.4, 0, 0.2, 1) both;
+  will-change: opacity, transform;
+}
+
+[data-slot="sheet-content"][data-side="left"][data-state="open"] {
+  animation: sheet-in-left 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: opacity, transform;
+}
+
+[data-slot="sheet-content"][data-side="left"][data-state="closed"] {
+  animation: sheet-out-left 260ms cubic-bezier(0.4, 0, 0.2, 1) both;
+  will-change: opacity, transform;
+}
+
+[data-slot="sheet-content"][data-side="top"][data-state="open"],
+[data-slot="sheet-content"][data-side="bottom"][data-state="open"] {
+  animation: fade-up 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+[data-slot="sheet-content"][data-side="top"][data-state="closed"],
+[data-slot="sheet-content"][data-side="bottom"][data-state="closed"] {
+  animation: fade-out 220ms ease-out both;
 }
 
 .marquee-track {

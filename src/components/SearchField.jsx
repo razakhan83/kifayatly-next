@@ -70,7 +70,6 @@ export default function SearchField({
                           sizes="48px"
                           className="object-cover"
                           {...getBlurPlaceholderProps(getPrimaryProductImage(product).blurDataURL)}
-                          unoptimized
                         />
                       ) : null}
                     </div>

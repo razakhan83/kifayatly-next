@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { connection } from 'next/server';
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 
@@ -15,6 +16,7 @@ const statusVariant = {
 };
 
 export default async function AdminOrderDetailPage({ params }) {
+  await connection();
   await requireAdmin();
   const { id } = await params;
 

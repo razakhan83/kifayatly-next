@@ -122,7 +122,6 @@ export default function AdminProductsClient({ initialProducts }) {
                       fill
                       className="object-cover"
                       {...getBlurPlaceholderProps(getPrimaryProductImage(product).blurDataURL)}
-                      unoptimized
                     />
                   ) : (
                     <div className="flex size-full items-center justify-center text-muted-foreground">
@@ -193,7 +192,6 @@ export default function AdminProductsClient({ initialProducts }) {
                             fill
                             className="object-cover"
                             {...getBlurPlaceholderProps(getPrimaryProductImage(product).blurDataURL)}
-                            unoptimized
                           />
                         ) : (
                           <div className="flex size-full items-center justify-center text-muted-foreground">

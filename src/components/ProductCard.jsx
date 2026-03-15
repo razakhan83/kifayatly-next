@@ -144,9 +144,7 @@ export default function ProductCard({ product, className = "" }) {
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-            {...getBlurPlaceholderProps(primaryImage.blurDataURL)}
-            unoptimized
-          />
+            {...getBlurPlaceholderProps(primaryImage.blurDataURL)}          />
         ) : (
           <div className="flex size-full items-center justify-center bg-muted/50">
             <ShoppingCart className="size-10 text-muted-foreground/30" />

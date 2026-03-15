@@ -61,7 +61,6 @@ export default function ProductGallery({ images }) {
                                 fill
                                 className="object-cover transition-transform duration-[700ms] ease-[cubic-bezier(0.25,1,0.5,1)] hover:scale-105"
                                 {...getBlurPlaceholderProps(image.blurDataURL)}
-                                unoptimized
                                 preload={index === 0}
                             />
                         </div>
@@ -88,7 +87,6 @@ export default function ProductGallery({ images }) {
                                     fill
                                     className="object-cover"
                                     {...getBlurPlaceholderProps(image.blurDataURL)}
-                                    unoptimized
                                 />
                             </div>
                         ))}

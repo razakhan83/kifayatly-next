@@ -44,7 +44,7 @@ export default function CartDrawer() {
 
   return (
     <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
-      <SheetContent side="right" className="w-[min(96vw,28rem)]">
+      <SheetContent side="right" className="w-[min(70vw,28rem)] min-w-[18rem]">
         <SheetHeader>
           <SheetTitle>Your Cart</SheetTitle>
           <SheetDescription>{cart.length ? `${cart.length} item${cart.length > 1 ? 's' : ''} ready for checkout.` : 'Add products to start your order.'}</SheetDescription>
@@ -72,9 +72,7 @@ export default function CartDrawer() {
                         fill
                         sizes="80px"
                         className="object-cover"
-                        {...getBlurPlaceholderProps(getPrimaryProductImage(item).blurDataURL)}
-                        unoptimized
-                      />
+                        {...getBlurPlaceholderProps(getPrimaryProductImage(item).blurDataURL)}                      />
                     ) : null}
                   </div>
                   <div className="min-w-0 flex-1">

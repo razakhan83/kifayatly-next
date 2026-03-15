@@ -72,7 +72,15 @@ export default function CategoryIconCarousel({ categories }) {
 
   return (
     <div className="w-full border-b border-border bg-card/70 py-4 md:py-5">
-      <div className="mx-auto w-full max-w-[1240px] px-4">
+      <div className="relative mx-auto w-full max-w-[1240px] px-4">
+        <div
+          className="pointer-events-none absolute inset-y-0 left-4 z-10 w-8 md:w-12"
+          style={{ background: "linear-gradient(to right, color-mix(in oklab, var(--color-card) 70%, transparent), transparent)" }}
+        />
+        <div
+          className="pointer-events-none absolute inset-y-0 right-4 z-10 w-8 md:w-12"
+          style={{ background: "linear-gradient(to left, color-mix(in oklab, var(--color-card) 70%, transparent), transparent)" }}
+        />
         <div ref={emblaRef} className="overflow-hidden">
           <div className="flex gap-4 md:gap-6">
             {displayCategories.map((category, index) => {
@@ -82,7 +90,7 @@ export default function CategoryIconCarousel({ categories }) {
                 <button
                   key={`${category.id}-${index}`}
                   onClick={() => router.push(`/products?category=${category.id}`)}
-                  className="group flex min-w-[110px] flex-[0_0_auto] flex-col items-center gap-3 rounded-xl px-1 py-1 text-center md:min-w-[140px]"
+                  className="group flex min-w-[110px] flex-[0_0_auto] cursor-pointer flex-col items-center gap-3 rounded-xl px-1 py-1 text-center md:min-w-[140px]"
                 >
                   <div
                     className={`relative flex h-20 w-20 items-center justify-center overflow-hidden rounded-full border ${colors.border} bg-white transition-all duration-300 group-hover:-translate-y-0.5 group-hover:shadow-md md:h-28 md:w-28`}
@@ -94,8 +102,7 @@ export default function CategoryIconCarousel({ categories }) {
                         fill
                         sizes="112px"
                         className="object-cover"
-                        {...getBlurPlaceholderProps()}
-                        unoptimized
+                        {...getBlurPlaceholderProps(category.blurDataURL)}
                       />
                     ) : (
                       <div className={`flex size-full items-center justify-center rounded-full ${colors.bg}`}>

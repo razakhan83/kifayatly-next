@@ -291,7 +291,6 @@ export default function CheckoutClient({ settings }) {
                           fill
                           className="object-cover"
                           {...getBlurPlaceholderProps(getPrimaryProductImage(item).blurDataURL)}
-                          unoptimized
                         />
                       ) : null}
                     </div>

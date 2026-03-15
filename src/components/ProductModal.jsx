@@ -56,7 +56,6 @@ export default function ProductModal({ product, onClose }) {
                                     fill
                                     className="object-cover transition-transform duration-500 group-hover:scale-105"
                                     {...getBlurPlaceholderProps(primaryImage.blurDataURL)}
-                                    unoptimized
                                 />
                             ) : (
                                 <div className="w-full h-full flex items-center justify-center text-gray-400">

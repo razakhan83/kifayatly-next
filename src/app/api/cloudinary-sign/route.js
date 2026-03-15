@@ -7,9 +7,10 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-export async function GET() {
+export async function GET(req) {
   try {
-    const folder = "kifayatly_products";
+    const { searchParams } = new URL(req.url);
+    const folder = searchParams.get("folder") || "kifayatly_products";
     const timestamp = Math.round(new Date().getTime() / 1000);
     const signature = cloudinary.utils.api_sign_request(
       {

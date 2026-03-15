@@ -41,8 +41,8 @@ export default function ProductsPageHeader({
   searchTerm = "",
 }) {
   const categoryButtons = [
-    { id: "all", label: "All Items", icon: Search },
-    { id: "new-arrivals", label: "New Arrivals", icon: Sparkles },
+    { id: "all", label: "All Items"},
+    { id: "new-arrivals", label: "New Arrivals"},
     ...categories,
   ];
   const pageTitle = buildTitle(activeCategory, categories, searchTerm);

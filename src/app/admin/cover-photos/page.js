@@ -2,23 +2,23 @@ import { Suspense } from 'react';
 import { connection } from 'next/server';
 
 import { AdminTableSkeleton } from '@/components/AdminDashboardSkeleton';
-import { getAdminSettings } from '@/lib/data';
+import { getAdminCoverPhotos } from '@/lib/data';
 import { requireAdmin } from '@/lib/requireAdmin';
 
-import AdminSettingsClient from './AdminSettingsClient';
+import CoverPhotosClient from './CoverPhotosClient';
 
-export default async function AdminSettingsPage() {
+export default async function AdminCoverPhotosPage() {
   await connection();
   await requireAdmin();
 
   return (
     <Suspense fallback={<AdminTableSkeleton rows={4} />}>
-      <SettingsContent />
+      <CoverPhotosContent />
     </Suspense>
   );
 }
 
-async function SettingsContent() {
-  const settings = await getAdminSettings();
-  return <AdminSettingsClient initialSettings={settings} />;
+async function CoverPhotosContent() {
+  const coverPhotos = await getAdminCoverPhotos();
+  return <CoverPhotosClient initialSlides={coverPhotos} />;
 }

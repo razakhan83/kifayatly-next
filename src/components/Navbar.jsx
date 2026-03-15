@@ -212,7 +212,7 @@ function NavbarContent({ categories }) {
       ) : null}
 
       <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
-        <SheetContent side="left" className="w-[min(92vw,22rem)]">
+        <SheetContent side="left" className="w-[min(70vw,22rem)] min-w-[16rem]">
           <SheetHeader>
             <SheetTitle>Browse the store</SheetTitle>
             <SheetDescription>Navigation and category shortcuts in one place.</SheetDescription>

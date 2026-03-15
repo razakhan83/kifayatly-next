@@ -5,7 +5,8 @@
 - **Theme Color:** Emerald Green (`#10b981`) for all Primary buttons and active states.
 - **Typography:** Clean, modern sans-serif.
 
-## 2. Next.js 15/16 Specific Skills
+## 2. Next.js 16 Specific Skills
+Always use docs and skills
 - **Dynamic Routes:** Always use `await params` in dynamic routes `[id]`.
 - **ID Matching:** Use `String()` conversion for comparing and matching IDs (e.g., `String(p.id) === String(id)`) to prevent 404 type-mismatch errors.
 - **Data Fetching:** Use `Suspense` borders and `Skeleton Screens` for all data fetching and asynchronous UI loading states.

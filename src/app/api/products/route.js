@@ -1,4 +1,4 @@
-import { revalidateTag, updateTag } from 'next/cache';
+import { revalidateTag } from 'next/cache';
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -6,6 +6,7 @@ import { isAdminEmail } from '@/lib/admin';
 import dbConnect from '@/lib/dbConnect';
 import Product from '@/models/Product';
 import { normalizeProductImages } from '@/lib/productImages';
+import { ensureProductImagesBlur } from '@/lib/serverImageBlur';
 
 // Utility for formatting a string to a unique URL-friendly slug
 const slugify = (text) => {
@@ -85,7 +86,10 @@ export async function POST(req) {
         const stockStatus = (stockQuantity || 0) > 0 ? 'In Stock' : 'Out of Stock';
         console.log('[API] 📦 Stock Quantity:', stockQuantity, '-> Status:', stockStatus);
 
-        const normalizedImages = normalizeProductImages(Images, ImageURL || '');
+        const normalizedImages = await ensureProductImagesBlur(
+            normalizeProductImages(Images, ImageURL || ''),
+            ImageURL || '',
+        );
         const primaryImage = normalizedImages[0]?.url || ImageURL || '';
 
         const product = await Product.create({
@@ -105,8 +109,8 @@ export async function POST(req) {
 
         console.log('[API] ✅ Product saved:', product._id);
 
-        updateTag('products');
-        revalidateTag('admin-dashboard');
+        revalidateTag('products', { expire: 0 });
+        revalidateTag('admin-dashboard', { expire: 0 });
         return NextResponse.json({ success: true, data: product }, { status: 201 });
     } catch (error) {
         console.error('[API] ❌ Error:', error.message);

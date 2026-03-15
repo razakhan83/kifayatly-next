@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { connection } from 'next/server';
 import { Suspense } from 'react';
 import { ArrowRight, Box, CircleDollarSign, Inbox, ShoppingBag, Users } from 'lucide-react';
 
@@ -15,6 +16,7 @@ const statsConfig = [
 ];
 
 export default async function AdminDashboardPage() {
+  await connection();
   await requireAdmin();
 
   return (

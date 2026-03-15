@@ -8,6 +8,7 @@ import NextTopLoader from 'nextjs-toploader';
 import {
   Box,
   ChartColumn,
+  Images,
   LayoutGrid,
   LogOut,
   Menu,
@@ -26,6 +27,7 @@ const navItems = [
   { href: '/admin/products', label: 'Products', icon: Box, match: (pathname) => pathname.startsWith('/admin/products') },
   { href: '/admin/categories', label: 'Categories', icon: LayoutGrid, match: (pathname) => pathname.startsWith('/admin/categories') },
   { href: '/admin/orders', label: 'Orders', icon: ShoppingCart, match: (pathname) => pathname.startsWith('/admin/orders') },
+  { href: '/admin/cover-photos', label: 'Cover Photos', icon: Images, match: (pathname) => pathname.startsWith('/admin/cover-photos') },
   { href: '/admin/settings', label: 'Settings', icon: Settings, match: (pathname) => pathname.startsWith('/admin/settings') },
 ];
 
