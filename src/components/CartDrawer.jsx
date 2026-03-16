@@ -28,14 +28,18 @@ const formatPriceLabel = (raw) => `Rs. ${formatPrice(raw).toLocaleString('en-PK'
 
 export default function CartDrawer() {
   const { cart, updateQuantity, removeFromCart, isCartOpen, setIsCartOpen } = useCart();
-  const subtotal = cart.reduce((total, item) => total + formatPrice(item.Price || item.price) * item.quantity, 0);
+  const subtotal = cart.reduce((total, item) => {
+    const itemPrice = item.discountedPrice != null ? item.discountedPrice : formatPrice(item.Price || item.price);
+    return total + itemPrice * item.quantity;
+  }, 0);
 
   function handleWhatsAppDirectCheckout() {
     if (!cart.length) return;
     let message = `*New Order from China Unique Store*\n\n`;
     message += `*Items*\n`;
     cart.forEach((item, index) => {
-      message += `${index + 1}. ${item.Name || item.name} - ${item.quantity} x Rs. ${formatPrice(item.Price || item.price)}\n`;
+      const itemPrice = item.discountedPrice != null ? item.discountedPrice : formatPrice(item.Price || item.price);
+      message += `${index + 1}. ${item.Name || item.name} - ${item.quantity} x Rs. ${formatPrice(itemPrice)}\n`;
     });
     message += `\n*Subtotal:* Rs. ${subtotal.toLocaleString('en-PK')}\n`;
     message += `Please confirm my order.`;
@@ -79,7 +83,7 @@ export default function CartDrawer() {
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <p className="line-clamp-2 text-sm font-semibold text-foreground">{item.Name || item.name}</p>
-                        <p className="mt-1 text-sm font-medium text-primary">{formatPriceLabel(item.Price || item.price)}</p>
+                        <p className="mt-1 text-sm font-medium text-primary">{formatPriceLabel(item.discountedPrice != null ? item.discountedPrice : item.Price || item.price)}</p>
                       </div>
                       <button
                         type="button"

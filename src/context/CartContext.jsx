@@ -17,6 +17,7 @@ function normalizeCartItem(item) {
     _id: item._id || item.id || item.slug || '',
     Name: item.Name || item.name || 'Untitled Product',
     Price: Number(item.Price || item.price || 0),
+    discountedPrice: item.discountedPrice != null ? Number(item.discountedPrice) : null,
     Category: Array.isArray(item.Category) ? item.Category : item.Category ? [item.Category] : [],
     Images: item.Images || [],
     quantity: Math.max(1, Number(item.quantity || 1)),

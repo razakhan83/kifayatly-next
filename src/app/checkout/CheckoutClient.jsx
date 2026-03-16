@@ -45,7 +45,10 @@ export default function CheckoutClient({ settings }) {
   const [orderState, setOrderState] = useState({ orderId: '', whatsappUrl: '' });
 
   const subtotal = useMemo(
-    () => cart.reduce((total, item) => total + formatPrice(item.Price || item.price) * item.quantity, 0),
+    () => cart.reduce((total, item) => {
+      const itemPrice = item.discountedPrice != null ? item.discountedPrice : formatPrice(item.Price || item.price);
+      return total + itemPrice * item.quantity;
+    }, 0),
     [cart],
   );
 
@@ -100,7 +103,7 @@ export default function CheckoutClient({ settings }) {
           items: cart.map((item) => ({
             productId: item.id || item._id || item.slug,
             name: item.Name || item.name,
-            price: item.Price || item.price,
+            price: item.discountedPrice != null ? item.discountedPrice : item.Price || item.price,
             quantity: item.quantity,
             image: getPrimaryProductImage(item)?.url || '',
           })),
@@ -298,7 +301,7 @@ export default function CheckoutClient({ settings }) {
                       <h4 className="line-clamp-2 text-sm font-semibold text-foreground">{item.Name || item.name}</h4>
                       <div className="mt-1 flex items-center justify-between">
                         <span className="text-xs text-muted-foreground">Qty: {item.quantity}</span>
-                        <span className="text-sm font-semibold text-primary">{formatPriceLabel(item.Price || item.price)}</span>
+                        <span className="text-sm font-semibold text-primary">{formatPriceLabel(item.discountedPrice != null ? item.discountedPrice : item.Price || item.price)}</span>
                       </div>
                     </div>
                   </div>

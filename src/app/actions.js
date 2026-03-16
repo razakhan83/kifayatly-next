@@ -1,6 +1,6 @@
 'use server';
 
-import { revalidateTag, updateTag } from 'next/cache';
+import { revalidatePath, revalidateTag, updateTag } from 'next/cache';
 
 import { isAdminEmail } from '@/lib/admin';
 import { authOptions } from '@/lib/auth';
@@ -108,6 +108,33 @@ export async function deleteProductAction(productId) {
   revalidateTag('admin-dashboard');
 
   return { success: true };
+}
+
+export async function setProductDiscountAction(productId, discountPercentage) {
+  await assertAdmin();
+  await dbConnect();
+
+  const product = await Product.findById(productId);
+  if (!product) {
+    throw new Error('Product not found');
+  }
+
+  const pct = Math.min(100, Math.max(0, Number(discountPercentage) || 0));
+  product.discountPercentage = pct;
+  product.isDiscounted = pct > 0;
+  await product.save();
+
+  // Use revalidateTag (hard/immediate flush) not updateTag (lazy background)
+  // so the admin page re-render after this action gets fresh data from MongoDB
+  revalidateTag('products');
+  if (product.slug) {
+    revalidateTag(`product-${product.slug}`);
+  }
+  revalidateTag('admin-dashboard');
+  revalidatePath('/admin/products');
+  revalidatePath('/');
+
+  return { success: true, discountPercentage: product.discountPercentage, isDiscounted: product.isDiscounted };
 }
 
 export async function saveStoreSettingsAction(nextSettings) {

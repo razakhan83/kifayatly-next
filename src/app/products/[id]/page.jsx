@@ -130,10 +130,24 @@ async function ProductPageContent({ slug }) {
                 {product.Name}
               </h1>
 
-              <div className="flex items-baseline gap-3">
-                <span className="text-3xl font-extrabold text-primary md:text-4xl">
-                  {formatPrice(product.Price)}
-                </span>
+              <div className="flex flex-wrap items-baseline gap-3">
+                {product.isDiscounted && product.discountPercentage > 0 ? (
+                  <>
+                    <span className="text-3xl font-extrabold text-red-600 dark:text-red-500 md:text-4xl">
+                      {formatPrice(product.discountedPrice != null ? product.discountedPrice : Math.round(product.Price * (1 - product.discountPercentage / 100)))}
+                    </span>
+                    <span className="text-lg font-medium text-muted-foreground line-through">
+                      {formatPrice(product.Price)}
+                    </span>
+                    <span className="inline-flex items-center rounded-md bg-secondary px-2 py-0.5 text-xs font-bold uppercase tracking-wider text-secondary-foreground">
+                      {product.discountPercentage}% OFF
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-3xl font-extrabold text-primary md:text-4xl">
+                    {formatPrice(product.Price)}
+                  </span>
+                )}
               </div>
 
               <Separator />

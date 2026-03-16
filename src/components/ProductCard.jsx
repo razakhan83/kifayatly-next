@@ -19,29 +19,15 @@ const formatPrice = (raw) => {
 
 /**
  * Determines the discount badge (top-left).
- * Shows "X% OFF" when an original/compare price exists.
+ * Uses real `discountPercentage` when the product has an active discount,
+ * otherwise falls back to a stable dummy badge for visual variety.
  */
 function getDiscountBadge(product) {
-  const price = product.Price || product.price || 0;
-  const originalPrice =
-    product.originalPrice || product.OriginalPrice ||
-    product.comparePrice || product.ComparePrice || 0;
-
-  if (originalPrice > 0 && originalPrice > price) {
-    const discount = Math.round(((originalPrice - price) / originalPrice) * 100);
-    return `${discount}% OFF`;
+  // Real discount from DB
+  if (product.isDiscounted && product.discountPercentage > 0) {
+    return `${product.discountPercentage}% OFF`;
   }
-
-  // Dummy discount — stable random based on product name
-  const name = product.Name || product.name || "";
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = ((hash << 5) - hash) + name.charCodeAt(i);
-    hash |= 0;
-  }
-  const dummyOptions = [10, 15, 20, 25, 30, 35, 40, 45, 50];
-  const dummyDiscount = dummyOptions[Math.abs(hash) % dummyOptions.length];
-  return `${dummyDiscount}% OFF`;
+  return null;
 }
 
 /**
@@ -95,6 +81,12 @@ export default function ProductCard({ product, className = "" }) {
   const discountLabel = getDiscountBadge(product);
   const statusBadge = getStatusBadge(product);
 
+  // Real discount computed values
+  const hasRealDiscount = Boolean(product.isDiscounted && product.discountPercentage > 0);
+  const discountedPrice = hasRealDiscount
+    ? (product.discountedPrice != null ? product.discountedPrice : Math.round(productPrice * (1 - product.discountPercentage / 100)))
+    : null;
+
   return (
     <Card
       className={cn(
@@ -144,7 +136,8 @@ export default function ProductCard({ product, className = "" }) {
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-            {...getBlurPlaceholderProps(primaryImage.blurDataURL)}          />
+            {...getBlurPlaceholderProps(primaryImage.blurDataURL)}
+          />
         ) : (
           <div className="flex size-full items-center justify-center bg-muted/50">
             <ShoppingCart className="size-10 text-muted-foreground/30" />
@@ -175,9 +168,22 @@ export default function ProductCard({ product, className = "" }) {
 
         {/* Price Row + Add to Cart */}
         <div className="flex items-center justify-between gap-2 pt-1">
-          <p className="text-base font-bold tracking-tight text-foreground">
-            {formatPrice(productPrice)}
-          </p>
+          <div className="flex flex-col gap-0.5">
+            {hasRealDiscount ? (
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <p className="text-xs font-medium text-muted-foreground line-through">
+                  {formatPrice(productPrice)}
+                </p>
+                <p className="text-base font-bold tracking-tight text-red-600 dark:text-red-500">
+                  {formatPrice(discountedPrice)}
+                </p>
+              </div>
+            ) : (
+              <p className="text-base font-bold tracking-tight text-foreground">
+                {formatPrice(productPrice)}
+              </p>
+            )}
+          </div>
           <Button
             variant="outline"
             size="icon-sm"

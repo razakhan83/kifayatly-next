@@ -67,7 +67,21 @@ const ProductSchema = new mongoose.Schema(
         isLive: {
             type: Boolean,
             default: true
-        }
+        },
+        discountPercentage: {
+            type: Number,
+            default: 0,
+            min: 0,
+            max: 100,
+        },
+        isDiscounted: {
+            type: Boolean,
+            default: false,
+        },
+        discountedPrice: {
+            type: Number,
+            default: null,
+        },
     },
     {
         timestamps: true,

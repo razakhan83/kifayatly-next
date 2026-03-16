@@ -91,6 +91,11 @@ export async function PUT(request, { params }) {
         existingProduct.StockStatus = stockQuantity > 0 ? 'In Stock' : 'Out of Stock';
         existingProduct.isLive = body.isLive === true || body.isLive === 'true';
 
+        // Discount fields
+        const discountPct = Math.min(100, Math.max(0, Number(body.discountPercentage) || 0));
+        existingProduct.discountPercentage = discountPct;
+        existingProduct.isDiscounted = discountPct > 0;
+
         await existingProduct.save();
         await existingProduct.populate('Category');
         revalidateTag('products', 'max');
@@ -117,6 +122,75 @@ export async function PUT(request, { params }) {
             },
         });
     } catch (error) {
+        return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    }
+}
+
+// PATCH — discount-only update (dedicated endpoint, no full product reload needed)
+export async function PATCH(request, { params }) {
+    try {
+        const session = await getServerSession(authOptions);
+        if (!session || !isAdminEmail(session.user?.email)) {
+            return NextResponse.json({ success: false, message: 'Unauthorized Access' }, { status: 401 });
+        }
+
+        await dbConnect();
+
+        const { id } = await params;
+        const body = await request.json();
+
+        const pct = Math.min(100, Math.max(0, Number(body.discountPercentage) || 0));
+
+        // We need the current price to compute discountedPrice
+        const existing = await Product.findById(id).select('Price slug Name').lean();
+        if (!existing) {
+            return NextResponse.json({ success: false, message: 'Product not found' }, { status: 404 });
+        }
+
+        const discountedPrice = pct > 0
+            ? Math.round(Number(existing.Price) * (1 - pct / 100))
+            : null;
+
+        // Atomic write directly to MongoDB — avoids any Mongoose validation issues
+        // 'strict: false' is CRUCIAL here because Mongoose caches schemas during Next.js HMR.
+        // If the dev server is using an old cached schema model, it will silently drop new fields!
+        const updatedProduct = await Product.findByIdAndUpdate(
+            id,
+            { $set: { discountPercentage: pct, isDiscounted: pct > 0, discountedPrice } },
+            { new: true, runValidators: false, strict: false }
+        ).lean();
+
+        // Verify the saved document in Vercel / server logs
+        console.log('[PATCH discount] Saved to MongoDB:', JSON.stringify({
+            _id: updatedProduct._id.toString(),
+            name: updatedProduct.Name,
+            discountPercentage: updatedProduct.discountPercentage,
+            isDiscounted: updatedProduct.isDiscounted,
+            discountedPrice: updatedProduct.discountedPrice,
+        }));
+
+        // Hard-flush all caches so the storefront reflects changes immediately
+        revalidateTag('products');
+        if (updatedProduct.slug) {
+            revalidateTag(`product-${updatedProduct.slug}`);
+            revalidatePath(`/products/${updatedProduct.slug}`);
+        }
+        revalidateTag('admin-dashboard');
+        revalidatePath('/admin/products');
+        revalidatePath('/products');
+        revalidatePath('/');
+
+        return NextResponse.json({
+            success: true,
+            data: {
+                _id: updatedProduct._id.toString(),
+                discountPercentage: updatedProduct.discountPercentage,
+                isDiscounted: updatedProduct.isDiscounted,
+                discountedPrice: updatedProduct.discountedPrice ?? null,
+            },
+        });
+    } catch (error) {
+        console.error('[PATCH discount] Error:', error);
         return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 }

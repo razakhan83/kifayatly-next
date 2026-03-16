@@ -64,6 +64,9 @@ function toProductCardItem(product) {
     StockStatus: product.StockStatus || 'Out of Stock',
     createdAt: product.createdAt,
     isLive: product.isLive !== false,
+    discountPercentage: Number(product.discountPercentage || 0),
+    isDiscounted: product.isDiscounted === true,
+    discountedPrice: product.discountedPrice != null ? Number(product.discountedPrice) : null,
   };
 }
 
@@ -80,6 +83,9 @@ function toProductDetailView(product) {
     StockStatus: product.StockStatus || 'Out of Stock',
     stockQuantity: Number(product.stockQuantity || 0),
     createdAt: product.createdAt,
+    discountPercentage: Number(product.discountPercentage || 0),
+    isDiscounted: product.isDiscounted === true,
+    discountedPrice: product.discountedPrice != null ? Number(product.discountedPrice) : null,
   };
 }
 
@@ -96,6 +102,9 @@ function toAdminProductRow(product) {
     stockQuantity: Number(product.stockQuantity || 0),
     isLive: product.isLive !== false,
     createdAt: product.createdAt,
+    discountPercentage: Number(product.discountPercentage || 0),
+    isDiscounted: product.isDiscounted === true,
+    discountedPrice: product.discountedPrice != null ? Number(product.discountedPrice) : null,
   };
 }
 
@@ -325,6 +334,24 @@ export async function getHomeSections() {
       };
     })
     .filter((section) => section.products.length > 0);
+
+  // Prepend a Special Offers section if any live products have an active discount
+  const discountedProducts = products
+    .filter((product) => product.isDiscounted === true)
+    .sort((a, b) => {
+      const dateA = new Date(a.createdAt || 0).getTime();
+      const dateB = new Date(b.createdAt || 0).getTime();
+      return dateB - dateA; // newest first
+    })
+    .slice(0, 12)
+    .map(toProductCardItem);
+
+  if (discountedProducts.length > 0) {
+    sections.unshift({
+      category: { id: 'special-offers', label: 'Special Offers 🏷️' },
+      products: discountedProducts,
+    });
+  }
 
   return {
     categories,
