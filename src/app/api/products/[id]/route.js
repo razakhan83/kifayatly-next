@@ -79,7 +79,6 @@ export async function PUT(request, { params }) {
         }
 
         const normalizedImages = await ensureProductImagesBlur(normalizeProductImages(body.Images));
-        const stockQuantity = Number(body.stockQuantity) || 0;
         const previousSlug = existingProduct.slug;
 
         existingProduct.Name = body.Name;
@@ -87,8 +86,7 @@ export async function PUT(request, { params }) {
         existingProduct.Price = Number(body.Price);
         existingProduct.Images = normalizedImages;
         existingProduct.Category = categoryArray;
-        existingProduct.stockQuantity = stockQuantity;
-        existingProduct.StockStatus = stockQuantity > 0 ? 'In Stock' : 'Out of Stock';
+        // existingProduct.StockStatus is intentionally left alone here; handled by the Admin toggle.
         existingProduct.isLive = body.isLive === true || body.isLive === 'true';
 
         // Discount fields
@@ -138,6 +136,33 @@ export async function PATCH(request, { params }) {
 
         const { id } = await params;
         const body = await request.json();
+
+        // Handle StockStatus toggle
+        if (body.StockStatus !== undefined) {
+            const updatedProduct = await Product.findByIdAndUpdate(
+                id,
+                { $set: { StockStatus: body.StockStatus } },
+                { new: true, runValidators: false, strict: false }
+            ).lean();
+
+            revalidateTag('products');
+            if (updatedProduct.slug) {
+                revalidateTag(`product-${updatedProduct.slug}`);
+                revalidatePath(`/products/${updatedProduct.slug}`);
+            }
+            revalidateTag('admin-dashboard');
+            revalidatePath('/admin/products');
+            revalidatePath('/products');
+            revalidatePath('/');
+
+            return NextResponse.json({
+                success: true,
+                data: {
+                    _id: updatedProduct._id.toString(),
+                    StockStatus: updatedProduct.StockStatus,
+                },
+            });
+        }
 
         const pct = Math.min(100, Math.max(0, Number(body.discountPercentage) || 0));
 

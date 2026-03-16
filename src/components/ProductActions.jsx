@@ -49,6 +49,8 @@ export default function ProductActions({ product }) {
         }
     };
 
+    const isOutOfStock = product.StockStatus === "Out of Stock";
+
     return (
         <div className="flex flex-col gap-4">
             <div className="flex items-center gap-3">
@@ -75,7 +77,7 @@ export default function ProductActions({ product }) {
             <div className="flex gap-3">
                 <Button
                     onClick={handleAddToCart}
-                    disabled={isAdding}
+                    disabled={isAdding || isOutOfStock}
                     className="flex-1"
                     size="lg"
                 >

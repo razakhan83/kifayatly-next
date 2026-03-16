@@ -178,6 +178,7 @@ export default function AdminProductsClient({ initialProducts }) {
   const [deleteModal, setDeleteModal] = useState({ open: false, product: null });
   const [deleting, setDeleting] = useState(false);
   const [togglingId, setTogglingId] = useState(null);
+  const [togglingStockId, setTogglingStockId] = useState(null);
   const [discountModal, setDiscountModal] = useState({ open: false, product: null });
 
   useEffect(() => {
@@ -241,6 +242,32 @@ export default function AdminProductsClient({ initialProducts }) {
         toast.error(error.message || "Toggle failed");
       } finally {
         setTogglingId(null);
+      }
+    });
+  }
+
+  async function handleToggleStock(product) {
+    setTogglingStockId(product._id);
+    const newStockStatus = product.StockStatus === "In Stock" ? "Out of Stock" : "In Stock";
+    startTransition(async () => {
+      try {
+        const res = await fetch(`/api/products/${product._id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ StockStatus: newStockStatus }),
+        });
+        const json = await res.json();
+        if (!res.ok || !json.success) throw new Error(json.error || json.message || "Failed to update stock status");
+        
+        setProducts((previous) =>
+          previous.map((entry) => (entry._id === product._id ? { ...entry, StockStatus: newStockStatus } : entry)),
+        );
+        toast.success(`"${product.Name}" is now ${newStockStatus}.`);
+        router.refresh(); // Refresh Server Components cache
+      } catch (error) {
+        toast.error(error.message || "Toggle failed");
+      } finally {
+        setTogglingStockId(null);
       }
     });
   }
@@ -335,17 +362,30 @@ export default function AdminProductsClient({ initialProducts }) {
                 </div>
               </div>
 
-              <div className="mt-4 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <Switch
-                    checked={product.isLive}
-                    disabled={togglingId === product._id}
-                    onCheckedChange={() => handleToggleLive(product)}
-                    aria-label={`Toggle ${product.Name} live status`}
-                  />
-                  <span className="text-sm font-medium text-muted-foreground">
-                    {product.isLive ? "Live" : "Draft"}
-                  </span>
+              <div className="mt-4 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex flex-wrap items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={product.isLive}
+                      disabled={togglingId === product._id}
+                      onCheckedChange={() => handleToggleLive(product)}
+                      aria-label={`Toggle ${product.Name} live status`}
+                    />
+                    <span className="text-sm font-medium text-muted-foreground">
+                      {product.isLive ? "Live" : "Draft"}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={product.StockStatus === "In Stock"}
+                      disabled={togglingStockId === product._id}
+                      onCheckedChange={() => handleToggleStock(product)}
+                      aria-label={`Toggle ${product.Name} stock status`}
+                    />
+                    <Badge variant={product.StockStatus === "In Stock" ? "emerald" : "destructive"} className="text-[10px] uppercase">
+                      {product.StockStatus === "In Stock" ? "In Stock" : "Out of Stock"}
+                    </Badge>
+                  </div>
                 </div>
                 <div className="flex gap-2">
                   <Button
@@ -434,9 +474,17 @@ export default function AdminProductsClient({ initialProducts }) {
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <Badge variant={product.StockStatus === "In Stock" ? "emerald" : "destructive"}>
-                      {product.StockStatus === "In Stock" ? "In Stock" : "Out of Stock"}
-                    </Badge>
+                    <div className="inline-flex items-center gap-2">
+                      <Switch
+                        checked={product.StockStatus === "In Stock"}
+                        disabled={togglingStockId === product._id}
+                        onCheckedChange={() => handleToggleStock(product)}
+                        aria-label={`Toggle ${product.Name} stock status`}
+                      />
+                      <Badge variant={product.StockStatus === "In Stock" ? "emerald" : "destructive"} className="min-w-[85px] justify-center text-[10px] uppercase">
+                        {product.StockStatus === "In Stock" ? "In Stock" : "Out of Stock"}
+                      </Badge>
+                    </div>
                   </td>
                   <td className="px-6 py-4 text-center">
                     <div className="inline-flex items-center gap-3">

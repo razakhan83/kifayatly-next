@@ -36,6 +36,13 @@ function getDiscountBadge(product) {
  * Each has a unique color.
  */
 function getStatusBadge(product) {
+  if (product.StockStatus === "Out of Stock") {
+    return {
+      label: "Out of Stock",
+      className: "bg-destructive text-destructive-foreground border-destructive",
+    };
+  }
+
   // Best Selling
   if (product.isBestSelling || product.bestSelling || product.isBestseller) {
     return {
@@ -187,11 +194,12 @@ export default function ProductCard({ product, className = "" }) {
           <Button
             variant="outline"
             size="icon-sm"
+            disabled={product.StockStatus === "Out of Stock"}
             onClick={(e) => {
               e.preventDefault();
               addToCart(product);
             }}
-            className="size-8 cursor-pointer shadow-none transition-all duration-300 hover:scale-110 hover:border-primary/30 hover:bg-primary/12 hover:text-primary hover:shadow-none"
+            className="size-8 cursor-pointer shadow-none transition-all duration-300 hover:scale-110 hover:border-primary/30 hover:bg-primary/12 hover:text-primary hover:shadow-none disabled:opacity-50 disabled:pointer-events-none"
           >
             <ShoppingCart className="size-4" />
           </Button>

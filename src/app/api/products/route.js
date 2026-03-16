@@ -66,7 +66,7 @@ export async function POST(req) {
         const body = await req.json();
         console.log('[API] Body received:', { Name: body.Name, Category: body.Category, Price: body.Price, Images: body.Images?.length });
 
-        let { Name, Description, Price, Images, cloudinary_id, Category: categoryInput, stockQuantity, slug, isLive } = body;
+        let { Name, Description, Price, Images, cloudinary_id, Category: categoryInput, slug, isLive } = body;
 
         if (!Name || !Price || !categoryInput) {
             console.log('[API] ❌ Validation failed: Missing required fields');
@@ -95,9 +95,9 @@ export async function POST(req) {
 
         console.log('[API] 🔗 Generated slug:', uniqueSlug);
 
-        // Compute stock status from quantity
-        const stockStatus = (stockQuantity || 0) > 0 ? 'In Stock' : 'Out of Stock';
-        console.log('[API] 📦 Stock Quantity:', stockQuantity, '-> Status:', stockStatus);
+        // New products default to In Stock
+        const stockStatus = 'In Stock';
+        console.log('[API] 📦 Stock Status Defaulted To:', stockStatus);
 
         const normalizedImages = await ensureProductImagesBlur(normalizeProductImages(Images));
 
@@ -108,7 +108,6 @@ export async function POST(req) {
             Images: normalizedImages,
             cloudinary_id,
             Category: categoryArray,
-            stockQuantity: stockQuantity || 0,
             StockStatus: stockStatus,
             slug: uniqueSlug, // Ensure slug is saved
             isLive: isLive === true || isLive === 'true' ? true : false,

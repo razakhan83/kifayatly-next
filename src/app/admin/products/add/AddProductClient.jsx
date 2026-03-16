@@ -31,7 +31,6 @@ export default function AddProduct() {
   const [Description, setDescription] = useState("");
   const [Price, setPrice] = useState("");
   const [Categories, setCategories] = useState([]); // array of selected category ids
-  const [stockQuantity, setStockQuantity] = useState("");
   const [images, setImages] = useState([]); // Array of { url, blurDataURL, publicId, file, isNew }
   const [saving, setSaving] = useState(false);
   const [isLive, setIsLive] = useState(false);
@@ -168,7 +167,6 @@ export default function AddProduct() {
     setDescription("");
     setPrice("");
     setCategories([]);
-    setStockQuantity("");
     setImages([]);
     setIsLive(false);
     setIsDragOver(false);
@@ -219,7 +217,6 @@ export default function AddProduct() {
       Price: Number(Price),
       Images: finalImages,
       Category: Categories,
-      stockQuantity: Number(stockQuantity) || 0,
       isLive,
     };
 
@@ -467,19 +464,6 @@ export default function AddProduct() {
             />
           </div>
 
-          {/* Stock Quantity */}
-          <div>
-            <Label className="mb-2">Stock Quantity</Label>
-            <Input
-              type="number"
-              value={stockQuantity}
-              onChange={(e) => setStockQuantity(e.target.value)}
-              className="h-11 px-4"
-              placeholder="0"
-              min="0"
-              required
-            />
-          </div>
 
           {/* Buttons */}
           <div className="flex gap-4 mt-6 md:mt-8">
