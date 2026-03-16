@@ -35,7 +35,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowDownWideNarrow, MoreHorizontal } from "lucide-react";
+import { ArrowDownWideNarrow, MoreVertical } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
 /*  Discount Dialog                                                     */
@@ -476,7 +476,7 @@ export default function AdminProductsClient({ initialProducts }) {
                       )}
                       title="Actions"
                     >
-                      <MoreHorizontal className="size-4" />
+                      <MoreVertical className="size-5" />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-[160px]">
                       <DropdownMenuGroup>
@@ -608,11 +608,11 @@ export default function AdminProductsClient({ initialProducts }) {
                       <DropdownMenu>
                         <DropdownMenuTrigger
                           className={cn(
-                            "inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-semibold transition-all duration-200 outline-none select-none hover:bg-muted hover:text-foreground text-muted-foreground size-8"
+                            "inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-semibold transition-all duration-200 outline-none select-none hover:bg-muted hover:text-foreground text-muted-foreground size-8 border border-transparent hover:border-border"
                           )}
                           title="Actions"
                         >
-                          <MoreHorizontal className="size-4" />
+                          <MoreVertical className="size-4" />
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-[160px]">
                           <DropdownMenuGroup>
