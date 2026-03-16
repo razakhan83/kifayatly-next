@@ -102,6 +102,7 @@ function toAdminProductRow(product) {
     stockQuantity: Number(product.stockQuantity || 0),
     isLive: product.isLive !== false,
     createdAt: product.createdAt,
+    updatedAt: product.updatedAt,
     discountPercentage: Number(product.discountPercentage || 0),
     isDiscounted: product.isDiscounted === true,
     discountedPrice: product.discountedPrice != null ? Number(product.discountedPrice) : null,

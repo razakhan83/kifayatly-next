@@ -39,7 +39,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { uploadImageDataUrl } from "@/lib/cloudinaryUpload";
@@ -530,10 +530,8 @@ export default function AdminCategoriesClient() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel asChild>
-              <Button variant="outline" onClick={() => setDeleteModal({ open: false, category: null })}>
-                Cancel
-              </Button>
+            <AlertDialogCancel className={cn(buttonVariants({ variant: "outline" }))} onClick={() => setDeleteModal({ open: false, category: null })}>
+              Cancel
             </AlertDialogCancel>
             <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
               {deleting ? "Deleting..." : "Delete Category"}
@@ -599,10 +597,8 @@ export default function AdminCategoriesClient() {
           </div>
 
           <AlertDialogFooter>
-            <AlertDialogCancel asChild>
-              <Button variant="outline" disabled={editing}>
-                Cancel
-              </Button>
+            <AlertDialogCancel className={cn(buttonVariants({ variant: "outline" }))} disabled={editing}>
+              Cancel
             </AlertDialogCancel>
             <Button onClick={handleEditCategory} disabled={editing || !editName.trim()}>
               {editing ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}

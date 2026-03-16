@@ -7,6 +7,7 @@ import { startTransition, useEffect, useMemo, useState } from "react";
 import { ImageIcon, Pencil, Plus, Search, Tag, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
+import { cn } from "@/lib/utils";
 import { deleteProductAction, toggleProductLiveAction } from "@/app/actions";
 import {
   AlertDialog,
@@ -18,12 +19,23 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { getProductCategoryNames } from "@/lib/productCategories";
 import { getPrimaryProductImage } from "@/lib/productImages";
 import { getBlurPlaceholderProps } from "@/lib/imagePlaceholder";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ArrowDownWideNarrow, MoreHorizontal } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
 /*  Discount Dialog                                                     */
@@ -98,14 +110,10 @@ function DiscountDialog({ open, product, onOpenChange, onSuccess }) {
             <Tag className="size-4 text-primary" />
             Set Discount
           </AlertDialogTitle>
-          <AlertDialogDescription asChild>
-            <div className="space-y-1">
-              <p>
-                Enter a discount percentage for{" "}
-                <span className="font-semibold text-foreground">{product?.Name}</span>.
-              </p>
-              <p className="text-xs">Set to 0 to remove the discount.</p>
-            </div>
+          <AlertDialogDescription>
+            Enter a discount percentage for{" "}
+            <span className="font-semibold text-foreground uppercase tracking-wide">{product?.Name}</span>.
+            Set to 0 to remove the discount.
           </AlertDialogDescription>
         </AlertDialogHeader>
 
@@ -153,10 +161,8 @@ function DiscountDialog({ open, product, onOpenChange, onSuccess }) {
               Remove Discount
             </Button>
           )}
-          <AlertDialogCancel asChild>
-            <Button variant="outline" disabled={saving}>
-              Cancel
-            </Button>
+          <AlertDialogCancel className={cn(buttonVariants({ variant: "outline" }))} disabled={saving}>
+            Cancel
           </AlertDialogCancel>
           <Button onClick={handleApply} disabled={saving}>
             {saving ? "Saving…" : "Apply Discount"}
@@ -175,6 +181,7 @@ export default function AdminProductsClient({ initialProducts }) {
   const router = useRouter();
   const [products, setProducts] = useState(initialProducts);
   const [searchQuery, setSearchQuery] = useState("");
+  const [sortOption, setSortOption] = useState("date-desc");
   const [deleteModal, setDeleteModal] = useState({ open: false, product: null });
   const [deleting, setDeleting] = useState(false);
   const [togglingId, setTogglingId] = useState(null);
@@ -203,25 +210,63 @@ export default function AdminProductsClient({ initialProducts }) {
   }, [initialProducts]);
 
   const filteredProducts = useMemo(() => {
-    if (!searchQuery.trim()) return products;
-    const query = searchQuery.toLowerCase();
-    
-    // Check if the search matches "special offers" conceptually
-    const isSearchingSpecialOffers = "special offers".includes(query) || "special-offers".includes(query);
-    
-    return products.filter((product) => {
-      // Direct name match
-      if (product.Name?.toLowerCase().includes(query)) return true;
+    let result = products;
+
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      // Check if the search matches "special offers" conceptually
+      const isSearchingSpecialOffers = "special offers".includes(query) || "special-offers".includes(query);
       
-      // Category match
-      if (getProductCategoryNames(product).some((category) => category.toLowerCase().includes(query))) return true;
-      
-      // Special Offers match
-      if (isSearchingSpecialOffers && product.isDiscounted) return true;
-      
-      return false;
-    });
-  }, [products, searchQuery]);
+      result = result.filter((product) => {
+        // Direct name match
+        if (product.Name?.toLowerCase().includes(query)) return true;
+        
+        // Category match
+        if (getProductCategoryNames(product).some((category) => category.toLowerCase().includes(query))) return true;
+        
+        // Special Offers match
+        if (isSearchingSpecialOffers && product.isDiscounted) return true;
+        
+        return false;
+      });
+    }
+
+    result = [...result];
+
+    switch (sortOption) {
+      case "category":
+        result.sort((a, b) => {
+          const catA = getProductCategoryNames(a)[0] || "";
+          const catB = getProductCategoryNames(b)[0] || "";
+          return catA.localeCompare(catB);
+        });
+        break;
+      case "last-updated":
+        result.sort((a, b) => {
+          const timeA = new Date(a.updatedAt || a.createdAt || 0).getTime();
+          const timeB = new Date(b.updatedAt || b.createdAt || 0).getTime();
+          return timeB - timeA;
+        });
+        break;
+      case "date-asc":
+        result.sort((a, b) => {
+          const timeA = new Date(a.createdAt || 0).getTime();
+          const timeB = new Date(b.createdAt || 0).getTime();
+          return timeA - timeB; // Oldest first
+        });
+        break;
+      case "date-desc":
+      default:
+        result.sort((a, b) => {
+          const timeA = new Date(a.createdAt || 0).getTime();
+          const timeB = new Date(b.createdAt || 0).getTime();
+          return timeB - timeA; // Newest first
+        });
+        break;
+    }
+
+    return result;
+  }, [products, searchQuery, sortOption]);
 
   async function handleDelete() {
     if (!deleteModal.product) return;
@@ -313,16 +358,32 @@ export default function AdminProductsClient({ initialProducts }) {
         </Link>
       </div>
 
-      <div className="mb-5 max-w-sm">
-        <div className="relative">
+      <div className="mb-5 flex max-w-2xl flex-col gap-3 sm:flex-row">
+        <div className="relative flex-1">
           <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="text"
             placeholder="Search products or categories"
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
-            className="pl-10"
+            className="pl-10 h-10"
           />
+        </div>
+        <div className="w-full sm:w-[220px]">
+          <Select value={sortOption} onValueChange={setSortOption}>
+            <SelectTrigger className="h-10 w-full">
+              <div className="flex items-center gap-2">
+                <ArrowDownWideNarrow className="size-4 text-muted-foreground" />
+                <SelectValue placeholder="Sort By" />
+              </div>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="date-desc">Date Created (Newest)</SelectItem>
+              <SelectItem value="date-asc">Date Created (Oldest)</SelectItem>
+              <SelectItem value="last-updated">Last Updated</SelectItem>
+              <SelectItem value="category">Category</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -408,14 +469,37 @@ export default function AdminProductsClient({ initialProducts }) {
                   >
                     <Tag className="size-4" />
                   </Button>
-                  <Link href={`/admin/products/edit/${product._id}`}>
-                    <Button variant="outline" size="icon">
-                      <Pencil />
-                    </Button>
-                  </Link>
-                  <Button variant="destructive" size="icon" onClick={() => setDeleteModal({ open: true, product })}>
-                    <Trash2 />
-                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger
+                      className={cn(
+                        "inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-lg border text-sm font-semibold transition-all duration-200 outline-none select-none disabled:pointer-events-none disabled:opacity-50 focus-visible:ring-3 focus-visible:ring-ring/20 border-border bg-background text-foreground hover:bg-muted size-10"
+                      )}
+                      title="Actions"
+                    >
+                      <MoreHorizontal className="size-4" />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-[160px]">
+                      <DropdownMenuGroup>
+                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          className="cursor-pointer"
+                        >
+                          <Link href={`/admin/products/edit/${product._id}`} className="flex w-full items-center">
+                            <Pencil className="mr-2 size-4" />
+                            Edit
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="cursor-pointer text-destructive focus:bg-destructive focus:text-destructive-foreground"
+                          onClick={() => setDeleteModal({ open: true, product })}
+                        >
+                          <Trash2 className="mr-2 size-4" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuGroup>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </div>
             </div>
@@ -510,7 +594,7 @@ export default function AdminProductsClient({ initialProducts }) {
                       </span>
                     </div>
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-4 relative">
                     <div className="flex items-center justify-center gap-2">
                       <Button
                         variant={product.isDiscounted ? "default" : "outline"}
@@ -521,16 +605,37 @@ export default function AdminProductsClient({ initialProducts }) {
                         <Tag className="size-3.5" data-icon="inline-start" />
                         {product.isDiscounted ? `${product.discountPercentage}% OFF` : "Discount"}
                       </Button>
-                      <Link href={`/admin/products/edit/${product._id}`}>
-                        <Button variant="outline">
-                          <Pencil data-icon="inline-start" />
-                          Edit
-                        </Button>
-                      </Link>
-                      <Button variant="destructive" onClick={() => setDeleteModal({ open: true, product })}>
-                        <Trash2 data-icon="inline-start" />
-                        Delete
-                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger
+                          className={cn(
+                            "inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-semibold transition-all duration-200 outline-none select-none hover:bg-muted hover:text-foreground text-muted-foreground size-8"
+                          )}
+                          title="Actions"
+                        >
+                          <MoreHorizontal className="size-4" />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-[160px]">
+                          <DropdownMenuGroup>
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              className="cursor-pointer"
+                            >
+                              <Link href={`/admin/products/edit/${product._id}`} className="flex w-full items-center">
+                                <Pencil className="mr-2 size-4" />
+                                Edit
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className="text-destructive focus:bg-destructive cursor-pointer focus:text-destructive-foreground"
+                              onClick={() => setDeleteModal({ open: true, product })}
+                            >
+                              <Trash2 className="mr-2 size-4" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuGroup>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </td>
                 </tr>
@@ -550,8 +655,8 @@ export default function AdminProductsClient({ initialProducts }) {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel asChild>
-              <Button variant="outline" onClick={() => setDeleteModal({ open: false, product: null })}>Cancel</Button>
+            <AlertDialogCancel className={cn(buttonVariants({ variant: "outline" }))} onClick={() => setDeleteModal({ open: false, product: null })}>
+              Cancel
             </AlertDialogCancel>
             <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
               {deleting ? "Deleting..." : "Delete Product"}
