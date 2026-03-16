@@ -26,6 +26,7 @@ import {
   Save,
   Trash2,
   Upload,
+  Pencil,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -45,7 +46,7 @@ import { uploadImageDataUrl } from "@/lib/cloudinaryUpload";
 import { getBlurPlaceholderProps } from "@/lib/imagePlaceholder";
 import { cn } from "@/lib/utils";
 
-function SortableCategoryCard({ category, index, onDelete }) {
+function SortableCategoryCard({ category, index, onEdit, onDelete }) {
   const {
     attributes,
     listeners,
@@ -104,15 +105,28 @@ function SortableCategoryCard({ category, index, onDelete }) {
         <p className="mt-1 text-sm font-semibold text-primary">{index + 1}</p>
       </div>
 
-      <Button
-        type="button"
-        variant="destructive"
-        size="icon"
-        className="rounded-xl"
-        onClick={() => onDelete(category)}
-      >
-        <Trash2 className="size-4" />
-      </Button>
+      <div className="flex flex-col gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className="rounded-xl"
+          onClick={() => onEdit?.(category)}
+          title="Edit Category"
+        >
+          <Pencil className="size-4" />
+        </Button>
+        <Button
+          type="button"
+          variant="destructive"
+          size="icon"
+          className="rounded-xl"
+          onClick={() => onDelete(category)}
+          title="Delete Category"
+        >
+          <Trash2 className="size-4" />
+        </Button>
+      </div>
     </div>
   );
 }
@@ -126,6 +140,12 @@ export default function AdminCategoriesClient() {
   const [newImage, setNewImage] = useState("");
   const [deleteModal, setDeleteModal] = useState({ open: false, category: null });
   const [deleting, setDeleting] = useState(false);
+
+  // Edit State
+  const [editModal, setEditModal] = useState({ open: false, category: null });
+  const [editing, setEditing] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [editImage, setEditImage] = useState("");
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -251,6 +271,80 @@ export default function AdminCategoriesClient() {
       toast.error(error.message || "Failed to create category");
     } finally {
       setAdding(false);
+    }
+  }
+
+  function handleEditImageSelect(event) {
+    const file = event.target.files?.[0];
+    if (!file || !file.type.startsWith("image/")) return;
+
+    const reader = new FileReader();
+    reader.onload = (loadEvent) => setEditImage(loadEvent.target?.result || "");
+    reader.readAsDataURL(file);
+    event.target.value = "";
+  }
+
+  function openEditModal(category) {
+    setEditName(category.name);
+    setEditImage(category.image || "");
+    setEditModal({ open: true, category });
+  }
+
+  async function handleEditCategory(event) {
+    event.preventDefault();
+    if (!editName.trim() || !editModal.category) return;
+
+    setEditing(true);
+    try {
+      let uploadedImage = editModal.category.image || "";
+      let uploadedPublicId = editModal.category.imagePublicId || "";
+      let uploadedBlurDataURL = editModal.category.blurDataURL || "";
+      let isNewImage = editImage && editImage !== editModal.category.image;
+
+      if (isNewImage) {
+        const upload = await uploadImageDataUrl(editImage, "kifayatly_categories");
+        uploadedImage = upload.url;
+        uploadedPublicId = upload.publicId;
+        uploadedBlurDataURL = upload.blurDataURL;
+      }
+
+      const response = await fetch(`/api/categories/${editModal.category._id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: editName.trim(),
+          image: uploadedImage,
+          imagePublicId: uploadedPublicId,
+          blurDataURL: uploadedBlurDataURL,
+          ...(isNewImage && { imageDataUrl: editImage }),
+        }),
+      });
+
+      const data = await response.json();
+      if (!data.success) {
+        throw new Error(data.error || "Failed to update category");
+      }
+
+      toast.success(`Category "${editName.trim()}" updated`);
+      
+      setCategories((current) =>
+        current.map((cat) => (cat._id === editModal.category._id ? {
+          ...cat,
+          name: data.data.name,
+          slug: data.data.slug,
+          image: data.data.image,
+          imagePublicId: data.data.imagePublicId,
+          blurDataURL: data.data.blurDataURL,
+        } : cat))
+      );
+      
+      setEditModal({ open: false, category: null });
+      setEditName("");
+      setEditImage("");
+    } catch (error) {
+      toast.error(error.message || "Failed to update category");
+    } finally {
+      setEditing(false);
     }
   }
 
@@ -398,6 +492,7 @@ export default function AdminCategoriesClient() {
                     key={category._id}
                     category={category}
                     index={index}
+                    onEdit={openEditModal}
                     onDelete={(selectedCategory) =>
                       setDeleteModal({ open: true, category: selectedCategory })
                     }
@@ -440,6 +535,76 @@ export default function AdminCategoriesClient() {
             </AlertDialogCancel>
             <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
               {deleting ? "Deleting..." : "Delete Category"}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Edit Category Modal */}
+      <AlertDialog
+        open={editModal.open}
+        onOpenChange={(open) => {
+          setEditModal((current) => ({ ...current, open }));
+          if (!open) {
+            setEditName("");
+            setEditImage("");
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Edit Category</AlertDialogTitle>
+            <AlertDialogDescription>
+              Update the name or image for this category.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          
+          <div className="flex flex-col gap-4 py-4">
+            <div>
+              <Label className="mb-2">Category Name</Label>
+              <Input
+                value={editName}
+                onChange={(event) => setEditName(event.target.value)}
+                placeholder="e.g. Kitchen Accessories"
+              />
+            </div>
+            <div>
+              <Label className="mb-2">Category Image</Label>
+              <div className="flex flex-wrap items-center gap-3">
+                <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-border bg-background px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-muted">
+                  <Upload className="size-4" />
+                  Upload new image
+                  <input type="file" accept="image/*" className="hidden" onChange={handleEditImageSelect} />
+                </label>
+                {editImage ? (
+                  <div className="relative h-16 w-16 overflow-hidden rounded-2xl border border-border">
+                    <Image
+                      src={editImage}
+                      alt="Category preview"
+                      fill
+                      sizes="64px"
+                      className="object-cover"
+                      {...getBlurPlaceholderProps()}
+                    />
+                  </div>
+                ) : (
+                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-dashed border-border bg-muted/25 text-muted-foreground">
+                    <ImageIcon className="size-5" />
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel asChild>
+              <Button variant="outline" disabled={editing}>
+                Cancel
+              </Button>
+            </AlertDialogCancel>
+            <Button onClick={handleEditCategory} disabled={editing || !editName.trim()}>
+              {editing ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
+              {editing ? "Saving..." : "Save Changes"}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
