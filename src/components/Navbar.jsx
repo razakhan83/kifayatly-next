@@ -149,7 +149,15 @@ function NavbarContent({ categories }) {
                   <Sparkles className="size-4 text-accent-foreground" />
                   New Arrivals
                 </button>
-                {categories.map((category) => (
+                <button
+                  type="button"
+                  onClick={() => handleCategoryClick('special-offers')}
+                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-foreground transition-colors hover:bg-muted"
+                >
+                  <Tag className="size-4 text-accent-foreground" />
+                  Special Offers 🏷️
+                </button>
+                {categories.filter(c => c.id !== 'special-offers').map((category) => (
                   <button
                     key={category.id}
                     type="button"
@@ -157,7 +165,7 @@ function NavbarContent({ categories }) {
                     className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-foreground transition-colors hover:bg-muted"
                   >
                     <Tag className="size-4 text-muted-foreground" />
-                    {category.label}
+                    {category.label.replace(' 🏷️', '')}
                   </button>
                 ))}
               </div>
@@ -249,7 +257,18 @@ function NavbarContent({ categories }) {
                 <Sparkles className="size-4" />
                 New Arrivals
               </button>
-              {categories.map((category) => (
+              <button
+                type="button"
+                onClick={() => handleCategoryClick('special-offers')}
+                className={cn(
+                  'flex items-center gap-3 rounded-lg px-3 py-3 text-left text-sm font-medium transition-colors',
+                  activeCategory === 'special-offers' ? 'bg-primary text-primary-foreground' : 'bg-muted/60 text-foreground hover:bg-muted'
+                )}
+              >
+                <Tag className="size-4" />
+                Special Offers 🏷️
+              </button>
+              {categories.filter(c => c.id !== 'special-offers').map((category) => (
                 <button
                   key={category.id}
                   type="button"
@@ -260,7 +279,7 @@ function NavbarContent({ categories }) {
                   )}
                 >
                   <Tag className="size-4" />
-                  {category.label}
+                  {category.label.replace(' 🏷️', '')}
                 </button>
               ))}
             </div>

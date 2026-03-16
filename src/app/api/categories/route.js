@@ -25,6 +25,14 @@ function slugifyCategory(name = "") {
 export async function GET() {
   try {
     await dbConnect();
+    
+    // Ensure 'special-offers' category exists
+    await Category.findOneAndUpdate(
+      { slug: 'special-offers' },
+      { $setOnInsert: { name: 'Special Offers', slug: 'special-offers', sortOrder: 0 } },
+      { upsert: true }
+    );
+
     const categories = await Category.find({}).sort({ sortOrder: 1, name: 1 }).lean();
     return NextResponse.json({
       success: true,
@@ -170,13 +178,22 @@ export async function DELETE(req) {
       );
     }
 
-    const deleted = await Category.findByIdAndDelete(id);
-    if (!deleted) {
+    const categoryToDelete = await Category.findById(id);
+    if (!categoryToDelete) {
       return NextResponse.json(
         { success: false, error: "Category not found" },
         { status: 404 },
       );
     }
+
+    if (categoryToDelete.slug === 'special-offers') {
+      return NextResponse.json(
+        { success: false, error: "Cannot delete the Special Offers category" },
+        { status: 400 },
+      );
+    }
+
+    const deleted = await Category.findByIdAndDelete(id);
 
     revalidateTag('categories', 'max');
     return NextResponse.json({ success: true, message: "Category deleted" });

@@ -71,6 +71,11 @@ function ProductGridContent({
       return base.slice(0, 30);
     }
 
+    if (activeCategory === "special-offers") {
+      base = base.filter((product) => product.isDiscounted === true);
+      return base;
+    }
+
     if (activeCategory !== "all") {
       base = base.filter((product) => hasProductCategory(product, activeCategory));
     }

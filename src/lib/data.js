@@ -234,8 +234,9 @@ async function getCategoriesRaw() {
 
   // Sort by sortOrder first (admin-defined order), then by name as fallback
   const dbCategories = await Category.find({}).sort({ sortOrder: 1, name: 1 }).lean();
+  let mappedCategories = [];
   if (dbCategories.length > 0) {
-    return dbCategories.map((category) => ({
+    mappedCategories = dbCategories.map((category) => ({
       _id: category._id.toString(),
       id: category.slug || normalizeCategoryId(category.name),
       label: category.name,
@@ -244,6 +245,23 @@ async function getCategoriesRaw() {
       blurDataURL: category.blurDataURL || '',
       sortOrder: category.sortOrder ?? 0,
     }));
+  }
+
+  // Ensure special-offers is always in the list for the homepage sections
+  if (!mappedCategories.some(c => c.id === 'special-offers')) {
+    mappedCategories.unshift({
+      _id: 'special-offers',
+      id: 'special-offers',
+      label: 'Special Offers',
+      image: '',
+      imagePublicId: '',
+      blurDataURL: '',
+      sortOrder: 0,
+    });
+  }
+  
+  if (mappedCategories.length > 0) {
+    return mappedCategories;
   }
 
   const products = await getLiveProductsRaw();
@@ -323,35 +341,38 @@ export async function getHomeSections() {
   const featuredProducts = products.slice(0, 8).map(toProductCardItem);
   const sections = categories
     .map((category) => {
-      const items = products
-        .filter((product) => hasProductCategory(product, category.id))
-        .slice(0, 12)
-        .map(toProductCardItem);
+      let items;
+      let label = category?.label || 'Special Offers';
+      if (category.id === 'special-offers') {
+        const discountedProducts = products
+          .filter((product) => product.isDiscounted === true)
+          .sort((a, b) => {
+            const dateA = new Date(a.createdAt || 0).getTime();
+            const dateB = new Date(b.createdAt || 0).getTime();
+            return dateB - dateA;
+          })
+          .slice(0, 12)
+          .map(toProductCardItem);
+        
+        items = discountedProducts;
+        
+        // Ensure the label has the emoji if they want it
+        if (!label.includes('🏷️')) {
+          category.label = `${label} 🏷️`;
+        }
+      } else {
+        items = products
+          .filter((product) => hasProductCategory(product, category.id))
+          .slice(0, 12)
+          .map(toProductCardItem);
+      }
 
       return {
         category,
         products: items,
       };
     })
-    .filter((section) => section.products.length > 0);
-
-  // Prepend a Special Offers section if any live products have an active discount
-  const discountedProducts = products
-    .filter((product) => product.isDiscounted === true)
-    .sort((a, b) => {
-      const dateA = new Date(a.createdAt || 0).getTime();
-      const dateB = new Date(b.createdAt || 0).getTime();
-      return dateB - dateA; // newest first
-    })
-    .slice(0, 12)
-    .map(toProductCardItem);
-
-  if (discountedProducts.length > 0) {
-    sections.unshift({
-      category: { id: 'special-offers', label: 'Special Offers 🏷️' },
-      products: discountedProducts,
-    });
-  }
+    .filter((section) => section.category.id === 'special-offers' || section.products.length > 0);
 
   return {
     categories,
@@ -380,6 +401,8 @@ export async function getProductsList({ category = 'all', search = '', sort = 'n
 
   if (category === 'new-arrivals') {
     filtered = [...filtered].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+  } else if (category === 'special-offers') {
+    filtered = filtered.filter((product) => product.isDiscounted === true);
   } else if (category && category !== 'all') {
     filtered = filtered.filter((product) => hasProductCategory(product, category));
   }
@@ -411,7 +434,7 @@ export async function getProductsList({ category = 'all', search = '', sort = 'n
   }
 
   const availableCategories = (await getCategoriesRaw()).filter(
-    (entry) => (categoryCounts.get(entry.id) || 0) > 0,
+    (entry) => entry.id === 'special-offers' || (categoryCounts.get(entry.id) || 0) > 0,
   );
 
   return {

@@ -116,16 +116,18 @@ function SortableCategoryCard({ category, index, onEdit, onDelete }) {
         >
           <Pencil className="size-4" />
         </Button>
-        <Button
-          type="button"
-          variant="destructive"
-          size="icon"
-          className="rounded-xl"
-          onClick={() => onDelete(category)}
-          title="Delete Category"
-        >
-          <Trash2 className="size-4" />
-        </Button>
+        {category.slug !== 'special-offers' && (
+          <Button
+            type="button"
+            variant="destructive"
+            size="icon"
+            className="rounded-xl"
+            onClick={() => onDelete(category)}
+            title="Delete Category"
+          >
+            <Trash2 className="size-4" />
+          </Button>
+        )}
       </div>
     </div>
   );

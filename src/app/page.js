@@ -34,7 +34,7 @@ async function HomeContent() {
     <HomeClientWrapper
       products={searchProducts}
       heroSlides={activeHeroSlides}
-      categories={categories}
+      categories={categories.filter(c => c.id !== 'special-offers')}
       sections={sections}
     />
   );

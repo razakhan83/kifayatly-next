@@ -205,11 +205,22 @@ export default function AdminProductsClient({ initialProducts }) {
   const filteredProducts = useMemo(() => {
     if (!searchQuery.trim()) return products;
     const query = searchQuery.toLowerCase();
-    return products.filter(
-      (product) =>
-        product.Name?.toLowerCase().includes(query) ||
-        getProductCategoryNames(product).some((category) => category.toLowerCase().includes(query)),
-    );
+    
+    // Check if the search matches "special offers" conceptually
+    const isSearchingSpecialOffers = "special offers".includes(query) || "special-offers".includes(query);
+    
+    return products.filter((product) => {
+      // Direct name match
+      if (product.Name?.toLowerCase().includes(query)) return true;
+      
+      // Category match
+      if (getProductCategoryNames(product).some((category) => category.toLowerCase().includes(query))) return true;
+      
+      // Special Offers match
+      if (isSearchingSpecialOffers && product.isDiscounted) return true;
+      
+      return false;
+    });
   }, [products, searchQuery]);
 
   async function handleDelete() {
