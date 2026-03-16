@@ -52,4 +52,10 @@ const OrderSchema = new mongoose.Schema(
     }
 );
 
+// Next.js hot reloading can keep old models in memory. 
+// If the cached Order model doesn't have the customerEmail field, we must delete it to force re-registration.
+if (mongoose.models.Order && !mongoose.models.Order.schema.paths.customerEmail) {
+    delete mongoose.models.Order;
+}
+
 export default mongoose.models.Order || mongoose.model('Order', OrderSchema);

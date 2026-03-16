@@ -141,6 +141,7 @@ export default function CheckoutClient({ settings }) {
           .join(', ');
 
         const result = await submitOrderAction({
+          customerEmail: formData.email,
           customerName: formData.fullName,
           customerPhone: formData.phone,
           customerAddress,

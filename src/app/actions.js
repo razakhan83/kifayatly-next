@@ -1,6 +1,6 @@
 'use server';
 
-import { revalidatePath, revalidateTag, updateTag } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 
 import { isAdminEmail, normalizeEmail, normalizePhone, getPhoneRegex } from '@/lib/admin';
 import { authOptions } from '@/lib/auth';
@@ -88,7 +88,7 @@ export async function toggleProductLiveAction(productId, nextValue) {
   product.isLive = Boolean(nextValue);
   await product.save();
 
-  updateTag('products');
+  revalidateTag('products');
   if (product.slug) {
     updateTag(`product-${product.slug}`);
   }
@@ -106,9 +106,9 @@ export async function deleteProductAction(productId) {
     throw new Error('Product not found');
   }
 
-  updateTag('products');
+  revalidateTag('products');
   if (product.slug) {
-    updateTag(`product-${product.slug}`);
+    revalidateTag(`product-${product.slug}`);
   }
   revalidateTag('admin-dashboard');
 
@@ -172,7 +172,7 @@ export async function saveStoreSettingsAction(nextSettings) {
     { new: true, upsert: true, runValidators: true },
   ).lean();
 
-  updateTag('settings');
+  revalidateTag('settings');
 
   return {
     success: true,
@@ -207,7 +207,16 @@ export async function submitOrderAction(input) {
   }));
 
   const session = await getServerSession(authOptions);
-  const userEmail = session?.user?.email ? normalizeEmail(session.user.email) : null;
+  
+  // Robust email capture:
+  const sessionEmail = session?.user?.email ? normalizeEmail(session.user.email) : null;
+  const inputEmail = input?.customerEmail ? normalizeEmail(input.customerEmail) : null;
+  const userEmail = sessionEmail || inputEmail || null;
+
+  // STRICT VALIDATION: If user is logged in, email MUST be captured.
+  if (session?.user && !userEmail) {
+    throw new Error('Unable to capture user email for account linking. Please try signing out and in again.');
+  }
 
   const order = await Order.create({
     orderId: makeOrderId(),
@@ -221,7 +230,7 @@ export async function submitOrderAction(input) {
     status: 'Pending',
   });
 
-  updateTag('orders');
+  revalidateTag('orders');
   revalidateTag('admin-dashboard');
 
   // Update User Profile & Link Previous Orders (Background)
