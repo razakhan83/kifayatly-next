@@ -9,6 +9,10 @@ import Order from '@/models/Order';
 import Product from '@/models/Product';
 import Settings from '@/models/Settings';
 import { getServerSession } from 'next-auth';
+import { Resend } from 'resend';
+import { generateOrderEmailHtml } from '@/lib/emailTemplates';
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const SETTINGS_KEY = 'site-settings';
 
@@ -214,6 +218,19 @@ export async function submitOrderAction(input) {
 
   updateTag('orders');
   revalidateTag('admin-dashboard');
+
+  // Trigger Notification Email (Background)
+  try {
+    const emailResult = await resend.emails.send({
+      from: 'China Unique <onboarding@resend.dev>',
+      to: '123raza83@gmail.com',
+      subject: `New Order Received - ${customerName}`,
+      html: generateOrderEmailHtml(order),
+    });
+    console.log(`Email notification triggered for ${order.orderId}:`, emailResult);
+  } catch (emailError) {
+    console.error(`Failed to send email for ${order.orderId}:`, emailError);
+  }
 
   const lines = [
     '*New Order from China Unique Store*',

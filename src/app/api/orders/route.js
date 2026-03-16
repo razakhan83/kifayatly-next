@@ -5,6 +5,10 @@ import { authOptions } from '@/lib/auth';
 import { isAdminEmail } from '@/lib/admin';
 import dbConnect from '@/lib/dbConnect';
 import Order from '@/models/Order';
+import { Resend } from 'resend';
+import { generateOrderEmailHtml } from '@/lib/emailTemplates';
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // GET all orders — Protected Admin Route
 export async function GET() {
@@ -59,6 +63,20 @@ export async function POST(req) {
 
         updateTag('orders');
         revalidateTag('admin-dashboard');
+
+        // Send Notification Email (Optimistic/Background - won't block response as we await it but catch error)
+        try {
+            const data = await resend.emails.send({
+                from: 'China Unique <onboarding@resend.dev>',
+                to: '123raza83@gmail.com',
+                subject: `New Order Received - ${customerName}`,
+                html: generateOrderEmailHtml(order),
+            });
+            console.log(`Resend response for ${orderId}:`, data);
+        } catch (emailError) {
+            console.error('Failed to send order notification email:', emailError);
+            // We don't throw here as the order is already saved successfully
+        }
 
         return NextResponse.json({ success: true, data: order }, { status: 201 });
     } catch (error) {

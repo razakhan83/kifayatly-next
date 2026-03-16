@@ -2,10 +2,11 @@
 
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { startTransition, useMemo, useState } from 'react';
-import { Loader2, MapPin, ShieldCheck, Wallet } from 'lucide-react';
+import { startTransition, useMemo, useState, useEffect } from 'react';
+import { Loader2, MapPin, ShieldCheck, Wallet, CheckCircle2, Copy, Check } from 'lucide-react';
 
 import { submitOrderAction } from '@/app/actions';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -43,6 +44,20 @@ export default function CheckoutClient({ settings }) {
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [orderState, setOrderState] = useState({ orderId: '', whatsappUrl: '' });
+  const [copied, setCopied] = useState(false);
+
+  // Copy to clipboard function
+  const copyToClipboard = () => {
+    if (orderState.orderId) {
+      navigator.clipboard.writeText(orderState.orderId);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const handleModalClose = () => {
+    router.push('/');
+  };
 
   const subtotal = useMemo(
     () => cart.reduce((total, item) => {
@@ -125,7 +140,7 @@ export default function CheckoutClient({ settings }) {
   if (cart.length === 0 && !orderState.orderId) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-background px-4">
-        <div className="surface-card w-full max-w-md rounded-xl p-8 text-center">
+        <div className="surface-card w-full max-w-md rounded-xl p-8 text-center border border-border shadow-sm">
           <h1 className="text-2xl font-bold text-foreground">Your cart is empty</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             Add a few products before heading to checkout.
@@ -138,33 +153,53 @@ export default function CheckoutClient({ settings }) {
     );
   }
 
-  if (orderState.orderId) {
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-background px-4">
-        <div className="surface-card w-full max-w-xl rounded-xl p-8 text-center">
-          <h1 className="text-3xl font-bold text-foreground">Order created</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Your order <span className="font-semibold text-foreground">{orderState.orderId}</span> has been saved.
-          </p>
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
-            {orderState.whatsappUrl ? (
-              <Button asChild>
-                <a href={orderState.whatsappUrl} target="_blank" rel="noreferrer">
-                  Continue on WhatsApp
-                </a>
-              </Button>
-            ) : null}
-            <Button variant="outline" onClick={() => router.push('/')}>
-              Back to Store
-            </Button>
-          </div>
-        </div>
-      </main>
-    );
-  }
-
   return (
     <main className="min-h-screen bg-background pb-16 pt-8">
+      {/* Success Modal */}
+      <Dialog open={!!orderState.orderId} onOpenChange={(open) => !open && handleModalClose()}>
+        <DialogContent className="sm:max-w-md text-center p-8" hideClose>
+          <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+            <CheckCircle2 className="size-10" />
+          </div>
+          
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold text-foreground">Thank You for Your Order!</DialogTitle>
+            <DialogDescription className="text-base text-muted-foreground pt-2">
+              Your order will be delivered within 2 to 3 working days.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="mt-6 space-y-4">
+            <div className="rounded-xl border border-border bg-muted/30 p-4">
+              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block mb-2">Order ID</span>
+              <div className="flex items-center justify-center gap-3">
+                <span className="text-lg font-bold text-foreground font-mono">{orderState.orderId}</span>
+                <button 
+                  onClick={copyToClipboard}
+                  className="inline-flex size-8 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground transition-all hover:bg-muted hover:text-foreground active:scale-90"
+                  title="Copy Order ID"
+                >
+                  {copied ? <Check className="size-4 text-emerald-600" /> : <Copy className="size-4" />}
+                </button>
+              </div>
+            </div>
+
+            <div className="grid gap-3 pt-2">
+              {orderState.whatsappUrl && (
+                <Button asChild size="lg" className="w-full bg-[#128c7e] hover:bg-[#075e54] border-none">
+                  <a href={orderState.whatsappUrl} target="_blank" rel="noreferrer">
+                    Notify on WhatsApp
+                  </a>
+                </Button>
+              )}
+              <Button variant="outline" size="lg" className="w-full" onClick={handleModalClose}>
+                Continue Shopping
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <div className="container mx-auto max-w-6xl px-4">
         <div className="mb-6">
           <Breadcrumb>
