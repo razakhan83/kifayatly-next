@@ -1,5 +1,5 @@
 import 'server-only';
-
+import mongoose from 'mongoose';
 import { cacheLife, cacheTag } from 'next/cache';
 
 import Category from '@/models/Category';
@@ -462,14 +462,31 @@ export async function getProductBySlug(slug) {
     cacheTag('products');
     cacheTag(`product-${productSlug}`);
 
-    await dbConnect();
-
-    const product = await Product.findOne({ slug: productSlug, isLive: true }).populate('Category').lean();
-    return product ? serializeProduct(product) : null;
+    try {
+      await dbConnect();
+      
+      // 1. Try finding by slug first (vanity URL)
+      let product = await Product.findOne({ slug: productSlug, isLive: true }).populate('Category').lean();
+      
+      // 2. If not found, and it looks like a Mongo ID, try finding by ID
+      if (!product && mongoose.Types.ObjectId.isValid(productSlug)) {
+        product = await Product.findOne({ _id: productSlug, isLive: true }).populate('Category').lean();
+      }
+      
+      return product ? serializeProduct(product) : null;
+    } catch (error) {
+      console.error(`❌ [DATA] Error fetching product "${productSlug}":`, error.message);
+      throw error;
+    }
   }
 
-  const product = await getSingleProduct(safeSlug);
-  return product ? toProductDetailView(product) : null;
+  try {
+    const product = await getSingleProduct(safeSlug);
+    return product ? toProductDetailView(product) : null;
+  } catch (error) {
+    console.error(`❌ [DATA] getProductBySlug failed for "${safeSlug}":`, error.message);
+    return null;
+  }
 }
 
 export async function getRelatedProducts({ category = '', excludeSlug = '', limit = 8 } = {}) {

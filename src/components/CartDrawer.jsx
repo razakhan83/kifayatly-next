@@ -76,7 +76,7 @@ export default function CartDrawer() {
                         fill
                         sizes="80px"
                         className="object-cover"
-                        {...getBlurPlaceholderProps(getPrimaryProductImage(item).blurDataURL)}                      />
+                        {...getBlurPlaceholderProps(getPrimaryProductImage(item).blurDataURL)}                      />
                     ) : null}
                   </div>
                   <div className="min-w-0 flex-1">
@@ -113,7 +113,7 @@ export default function CartDrawer() {
                           <Plus className="size-4" />
                         </button>
                       </div>
-                      <span className="text-sm text-muted-foreground">Ready to ship</span>
+                      <span className="hidden text-sm text-muted-foreground sm:inline-flex">Ready to ship</span>
                     </div>
                   </div>
                 </div>

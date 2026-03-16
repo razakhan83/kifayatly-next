@@ -18,6 +18,13 @@ import {
 import SearchField from '@/components/SearchField';
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
+import GoogleSignInButton from '@/components/GoogleSignInButton';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 import {
   Sheet,
   SheetContent,
@@ -113,7 +120,7 @@ function NavbarContent({ categories }) {
       </div>
 
       <header className="relative mx-auto flex h-16 max-w-7xl items-center gap-3 px-4">
-        <Button variant="ghost" size="icon" className="md:hidden" onClick={openSidebar} aria-label="Open menu">
+        <Button variant="ghost" size="icon" onClick={openSidebar} aria-label="Open menu">
           <Menu />
         </Button>
 
@@ -245,43 +252,60 @@ function NavbarContent({ categories }) {
             </div>
 
             <div className="flex flex-col gap-2">
-              <p className="px-1 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Categories</p>
-              <button
-                type="button"
-                onClick={() => handleCategoryClick('new-arrivals')}
-                className={cn(
-                  'flex items-center gap-3 rounded-lg px-3 py-3 text-left text-sm font-medium transition-colors',
-                  activeCategory === 'new-arrivals' ? 'bg-primary text-primary-foreground' : 'bg-muted/60 text-foreground hover:bg-muted'
-                )}
-              >
-                <Sparkles className="size-4" />
-                New Arrivals
-              </button>
-              <button
-                type="button"
-                onClick={() => handleCategoryClick('special-offers')}
-                className={cn(
-                  'flex items-center gap-3 rounded-lg px-3 py-3 text-left text-sm font-medium transition-colors',
-                  activeCategory === 'special-offers' ? 'bg-primary text-primary-foreground' : 'bg-muted/60 text-foreground hover:bg-muted'
-                )}
-              >
-                <Tag className="size-4" />
-                Special Offers 🏷️
-              </button>
-              {categories.filter(c => c.id !== 'special-offers').map((category) => (
-                <button
-                  key={category.id}
-                  type="button"
-                  onClick={() => handleCategoryClick(category.id)}
-                  className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-3 text-left text-sm font-medium transition-colors',
-                    activeCategory === category.id ? 'bg-primary text-primary-foreground' : 'bg-muted/60 text-foreground hover:bg-muted'
-                  )}
-                >
-                  <Tag className="size-4" />
-                  {category.label.replace(' 🏷️', '')}
-                </button>
-              ))}
+              <Accordion className="w-full">
+                <AccordionItem value="categories" className="border-none">
+                  <AccordionTrigger className="bg-muted/60 px-3 py-3 hover:bg-muted hover:no-underline [&[data-state=open]]:bg-muted/80">
+                    <div className="flex items-center gap-3">
+                      <LayoutGrid className="size-4" />
+                      <span className="text-sm font-medium">Shop by Category</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pt-2 pb-0">
+                    <div className="flex flex-col gap-1.5 pl-4">
+                      <button
+                        type="button"
+                        onClick={() => handleCategoryClick('new-arrivals')}
+                        className={cn(
+                          'flex items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-colors',
+                          activeCategory === 'new-arrivals' ? 'bg-primary text-primary-foreground' : 'text-foreground hover:bg-muted'
+                        )}
+                      >
+                        <Sparkles className="size-4" />
+                        New Arrivals
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleCategoryClick('special-offers')}
+                        className={cn(
+                          'flex items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-colors',
+                          activeCategory === 'special-offers' ? 'bg-primary text-primary-foreground' : 'text-foreground hover:bg-muted'
+                        )}
+                      >
+                        <Tag className="size-4" />
+                        Special Offers 🏷️
+                      </button>
+                      {categories.filter(c => c.id !== 'special-offers').map((category) => (
+                        <button
+                          key={category.id}
+                          type="button"
+                          onClick={() => handleCategoryClick(category.id)}
+                          className={cn(
+                            'flex items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-colors',
+                            activeCategory === category.id ? 'bg-primary text-primary-foreground' : 'text-foreground hover:bg-muted'
+                          )}
+                        >
+                          <Tag className="size-4" />
+                          {category.label.replace(' 🏷️', '')}
+                        </button>
+                      ))}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </div>
+
+            <div className="mt-auto pt-6">
+              <GoogleSignInButton />
             </div>
           </div>
         </SheetContent>
