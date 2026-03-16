@@ -6,7 +6,8 @@ import { useSession } from 'next-auth/react';
 import { startTransition, useMemo, useState, useEffect } from 'react';
 import { Loader2, MapPin, ShieldCheck, Wallet, CheckCircle2, Copy, Check } from 'lucide-react';
 
-import { submitOrderAction, getLastOrderDetailsAction } from '@/app/actions';
+import { submitOrderAction, getLastOrderDetailsAction, revalidatePathAction } from '@/app/actions';
+import AuthModal from '@/components/AuthModal';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   Breadcrumb,
@@ -77,6 +78,7 @@ export default function CheckoutClient({ settings }) {
   const [submitting, setSubmitting] = useState(false);
   const [orderState, setOrderState] = useState({ orderId: '', whatsappUrl: '' });
   const [copied, setCopied] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   // Copy to clipboard function
   const copyToClipboard = () => {
@@ -89,6 +91,14 @@ export default function CheckoutClient({ settings }) {
 
   const handleModalClose = () => {
     router.push('/');
+  };
+
+  const handleViewOrders = () => {
+    if (session) {
+      router.push('/orders');
+    } else {
+      setShowAuthModal(true);
+    }
   };
 
   const subtotal = useMemo(
@@ -218,13 +228,9 @@ export default function CheckoutClient({ settings }) {
             </div>
 
             <div className="grid gap-3 pt-2">
-              {orderState.whatsappUrl && (
-                <Button asChild size="lg" className="w-full bg-[#128c7e] hover:bg-[#075e54] border-none">
-                  <a href={orderState.whatsappUrl} target="_blank" rel="noreferrer">
-                    Notify on WhatsApp
-                  </a>
-                </Button>
-              )}
+              <Button size="lg" className="w-full font-semibold" onClick={handleViewOrders}>
+                View My Orders
+              </Button>
               <Button variant="outline" size="lg" className="w-full" onClick={handleModalClose}>
                 Continue Shopping
               </Button>
@@ -232,6 +238,8 @@ export default function CheckoutClient({ settings }) {
           </div>
         </DialogContent>
       </Dialog>
+
+      <AuthModal open={showAuthModal} onOpenChange={setShowAuthModal} callbackUrl="/orders" />
 
       <div className="container mx-auto max-w-6xl px-4">
         <div className="mb-6">
