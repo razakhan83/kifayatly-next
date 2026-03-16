@@ -1,12 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/context/CartContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getPrimaryProductImage } from "@/lib/productImages";
 import { getBlurPlaceholderProps } from "@/lib/imagePlaceholder";
@@ -77,6 +78,7 @@ function getStatusBadge(product) {
 
 export default function ProductCard({ product, className = "" }) {
   const { addToCart } = useCart();
+  const [isAdding, setIsAdding] = useState(false);
 
   const productName = product.Name || product.name || "Unknown";
   const productDescription = product.Description || product.description || "";
@@ -193,15 +195,22 @@ export default function ProductCard({ product, className = "" }) {
           </div>
           <Button
             variant="outline"
-            size="icon-sm"
-            disabled={product.StockStatus === "Out of Stock"}
-            onClick={(e) => {
+            size="icon"
+            disabled={product.StockStatus === "Out of Stock" || isAdding}
+            onClick={async (e) => {
               e.preventDefault();
-              addToCart(product);
+              setIsAdding(true);
+              try {
+                await addToCart(product);
+                // Simulate network delay for UX if addToCart is extremely fast
+                await new Promise(resolve => setTimeout(resolve, 300));
+              } finally {
+                setIsAdding(false);
+              }
             }}
-            className="size-8 cursor-pointer shadow-none transition-all duration-300 hover:scale-110 hover:border-primary/30 hover:bg-primary/12 hover:text-primary hover:shadow-none disabled:opacity-50 disabled:pointer-events-none"
+            className="size-10 cursor-pointer shadow-none transition-all duration-300 hover:scale-110 hover:border-primary/30 hover:bg-primary/12 hover:text-primary hover:shadow-sm disabled:opacity-50 disabled:pointer-events-none"
           >
-            <ShoppingCart className="size-4" />
+            {isAdding ? <Loader2 className="size-5 animate-spin text-muted-foreground" /> : <ShoppingCart className="size-5" />}
           </Button>
         </div>
       </CardContent>

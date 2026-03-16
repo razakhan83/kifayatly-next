@@ -90,7 +90,7 @@ export default function CategoryProductSlider({ categoryId, categoryLabel, produ
                                     mass: 1,
                                 }}
                                 style={{ x: bounceKey > 0 ? -5 : 0 }}
-                                className="min-w-0 flex-[0_0_100%] md:flex-[0_0_22vw] md:max-w-[280px] will-change-transform"
+                                className="min-w-0 flex-[0_0_calc(50%-0.5rem)] md:flex-[0_0_22vw] md:max-w-[280px] will-change-transform"
                             >
                                 <ProductCard product={p} />
                             </motion.div>
