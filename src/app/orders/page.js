@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import LinkOrdersForm from '@/components/LinkOrdersForm';
+import InvoiceButton from '@/components/InvoiceButtonWrapper';
 
 const STATUS_COLORS = {
   Pending: 'bg-amber-100 text-amber-700 border-amber-200',
@@ -23,7 +24,8 @@ export default async function OrdersPage() {
     redirect('/');
   }
 
-  const orders = await getUserOrders(session.user.email);
+  const rawOrders = await getUserOrders(session.user.email);
+  const orders = JSON.parse(JSON.stringify(rawOrders));
 
   return (
     <main className="min-h-screen bg-background pb-16 pt-8">
@@ -71,12 +73,15 @@ export default async function OrdersPage() {
                       </div>
                     </div>
                   </div>
-                  <Badge 
-                    variant="outline" 
-                    className={`px-3 py-1 rounded-full border ${STATUS_COLORS[order.status] || 'bg-muted'}`}
-                  >
-                    {order.status}
-                  </Badge>
+                  <div className="flex items-center gap-3">
+                    <InvoiceButton order={order} />
+                    <Badge 
+                      variant="outline" 
+                      className={`px-3 py-1 rounded-full border ${STATUS_COLORS[order.status] || 'bg-muted'}`}
+                    >
+                      {order.status}
+                    </Badge>
+                  </div>
                 </div>
 
                 <div className="p-6">

@@ -121,7 +121,13 @@ function toOrderSummaryRow(order) {
     totalAmount: Number(order.totalAmount || 0),
     status: order.status,
     notes: order.notes || '',
-    items: Array.isArray(order.items) ? order.items : [],
+    items: Array.isArray(order.items) 
+      ? order.items.map(item => ({
+          ...item,
+          _id: item._id?.toString(),
+          productId: item.productId?.toString() || item.productId
+        })) 
+      : [],
     createdAt: order.createdAt ? new Date(order.createdAt).toISOString() : null,
     updatedAt: order.updatedAt ? new Date(order.updatedAt).toISOString() : null,
   };
@@ -514,7 +520,7 @@ export async function getAdminProducts() {
 export async function getOrdersList() {
   await dbConnect();
   const orders = await Order.find({}).sort({ createdAt: -1 }).lean();
-  return orders.map(toOrderSummaryRow);
+  return JSON.parse(JSON.stringify(orders.map(toOrderSummaryRow)));
 }
 
 export async function getUserOrders(email) {
@@ -541,7 +547,7 @@ export async function getUserOrders(email) {
   }
 
   const orders = await Order.find(query).sort({ createdAt: -1 }).lean();
-  return orders.map(toOrderSummaryRow);
+  return JSON.parse(JSON.stringify(orders.map(toOrderSummaryRow)));
 }
 
 export async function getOrderById(id) {
