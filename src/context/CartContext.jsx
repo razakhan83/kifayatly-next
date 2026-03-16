@@ -111,9 +111,6 @@ function CartProviderContent({ children }) {
           ...current,
           cart: current.cart.filter((item) => item.id !== itemId),
         }));
-        toast('Item removed from cart', {
-          description: product.Name || product.name,
-        });
       },
       updateQuantity(product, newQuantity) {
         const itemId = getCartItemId(product);

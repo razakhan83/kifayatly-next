@@ -60,7 +60,7 @@ export default async function RootLayout({ children }) {
             </TooltipProvider>
           </AuthProvider>
         </CartProvider>
-        <Toaster position="bottom-right" richColors />
+        <Toaster position="bottom-center" richColors />
       </body>
     </html>
   );

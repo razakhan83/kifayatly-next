@@ -63,8 +63,8 @@ export default function CartDrawer() {
                   layout
                   initial={{ opacity: 1, x: 0 }}
                   animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 300 }}
-                  transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                  exit={{ opacity: 0, x: 200 }}
+                  transition={{ duration: 0.5, ease: 'easeInOut' }}
                   className="surface-card rounded-xl p-3"
                 >
                 <div className="flex gap-3">

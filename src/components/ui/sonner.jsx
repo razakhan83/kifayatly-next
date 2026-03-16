@@ -28,7 +28,7 @@ function Toaster({ ...props }) {
       }}
       richColors
       closeButton={false}
-      position="top-center"
+      position="bottom-center"
       expand={false}
       duration={3000}
       {...props}

@@ -168,7 +168,7 @@ export default function ProductCard({ product, className = "" }) {
 
         {/* Description */}
         {productDescription ? (
-          <p className="line-clamp-1 text-xs text-muted-foreground">
+          <p className="line-clamp-2 text-xs text-muted-foreground">
             {productDescription}
           </p>
         ) : (
