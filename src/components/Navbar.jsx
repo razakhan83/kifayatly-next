@@ -19,6 +19,7 @@ import SearchField from '@/components/SearchField';
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
 import GoogleSignInButton from '@/components/GoogleSignInButton';
+import MyOrdersButton from '@/components/MyOrdersButton';
 import {
   Accordion,
   AccordionContent,
@@ -189,6 +190,9 @@ function NavbarContent({ categories }) {
           >
             {isSearchOpen ? <X /> : <Search />}
           </Button>
+          <div className="hidden md:block">
+            <MyOrdersButton />
+          </div>
           <button
             type="button"
             onClick={openCart}
@@ -302,6 +306,10 @@ function NavbarContent({ categories }) {
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>
+            </div>
+
+            <div className="pt-2">
+              <MyOrdersButton isMobile />
             </div>
 
             <div className="mt-auto pt-6">

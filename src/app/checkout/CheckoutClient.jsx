@@ -2,10 +2,11 @@
 
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { startTransition, useMemo, useState, useEffect } from 'react';
 import { Loader2, MapPin, ShieldCheck, Wallet, CheckCircle2, Copy, Check } from 'lucide-react';
 
-import { submitOrderAction } from '@/app/actions';
+import { submitOrderAction, getLastOrderDetailsAction } from '@/app/actions';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   Breadcrumb,
@@ -30,6 +31,7 @@ const formatPriceLabel = (raw) => `Rs. ${formatPrice(raw).toLocaleString('en-PK'
 
 export default function CheckoutClient({ settings }) {
   const router = useRouter();
+  const { data: session } = useSession();
   const { cart, clearCart } = useCart();
   const [formData, setFormData] = useState({
     email: '',
@@ -41,6 +43,36 @@ export default function CheckoutClient({ settings }) {
     city: '',
     instructions: '',
   });
+
+  // Auto-fill Name and Email from Session
+  useEffect(() => {
+    if (session?.user) {
+      setFormData((prev) => ({
+        ...prev,
+        fullName: prev.fullName || session.user.name || '',
+        email: prev.email || session.user.email || '',
+      }));
+    }
+  }, [session]);
+
+  // Auto-fill Address and Phone from Last Order
+  useEffect(() => {
+    if (session?.user) {
+      startTransition(async () => {
+        const lastOrder = await getLastOrderDetailsAction();
+        if (lastOrder) {
+          setFormData((prev) => ({
+            ...prev,
+            phone: prev.phone || lastOrder.phone || '',
+            address: prev.address || lastOrder.addressOnly || '',
+            city: prev.city || lastOrder.city || '',
+            landmark: prev.landmark || lastOrder.landmark || '',
+          }));
+        }
+      });
+    }
+  }, [session]);
+
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [orderState, setOrderState] = useState({ orderId: '', whatsappUrl: '' });

@@ -7,6 +7,11 @@ const OrderSchema = new mongoose.Schema(
             required: true,
             unique: true,
         },
+        customerEmail: {
+            type: String,
+            required: false,
+            lowercase: true,
+        },
         customerName: {
             type: String,
             required: [true, 'Customer name is required.'],

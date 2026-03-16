@@ -7,8 +7,10 @@ import CoverPhoto from '@/models/CoverPhoto';
 import Order from '@/models/Order';
 import Product from '@/models/Product';
 import Settings from '@/models/Settings';
+import User from '@/models/User';
 import dbConnect from '@/lib/dbConnect';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryImage';
+import { normalizeEmail, getPhoneRegex } from '@/lib/admin';
 import {
   getProductCategories,
   getProductCategoryNames,
@@ -512,6 +514,33 @@ export async function getAdminProducts() {
 export async function getOrdersList() {
   await dbConnect();
   const orders = await Order.find({}).sort({ createdAt: -1 }).lean();
+  return orders.map(toOrderSummaryRow);
+}
+
+export async function getUserOrders(email) {
+  if (!email) return [];
+  await dbConnect();
+  
+  const normalizedEmail = normalizeEmail(email);
+
+  // 1. Fetch user to see if they have a phone number linked
+  const user = await User.findOne({ email: normalizedEmail }).lean();
+  
+  // 2. Build query: match by customerEmail OR by customerPhone if phone exists (fuzzy)
+  const query = {
+    $or: [
+      { customerEmail: normalizedEmail }
+    ]
+  };
+
+  if (user?.phone) {
+    const phoneRegex = getPhoneRegex(user.phone);
+    if (phoneRegex) {
+      query.$or.push({ customerPhone: { $regex: phoneRegex } });
+    }
+  }
+
+  const orders = await Order.find(query).sort({ createdAt: -1 }).lean();
   return orders.map(toOrderSummaryRow);
 }
 

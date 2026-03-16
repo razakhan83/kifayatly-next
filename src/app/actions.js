@@ -2,12 +2,13 @@
 
 import { revalidatePath, revalidateTag, updateTag } from 'next/cache';
 
-import { isAdminEmail } from '@/lib/admin';
+import { isAdminEmail, normalizeEmail, normalizePhone, getPhoneRegex } from '@/lib/admin';
 import { authOptions } from '@/lib/auth';
 import dbConnect from '@/lib/dbConnect';
 import Order from '@/models/Order';
 import Product from '@/models/Product';
 import Settings from '@/models/Settings';
+import User from '@/models/User';
 import { getServerSession } from 'next-auth';
 import { Resend } from 'resend';
 import { generateOrderEmailHtml } from '@/lib/emailTemplates';
@@ -205,8 +206,12 @@ export async function submitOrderAction(input) {
     image: String(item.image || item.imageUrl || ''),
   }));
 
+  const session = await getServerSession(authOptions);
+  const userEmail = session?.user?.email ? normalizeEmail(session.user.email) : null;
+
   const order = await Order.create({
     orderId: makeOrderId(),
+    customerEmail: userEmail,
     customerName,
     customerPhone,
     customerAddress,
@@ -218,6 +223,33 @@ export async function submitOrderAction(input) {
 
   updateTag('orders');
   revalidateTag('admin-dashboard');
+
+  // Update User Profile & Link Previous Orders (Background)
+  if (userEmail) {
+    try {
+      // 1. Update user profile with the latest phone number
+      await User.findOneAndUpdate(
+        { email: userEmail },
+        { phone: customerPhone },
+        { upsert: true }
+      );
+
+      // 2. Link all previous orders using fuzzy phone matching
+      const phoneRegex = getPhoneRegex(customerPhone);
+      if (phoneRegex) {
+        const linkResult = await Order.updateMany(
+          { customerPhone: { $regex: phoneRegex }, customerEmail: null },
+          { customerEmail: userEmail }
+        );
+        
+        if (linkResult.modifiedCount > 0) {
+          console.log(`Linked ${linkResult.modifiedCount} previous orders to ${userEmail} via fuzzy phone ${customerPhone}`);
+        }
+      }
+    } catch (profileError) {
+      console.error('Error updating user profile/linking orders:', profileError);
+    }
+  }
 
   // Trigger Notification Email (Background)
   try {
@@ -257,4 +289,74 @@ export async function submitOrderAction(input) {
     orderId: order.orderId,
     whatsappUrl: whatsappNumber ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(lines.join('\n'))}` : '',
   };
+}
+
+export async function getLastOrderDetailsAction() {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.email) return null;
+
+  await dbConnect();
+  const lastOrder = await Order.findOne({ userEmail: normalizeEmail(session.user.email) })
+    .sort({ createdAt: -1 })
+    .lean();
+
+  if (!lastOrder) return null;
+
+  return {
+    phone: lastOrder.customerPhone || '',
+    address: lastOrder.customerAddress || '',
+    // Extract landmark and city from address string if possible (best effort)
+    // Assuming format from CheckoutClient: "address, landmark, city"
+    addressOnly: lastOrder.customerAddress.split(',')[0]?.trim() || lastOrder.customerAddress,
+    city: lastOrder.customerAddress.split(',').pop()?.trim() || '',
+    landmark: lastOrder.customerAddress.split(',').length > 2 ? lastOrder.customerAddress.split(',')[1]?.trim() : '',
+  };
+}
+
+export async function linkOrdersAction(phone) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.email) {
+    return { success: false, message: 'Please sign in first.' };
+  }
+
+  const userEmail = normalizeEmail(session.user.email);
+  const normalizedPhone = String(phone || '').trim();
+
+  if (!normalizedPhone) {
+    return { success: false, message: 'Phone number is required.' };
+  }
+
+  await dbConnect();
+
+  // 1. Update User profile with this phone
+  await User.findOneAndUpdate(
+    { email: userEmail },
+    { phone: normalizedPhone },
+    { upsert: true }
+  );
+
+  // 2. Link orders using fuzzy phone matching
+  const phoneRegex = getPhoneRegex(normalizedPhone);
+  let modifiedCount = 0;
+
+  if (phoneRegex) {
+    const result = await Order.updateMany(
+      { customerPhone: { $regex: phoneRegex }, customerEmail: null },
+      { customerEmail: userEmail }
+    );
+    modifiedCount = result.modifiedCount;
+  }
+
+  if (modifiedCount > 0) {
+    revalidatePath('/orders');
+    return { 
+      success: true, 
+      message: `Successfully linked ${result.matchedCount} order(s) to your account.` 
+    };
+  } else {
+    return { 
+      success: false, 
+      message: 'No unlinked orders found with this phone number, but your phone has been saved to your profile.' 
+    };
+  }
 }

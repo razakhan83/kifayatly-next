@@ -2,6 +2,8 @@ import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { isAdminEmail, normalizeEmail } from "@/lib/admin";
+import dbConnect from "@/lib/dbConnect";
+import User from "@/models/User";
 
 export const authOptions = {
   providers: [
@@ -30,6 +32,29 @@ export const authOptions = {
     })
   ],
   callbacks: {
+    async signIn({ user, account }) {
+      if (account.provider === "google") {
+        try {
+          await dbConnect();
+          const normalizedEmail = normalizeEmail(user.email);
+          
+          await User.findOneAndUpdate(
+            { email: normalizedEmail },
+            { 
+              name: user.name, 
+              image: user.image,
+              email: normalizedEmail
+            },
+            { upsert: true, new: true }
+          );
+          return true;
+        } catch (error) {
+          console.error("Error saving user profile:", error);
+          return true; // Still allow sign in even if profile save fails
+        }
+      }
+      return true;
+    },
     async jwt({ token, user }) {
       const email = user?.email || token?.email;
       token.isAdmin = isAdminEmail(email);

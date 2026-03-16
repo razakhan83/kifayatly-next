@@ -19,4 +19,15 @@ function isAdminEmail(email) {
   return getConfiguredAdminEmails().includes(normalizedEmail);
 }
 
-export { getConfiguredAdminEmails, isAdminEmail, normalizeEmail };
+function normalizePhone(phone) {
+  return String(phone || "").replace(/\D/g, "");
+}
+
+function getPhoneRegex(phone) {
+  const digits = normalizePhone(phone);
+  if (!digits) return null;
+  const pattern = digits.split("").join("\\D*");
+  return new RegExp(`^\\D*${pattern}\\D*$`);
+}
+
+export { getConfiguredAdminEmails, isAdminEmail, normalizeEmail, normalizePhone, getPhoneRegex };

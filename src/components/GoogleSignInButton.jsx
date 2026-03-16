@@ -1,16 +1,14 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { signIn } from 'next-auth/react';
 
 export default function GoogleSignInButton({ className }) {
   return (
     <Button
       variant="outline"
       className={`relative flex w-full items-center justify-center gap-3 border-border bg-background py-6 font-medium text-foreground transition-all hover:bg-muted/50 ${className}`}
-      onClick={() => {
-        // Placeholder for future next-auth integration if needed
-        console.log('Google Sign-in clicked');
-      }}
+      onClick={() => signIn('google')}
     >
       <svg
         className="size-5"
