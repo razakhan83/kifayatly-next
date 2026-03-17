@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef, useEffect } from "react";
 import Link from "next/link";
 import { Search, Sparkles } from "lucide-react";
 
@@ -48,10 +49,24 @@ export default function ProductsPageHeader({
   ];
   const pageTitle = buildTitle(activeCategory, categories, searchTerm);
 
+  const categoryNavRef = useRef(null);
+
+  useEffect(() => {
+    if (categoryNavRef.current) {
+      const activePill = categoryNavRef.current.querySelector("[data-active='true']");
+      if (activePill) {
+        categoryNavRef.current.scrollTo({
+          left: activePill.offsetLeft - categoryNavRef.current.clientWidth / 2 + activePill.clientWidth / 2,
+          behavior: "smooth",
+        });
+      }
+    }
+  }, [activeCategory]);
+
   return (
     <div>
       <div className="fixed inset-x-0 top-24 z-30 border-y border-border/70 bg-card/95 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl gap-2 overflow-x-auto px-4 py-4 hide-scrollbar">
+        <div ref={categoryNavRef} className="relative mx-auto flex max-w-7xl gap-2 overflow-x-auto px-4 py-4 hide-scrollbar">
           {categoryButtons.map((category) => {
             const Icon = category.icon;
             const isActive = activeCategory === category.id;
@@ -60,6 +75,7 @@ export default function ProductsPageHeader({
                 key={category.id}
                 href={buildCategoryHref(category.id, searchTerm)}
                 scroll={false}
+                data-active={isActive}
                 className={cn(
                   buttonVariants({ variant: isActive ? "default" : "outline", size: "sm" }),
                   "shrink-0"

@@ -163,7 +163,7 @@ function ProductGridContent({
     <>
       {!hideCategoryBar ? (
         <div className="border-y border-border/70 bg-card/70">
-          <div ref={categoryNavRef} className="mx-auto flex max-w-7xl gap-2 overflow-x-auto px-4 py-4 hide-scrollbar">
+          <div ref={categoryNavRef} className="relative mx-auto flex max-w-7xl gap-2 overflow-x-auto px-4 py-4 hide-scrollbar">
             {categoryButtons.map((category) => {
               const Icon = category.icon;
               const isActive = activeCategory === category.id;
