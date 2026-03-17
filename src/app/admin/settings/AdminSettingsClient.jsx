@@ -123,37 +123,6 @@ export default function AdminSettingsClient({ initialSettings }) {
           </div>
         </SettingSection>
 
-        <SettingSection icon={Truck} title="Shipping Rates">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>
-              <Label className="mb-1.5">Karachi Delivery Fee</Label>
-              <Input
-                type="number"
-                min="0"
-                value={form.karachiDeliveryFee}
-                onChange={(event) => handleChange('karachiDeliveryFee', Number(event.target.value))}
-              />
-            </div>
-            <div>
-              <Label className="mb-1.5">Outside Karachi Fee</Label>
-              <Input
-                type="number"
-                min="0"
-                value={form.outsideKarachiDeliveryFee}
-                onChange={(event) => handleChange('outsideKarachiDeliveryFee', Number(event.target.value))}
-              />
-            </div>
-          </div>
-          <div>
-            <Label className="mb-1.5">Free Shipping Threshold</Label>
-            <Input
-              type="number"
-              min="0"
-              value={form.freeShippingThreshold}
-              onChange={(event) => handleChange('freeShippingThreshold', Number(event.target.value))}
-            />
-          </div>
-        </SettingSection>
 
         <SettingSection icon={BellRing} title="Announcement Bar">
           <div className="flex items-center justify-between rounded-lg border border-border bg-muted/35 px-4 py-3">
