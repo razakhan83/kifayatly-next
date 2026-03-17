@@ -82,6 +82,18 @@ const ProductSchema = new mongoose.Schema(
             type: Number,
             default: null,
         },
+        isNewArrival: {
+            type: Boolean,
+            default: false,
+        },
+        isTrending: {
+            type: Boolean,
+            default: false,
+        },
+        isBestSelling: {
+            type: Boolean,
+            default: false,
+        },
     },
     {
         timestamps: true,

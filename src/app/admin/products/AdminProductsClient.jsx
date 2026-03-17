@@ -328,6 +328,25 @@ export default function AdminProductsClient({ initialProducts }) {
     });
   }
 
+  const toggleProductFlag = async (productId, flag, currentStatus) => {
+    const originalProducts = [...products];
+    const newStatus = !currentStatus;
+    try {
+      setProducts((prev) => prev.map((p) => (p._id === productId ? { ...p, [flag]: newStatus } : p)));
+      
+      const res = await fetch(`/api/products/${productId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [flag]: newStatus }),
+      });
+      if (!res.ok) throw new Error('Failed to update flag');
+      toast.success('Product updated');
+    } catch (err) {
+      setProducts(originalProducts);
+      toast.error('Failed to update product');
+    }
+  };
+
   function handleDiscountSuccess(productId, discountPercentage, isDiscounted, discountedPrice) {
     setProducts((previous) =>
       previous.map((entry) =>
@@ -458,6 +477,44 @@ export default function AdminProductsClient({ initialProducts }) {
                       {product.StockStatus === "In Stock" ? "In Stock" : "Out of Stock"}
                     </Badge>
                   </div>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => toggleProductFlag(product._id, 'isNewArrival', product.isNewArrival)}
+                      className={cn(
+                        "flex h-7 px-2 items-center justify-center rounded-md border text-[9px] font-bold transition-all",
+                        product.isNewArrival 
+                          ? "bg-primary/10 border-primary/20 text-primary" 
+                          : "bg-muted/50 border-transparent text-muted-foreground hover:bg-muted"
+                      )}
+                      title="New Arrival"
+                    >
+                      NEW
+                    </button>
+                    <button
+                      onClick={() => toggleProductFlag(product._id, 'isTrending', product.isTrending)}
+                      className={cn(
+                        "flex h-7 px-2 items-center justify-center rounded-md border text-[9px] font-bold transition-all",
+                        product.isTrending 
+                          ? "bg-amber-500/10 border-amber-500/20 text-amber-600" 
+                          : "bg-muted/50 border-transparent text-muted-foreground hover:bg-muted"
+                      )}
+                      title="Trending"
+                    >
+                      HOT
+                    </button>
+                    <button
+                      onClick={() => toggleProductFlag(product._id, 'isBestSelling', product.isBestSelling)}
+                      className={cn(
+                        "flex h-7 px-2 items-center justify-center rounded-md border text-[9px] font-bold transition-all",
+                        product.isBestSelling 
+                          ? "bg-rose-500/10 border-rose-500/20 text-rose-600" 
+                          : "bg-muted/50 border-transparent text-muted-foreground hover:bg-muted"
+                      )}
+                      title="Best Selling"
+                    >
+                      TOP
+                    </button>
+                  </div>
                 </div>
                 <div className="flex gap-2">
                   <Button
@@ -517,6 +574,9 @@ export default function AdminProductsClient({ initialProducts }) {
                 <th className="px-6 py-4">Price</th>
                 <th className="px-6 py-4">Category</th>
                 <th className="px-6 py-4">Stock</th>
+                <th className="px-4 py-3 text-left text-[10px] font-black uppercase tracking-wider text-muted-foreground/70">
+                  Flags
+                </th>
                 <th className="px-6 py-4 text-center">Live</th>
                 <th className="px-6 py-4 text-center">Actions</th>
               </tr>
@@ -579,6 +639,47 @@ export default function AdminProductsClient({ initialProducts }) {
                       <Badge variant={product.StockStatus === "In Stock" ? "emerald" : "destructive"} className="min-w-[85px] justify-center text-[10px] uppercase">
                         {product.StockStatus === "In Stock" ? "In Stock" : "Out of Stock"}
                       </Badge>
+                    </div>
+                  </td>
+                  {/* Flags Toggles */}
+                  <td className="whitespace-nowrap px-4 py-4">
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => toggleProductFlag(product._id, 'isNewArrival', product.isNewArrival)}
+                        className={cn(
+                          "flex h-7 px-2 items-center justify-center rounded-md border text-[9px] font-bold transition-all",
+                          product.isNewArrival 
+                            ? "bg-primary/10 border-primary/20 text-primary" 
+                            : "bg-muted/50 border-transparent text-muted-foreground hover:bg-muted"
+                        )}
+                        title="New Arrival"
+                      >
+                        NEW
+                      </button>
+                      <button
+                        onClick={() => toggleProductFlag(product._id, 'isTrending', product.isTrending)}
+                        className={cn(
+                          "flex h-7 px-2 items-center justify-center rounded-md border text-[9px] font-bold transition-all",
+                          product.isTrending 
+                            ? "bg-amber-500/10 border-amber-500/20 text-amber-600" 
+                            : "bg-muted/50 border-transparent text-muted-foreground hover:bg-muted"
+                        )}
+                        title="Trending"
+                      >
+                        HOT
+                      </button>
+                      <button
+                        onClick={() => toggleProductFlag(product._id, 'isBestSelling', product.isBestSelling)}
+                        className={cn(
+                          "flex h-7 px-2 items-center justify-center rounded-md border text-[9px] font-bold transition-all",
+                          product.isBestSelling 
+                            ? "bg-rose-500/10 border-rose-500/20 text-rose-600" 
+                            : "bg-muted/50 border-transparent text-muted-foreground hover:bg-muted"
+                        )}
+                        title="Best Selling"
+                      >
+                        TOP
+                      </button>
                     </div>
                   </td>
                   <td className="px-6 py-4 text-center">

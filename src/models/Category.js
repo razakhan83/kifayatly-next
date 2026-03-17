@@ -32,6 +32,10 @@ const CategorySchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    isEnabled: {
+      type: Boolean,
+      default: true,
+    },
   },
   {
     timestamps: true,

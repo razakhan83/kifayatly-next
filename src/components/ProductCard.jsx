@@ -60,12 +60,20 @@ function getStatusBadge(product) {
     };
   }
 
-  // New — products created within the last 30 days
+  // New Arrivals Toggle
+  if (product.isNewArrival) {
+    return {
+      label: "New",
+      className: "bg-emerald-100 text-emerald-800 border-emerald-200",
+    };
+  }
+
+  // Fallback: products created within the last 7 days (optional, but keep it tight)
   const createdAt = product.createdAt || product.created_at;
   if (createdAt) {
     const daysSinceCreated =
       (Date.now() - new Date(createdAt).getTime()) / (1000 * 60 * 60 * 24);
-    if (daysSinceCreated <= 30) {
+    if (daysSinceCreated <= 7) {
       return {
         label: "New",
         className: "bg-emerald-100 text-emerald-800 border-emerald-200",

@@ -69,6 +69,9 @@ export async function PATCH(req, { params }) {
     existingCategory.image = image;
     existingCategory.imagePublicId = imagePublicId;
     existingCategory.blurDataURL = blurDataURL;
+    if (body.isEnabled !== undefined) {
+      existingCategory.isEnabled = body.isEnabled === true || body.isEnabled === 'true';
+    }
 
     await existingCategory.save();
     revalidateTag('categories', 'max');

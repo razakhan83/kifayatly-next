@@ -46,7 +46,7 @@ import { uploadImageDataUrl } from "@/lib/cloudinaryUpload";
 import { getBlurPlaceholderProps } from "@/lib/imagePlaceholder";
 import { cn } from "@/lib/utils";
 
-function SortableCategoryCard({ category, index, onEdit, onDelete }) {
+function SortableCategoryCard({ category, index, onEdit, onDelete, onToggleEnabled }) {
   const {
     attributes,
     listeners,
@@ -129,6 +129,31 @@ function SortableCategoryCard({ category, index, onEdit, onDelete }) {
           </Button>
         )}
       </div>
+
+      {/* Visibility Toggle */}
+      <div className="flex items-center gap-3 pr-2">
+        <span className={cn(
+          "text-[9px] font-black uppercase tracking-widest",
+          category.isEnabled ? "text-emerald-500" : "text-muted-foreground/60"
+        )}>
+          {category.isEnabled ? "Visible" : "Hidden"}
+        </span>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleEnabled?.(category._id, category.isEnabled);
+          }}
+          className={cn(
+            "relative h-5 w-9 rounded-full transition-colors duration-300",
+            category.isEnabled ? "bg-emerald-500" : "bg-muted-foreground/30"
+          )}
+        >
+          <span className={cn(
+            "absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white transition-transform duration-300 shadow-sm",
+            category.isEnabled ? "translate-x-4" : "translate-x-0"
+          )} />
+        </button>
+      </div>
     </div>
   );
 }
@@ -148,6 +173,7 @@ export default function AdminCategoriesClient() {
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState("");
   const [editImage, setEditImage] = useState("");
+  const [editIsEnabled, setEditIsEnabled] = useState(true);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -285,10 +311,10 @@ export default function AdminCategoriesClient() {
     reader.readAsDataURL(file);
     event.target.value = "";
   }
-
   function openEditModal(category) {
     setEditName(category.name);
     setEditImage(category.image || "");
+    setEditIsEnabled(category.isEnabled !== false);
     setEditModal({ open: true, category });
   }
 
@@ -318,6 +344,7 @@ export default function AdminCategoriesClient() {
           image: uploadedImage,
           imagePublicId: uploadedPublicId,
           blurDataURL: uploadedBlurDataURL,
+          isEnabled: editIsEnabled, // Include isEnabled in the update
           ...(isNewImage && { imageDataUrl: editImage }),
         }),
       });
@@ -337,12 +364,14 @@ export default function AdminCategoriesClient() {
           image: data.data.image,
           imagePublicId: data.data.imagePublicId,
           blurDataURL: data.data.blurDataURL,
+          isEnabled: data.data.isEnabled, // Update isEnabled in state
         } : cat))
       );
       
       setEditModal({ open: false, category: null });
       setEditName("");
       setEditImage("");
+      setEditIsEnabled(true); // Reset isEnabled state
     } catch (error) {
       toast.error(error.message || "Failed to update category");
     } finally {
@@ -379,6 +408,7 @@ export default function AdminCategoriesClient() {
           imagePublicId: category.imagePublicId || "",
           blurDataURL: category.blurDataURL || "",
           sortOrder: Number(category.sortOrder ?? index) || 0,
+          isEnabled: category.isEnabled ?? true,
         })),
       );
     } catch (error) {
@@ -415,6 +445,25 @@ export default function AdminCategoriesClient() {
       setDeleting(false);
     }
   }
+
+  const toggleCategoryEnabled = async (categoryId, currentStatus) => {
+    const originalCategories = [...categories];
+    const newStatus = !currentStatus;
+    try {
+      setCategories(prev => prev.map(c => c._id === categoryId ? { ...c, isEnabled: newStatus } : c));
+      
+      const res = await fetch(`/api/categories/${categoryId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isEnabled: newStatus, name: categories.find(c => c._id === categoryId).name }),
+      });
+      if (!res.ok) throw new Error('Failed to update status');
+      toast.success(newStatus ? 'Category enabled' : 'Category disabled');
+    } catch (err) {
+      setCategories(originalCategories);
+      toast.error('Failed to update category visibility');
+    }
+  };
 
   return (
     <div className="max-w-4xl pb-24 md:pb-0">
@@ -498,6 +547,7 @@ export default function AdminCategoriesClient() {
                     onDelete={(selectedCategory) =>
                       setDeleteModal({ open: true, category: selectedCategory })
                     }
+                    onToggleEnabled={toggleCategoryEnabled}
                   />
                 ))}
               </div>

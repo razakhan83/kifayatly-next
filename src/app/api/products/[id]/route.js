@@ -88,6 +88,11 @@ export async function PUT(request, { params }) {
         existingProduct.Category = categoryArray;
         // existingProduct.StockStatus is intentionally left alone here; handled by the Admin toggle.
         existingProduct.isLive = body.isLive === true || body.isLive === 'true';
+        
+        // Marketing flags
+        existingProduct.isNewArrival = body.isNewArrival === true || body.isNewArrival === 'true';
+        existingProduct.isTrending = body.isTrending === true || body.isTrending === 'true';
+        existingProduct.isBestSelling = body.isBestSelling === true || body.isBestSelling === 'true';
 
         // Discount fields
         const discountPct = Math.min(100, Math.max(0, Number(body.discountPercentage) || 0));
@@ -160,6 +165,40 @@ export async function PATCH(request, { params }) {
                 data: {
                     _id: updatedProduct._id.toString(),
                     StockStatus: updatedProduct.StockStatus,
+                },
+            });
+        }
+
+        // Handle Marketing flags toggle
+        if (body.isNewArrival !== undefined || body.isTrending !== undefined || body.isBestSelling !== undefined) {
+            const updateFields = {};
+            if (body.isNewArrival !== undefined) updateFields.isNewArrival = body.isNewArrival === true || body.isNewArrival === 'true';
+            if (body.isTrending !== undefined) updateFields.isTrending = body.isTrending === true || body.isTrending === 'true';
+            if (body.isBestSelling !== undefined) updateFields.isBestSelling = body.isBestSelling === true || body.isBestSelling === 'true';
+
+            const updatedProduct = await Product.findByIdAndUpdate(
+                id,
+                { $set: updateFields },
+                { new: true, runValidators: false, strict: false }
+            ).lean();
+
+            revalidateTag('products');
+            if (updatedProduct.slug) {
+                revalidateTag(`product-${updatedProduct.slug}`);
+                revalidatePath(`/products/${updatedProduct.slug}`);
+            }
+            revalidateTag('admin-dashboard');
+            revalidatePath('/admin/products');
+            revalidatePath('/products');
+            revalidatePath('/');
+
+            return NextResponse.json({
+                success: true,
+                data: {
+                    _id: updatedProduct._id.toString(),
+                    isNewArrival: updatedProduct.isNewArrival,
+                    isTrending: updatedProduct.isTrending,
+                    isBestSelling: updatedProduct.isBestSelling,
                 },
             });
         }

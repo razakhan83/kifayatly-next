@@ -34,6 +34,9 @@ export default function AddProduct() {
   const [images, setImages] = useState([]); // Array of { url, blurDataURL, publicId, file, isNew }
   const [saving, setSaving] = useState(false);
   const [isLive, setIsLive] = useState(false);
+  const [isNewArrival, setIsNewArrival] = useState(false);
+  const [isTrending, setIsTrending] = useState(false);
+  const [isBestSelling, setIsBestSelling] = useState(false);
 
   const [isDragOver, setIsDragOver] = useState(false);
 
@@ -169,6 +172,9 @@ export default function AddProduct() {
     setCategories([]);
     setImages([]);
     setIsLive(false);
+    setIsNewArrival(false);
+    setIsTrending(false);
+    setIsBestSelling(false);
     setIsDragOver(false);
     setIsCategoryModalOpen(false);
     setNewCatName("");
@@ -218,6 +224,9 @@ export default function AddProduct() {
       Images: finalImages,
       Category: Categories,
       isLive,
+      isNewArrival,
+      isTrending,
+      isBestSelling,
     };
 
     try {
@@ -339,22 +348,56 @@ export default function AddProduct() {
                   : "🔴 Draft — hidden from store until toggled Live"}
               </p>
             </div>
-            <button
-              type="button"
-              onClick={() => setIsLive(!isLive)}
-              className={cn(
-                "relative h-6 w-12 rounded-lg transition-colors duration-300 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/20",
-                isLive ? "bg-primary" : "bg-border",
-              )}
-              aria-label="Toggle Live"
-            >
-              <span
-                className={cn(
-                  "absolute left-0.5 top-0.5 h-5 w-5 rounded-md bg-background shadow transition-transform duration-300",
-                  isLive ? "translate-x-6" : "translate-x-0",
-                )}
-              />
             </button>
+          </div>
+
+          {/* Marketing Flags */}
+          <div className="rounded-xl border border-border bg-muted/35 p-4 space-y-4">
+            <p className="text-sm font-semibold text-foreground">Marketing Flags</p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="flex items-center justify-between gap-2 border-b border-border/50 pb-4 sm:border-0 sm:pb-0">
+                <Label className="text-xs text-muted-foreground mr-2 cursor-pointer" htmlFor="toggle-new">New Arrival</Label>
+                <button
+                  id="toggle-new"
+                  type="button"
+                  onClick={() => setIsNewArrival(!isNewArrival)}
+                  className={cn(
+                    "relative h-5 w-10 rounded-lg transition-colors duration-300",
+                    isNewArrival ? "bg-primary" : "bg-border",
+                  )}
+                >
+                  <span className={cn("absolute left-0.5 top-0.5 h-4 w-4 rounded-md bg-background shadow transition-transform duration-300", isNewArrival ? "translate-x-5" : "translate-x-0")} />
+                </button>
+              </div>
+              <div className="flex items-center justify-between gap-2 border-b border-border/50 pb-4 sm:border-0 sm:pb-0">
+                <Label className="text-xs text-muted-foreground mr-2 cursor-pointer" htmlFor="toggle-trending">Trending</Label>
+                <button
+                  id="toggle-trending"
+                  type="button"
+                  onClick={() => setIsTrending(!isTrending)}
+                  className={cn(
+                    "relative h-5 w-10 rounded-lg transition-colors duration-300",
+                    isTrending ? "bg-primary" : "bg-border",
+                  )}
+                >
+                  <span className={cn("absolute left-0.5 top-0.5 h-4 w-4 rounded-md bg-background shadow transition-transform duration-300", isTrending ? "translate-x-5" : "translate-x-0")} />
+                </button>
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <Label className="text-xs text-muted-foreground mr-2 cursor-pointer" htmlFor="toggle-best">Best Selling</Label>
+                <button
+                  id="toggle-best"
+                  type="button"
+                  onClick={() => setIsBestSelling(!isBestSelling)}
+                  className={cn(
+                    "relative h-5 w-10 rounded-lg transition-colors duration-300",
+                    isBestSelling ? "bg-primary" : "bg-border",
+                  )}
+                >
+                  <span className={cn("absolute left-0.5 top-0.5 h-4 w-4 rounded-md bg-background shadow transition-transform duration-300", isBestSelling ? "translate-x-5" : "translate-x-0")} />
+                </button>
+              </div>
+            </div>
           </div>
 
           {/* Image Upload */}

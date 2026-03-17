@@ -50,6 +50,9 @@ function serializeProduct(product) {
     Images: normalizeProductImages(safeProduct.Images),
     createdAt: safeProduct.createdAt ? new Date(safeProduct.createdAt).toISOString() : null,
     updatedAt: safeProduct.updatedAt ? new Date(safeProduct.updatedAt).toISOString() : null,
+    isNewArrival: safeProduct.isNewArrival === true,
+    isTrending: safeProduct.isTrending === true,
+    isBestSelling: safeProduct.isBestSelling === true,
   };
 }
 
@@ -105,6 +108,9 @@ function toAdminProductRow(product) {
     isLive: product.isLive !== false,
     createdAt: product.createdAt,
     updatedAt: product.updatedAt,
+    isNewArrival: product.isNewArrival === true,
+    isTrending: product.isTrending === true,
+    isBestSelling: product.isBestSelling === true,
     discountPercentage: Number(product.discountPercentage || 0),
     isDiscounted: product.isDiscounted === true,
     discountedPrice: product.discountedPrice != null ? Number(product.discountedPrice) : null,
@@ -253,6 +259,7 @@ async function getCategoriesRaw() {
       imagePublicId: category.imagePublicId || '',
       blurDataURL: category.blurDataURL || '',
       sortOrder: category.sortOrder ?? 0,
+      isEnabled: category.isEnabled !== false,
     }));
   }
 
@@ -266,6 +273,7 @@ async function getCategoriesRaw() {
       imagePublicId: '',
       blurDataURL: '',
       sortOrder: 0,
+      isEnabled: true,
     });
   }
   
@@ -381,14 +389,48 @@ export async function getHomeSections() {
         products: items,
       };
     })
-    .filter((section) => section.category.id === 'special-offers' || section.products.length > 0);
+    .filter((section) => 
+      (section.category.id === 'special-offers' || section.category.isEnabled !== false) &&
+      (section.category.id === 'special-offers' || section.products.length > 0)
+    );
+
+  // Add the dynamic marketing sections (New Arrivals, Trending, Best Selling)
+  const marketingSections = [
+    { id: 'new-arrivals', label: 'New Arrivals ✨', flag: 'isNewArrival' },
+    { id: 'trending', label: 'Trending This Week 🔥', flag: 'isTrending' },
+    { id: 'best-selling', label: 'Best Selling 🏆', flag: 'isBestSelling' },
+  ].map(m => {
+    const items = products
+      .filter(p => p[m.flag] === true)
+      .slice(0, 12)
+      .map(toProductCardItem);
+    
+    if (items.length === 0) return null;
+
+    return {
+      category: {
+        id: m.id,
+        label: m.label,
+        image: '',
+        isEnabled: true,
+      },
+      products: items
+    };
+  }).filter(Boolean);
+
+  // Combine and sort sections: Special Offers first, then Marketing, then Categories
+  const finalSections = [
+    ...sections.filter(s => s.category.id === 'special-offers'),
+    ...marketingSections,
+    ...sections.filter(s => s.category.id !== 'special-offers')
+  ];
 
   return {
-    categories,
+    categories: categories.filter(c => c.isEnabled !== false),
     coverPhotos,
     featuredProducts,
     searchProducts: products.map(toProductCardItem),
-    sections,
+    sections: finalSections,
   };
 }
 
@@ -409,7 +451,7 @@ export async function getProductsList({ category = 'all', search = '', sort = 'n
   let filtered = searchMatched;
 
   if (category === 'new-arrivals') {
-    filtered = [...filtered].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+    filtered = filtered.filter((product) => product.isNewArrival === true);
   } else if (category === 'special-offers') {
     filtered = filtered.filter((product) => product.isDiscounted === true);
   } else if (category && category !== 'all') {

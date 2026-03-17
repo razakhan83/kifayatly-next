@@ -90,6 +90,7 @@ export async function POST(req) {
       imagePublicId,
       blurDataURL,
       sortOrder: body.sortOrder ?? count,
+      isEnabled: body.isEnabled !== false, // default to true
     });
     revalidateTag('categories', 'max');
     return NextResponse.json(
@@ -140,7 +141,10 @@ export async function PUT(req) {
     const operations = body.categories.map((cat) => ({
       updateOne: {
         filter: { _id: new mongoose.Types.ObjectId(cat._id) },
-        update: { $set: { sortOrder: Number(cat.sortOrder) || 0 } },
+        update: { $set: { 
+          sortOrder: Number(cat.sortOrder) || 0,
+          ...(cat.isEnabled !== undefined && { isEnabled: cat.isEnabled === true || cat.isEnabled === 'true' })
+        } },
       },
     }));
 
