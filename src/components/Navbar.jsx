@@ -6,20 +6,38 @@ import { usePathname, useRouter } from 'next/navigation';
 import {
   ChevronDown,
   LayoutGrid,
+  LogOut,
   Menu,
   Search,
   ShoppingBag,
   Sparkles,
   Store,
   Tag,
+  User,
   X,
 } from 'lucide-react';
+import { useSession, signOut } from 'next-auth/react';
 
 import SearchField from '@/components/SearchField';
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
 import GoogleSignInButton from '@/components/GoogleSignInButton';
 import MyOrdersButton from '@/components/MyOrdersButton';
+import AuthModal from '@/components/AuthModal';
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   Accordion,
   AccordionContent,
@@ -36,6 +54,7 @@ import {
 import { cn } from '@/lib/utils';
 
 function NavbarContent({ categories }) {
+  const { data: session } = useSession();
   const router = useRouter();
   const pathname = usePathname();
   const {
@@ -50,6 +69,7 @@ function NavbarContent({ categories }) {
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -190,9 +210,6 @@ function NavbarContent({ categories }) {
           >
             {isSearchOpen ? <X /> : <Search />}
           </Button>
-          <div className="hidden md:block">
-            <MyOrdersButton />
-          </div>
           <button
             type="button"
             onClick={openCart}
@@ -206,6 +223,54 @@ function NavbarContent({ categories }) {
               </span>
             ) : null}
           </button>
+
+          {session ? (
+            <div className="hidden md:block">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0">
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={session.user?.image} alt={session.user?.name || 'User'} />
+                      <AvatarFallback>{(session.user?.name || 'U').charAt(0)}</AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" sideOffset={8}>
+                  <DropdownMenuGroup>
+                    <DropdownMenuLabel className="font-normal">
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">{session.user?.name}</p>
+                        <p className="text-xs leading-none text-muted-foreground">{session.user?.email}</p>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => router.push('/orders')}>
+                      <ShoppingBag className="mr-2 h-4 w-4" />
+                      <span>My Orders</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => signOut()} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Logout</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          ) : (
+            <div className="hidden md:block">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsAuthModalOpen(true)}
+                className="text-muted-foreground hover:bg-muted hover:text-foreground"
+              >
+                <User />
+              </Button>
+            </div>
+          )}
+          
+          <AuthModal open={isAuthModalOpen} onOpenChange={setIsAuthModalOpen} />
         </div>
       </header>
 
@@ -312,8 +377,34 @@ function NavbarContent({ categories }) {
               <MyOrdersButton isMobile />
             </div>
 
+            {session && (
+              <div className="flex flex-col gap-2 pt-2">
+                <div className="flex items-center gap-3 rounded-lg bg-muted/40 px-3 py-3">
+                  <Avatar className="h-9 w-9">
+                    <AvatarImage src={session.user?.image} alt={session.user?.name || 'User'} />
+                    <AvatarFallback>{(session.user?.name || 'U').charAt(0)}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex flex-col min-w-0">
+                    <p className="truncate text-sm font-semibold">{session.user?.name}</p>
+                    <p className="truncate text-xs text-muted-foreground">{session.user?.email}</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsSidebarOpen(false);
+                    signOut();
+                  }}
+                  className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors bg-destructive/10 text-destructive hover:bg-destructive/20"
+                >
+                  <LogOut className="size-4" />
+                  Logout
+                </button>
+              </div>
+            )}
+
             <div className="mt-auto pt-6">
-              <GoogleSignInButton />
+              {!session ? <GoogleSignInButton /> : null}
             </div>
           </div>
         </SheetContent>
