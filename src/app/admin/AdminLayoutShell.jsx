@@ -16,6 +16,8 @@ import {
   ShoppingCart,
   Store,
   Truck,
+  Users,
+  MessageSquare,
   X,
 } from 'lucide-react';
 
@@ -46,6 +48,8 @@ const navItems = [
   { href: '/admin/shipping', label: 'Shipping', icon: Truck, match: (pathname) => pathname.startsWith('/admin/shipping') },
   { href: '/admin/cover-photos', label: 'Cover Photos', icon: Images, match: (pathname) => pathname.startsWith('/admin/cover-photos') },
   { href: '/admin/settings', label: 'Settings', icon: Settings, match: (pathname) => pathname.startsWith('/admin/settings') },
+  { href: '/admin/users', label: 'Users', icon: Users, match: (pathname) => pathname.startsWith('/admin/users') },
+  { href: '/admin/reviews', label: 'Reviews', icon: MessageSquare, match: (pathname) => pathname.startsWith('/admin/reviews') },
 ];
 
 export default function AdminLayoutShell({ children }) {

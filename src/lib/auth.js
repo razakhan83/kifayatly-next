@@ -40,7 +40,12 @@ export const authOptions = {
           
           const existingUser = await User.findOne({ email: normalizedEmail });
           
-          await User.findOneAndUpdate(
+          if (existingUser && existingUser.disabled) {
+            console.log("Blocked Login for Disabled User:", normalizedEmail);
+            return false; // Prevent sign in
+          }
+
+          const dbUser = await User.findOneAndUpdate(
             { email: normalizedEmail },
             { 
               name: user.name, 
@@ -48,7 +53,7 @@ export const authOptions = {
               email: normalizedEmail
             },
             { upsert: true, new: true }
-          );
+          ).lean();
 
           if (!existingUser) {
             // New User Signup - Create Notification
@@ -56,9 +61,10 @@ export const authOptions = {
             await Notification.create({
               type: 'user',
               message: `New user ${user.name} just signed up`,
-              link: `/admin`, // No specific user profile page yet, link to dashboard
+              link: `/admin/users?id=${dbUser._id}`, // Deep link with ID
               metadata: {
                 userName: user.name,
+                userId: dbUser._id.toString(),
               }
             });
           }
@@ -71,12 +77,44 @@ export const authOptions = {
       }
       return true;
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       const email = user?.email || token?.email;
-      token.isAdmin = isAdminEmail(email);
+      
       if (email) {
         token.email = normalizeEmail(email);
+        token.isAdmin = isAdminEmail(email);
+
+        // Phase 2: Strict Session Validation
+        // Avoid DB check for static admin if possible, but for regular users we must check status
+        try {
+          // We only need to check DB if it's not the initial sign in (where user is provided)
+          // or if we want to enforce "immediate" logout on every request/refresh
+          await dbConnect();
+          const dbUser = await User.findOne({ email: token.email }).select('disabled forceLogoutAt').lean();
+          
+          if (dbUser) {
+            // 1. Check if user is disabled
+            if (dbUser.disabled) {
+              console.log("Blocking session for disabled user:", token.email);
+              return null; // This invalidates the JWT
+            }
+
+            // 2. Check if session was forced to logout
+            if (dbUser.forceLogoutAt && token.iat) {
+              const forceLogoutTime = new Date(dbUser.forceLogoutAt).getTime();
+              const tokenIssuedAt = token.iat * 1000;
+              
+              if (tokenIssuedAt < forceLogoutTime) {
+                console.log("Invalidating old session for user:", token.email);
+                return null;
+              }
+            }
+          }
+        } catch (error) {
+          console.error("Auth DB Check Error:", error);
+        }
       }
+      
       return token;
     },
     async session({ session, token }) {

@@ -70,7 +70,7 @@ export async function POST(req) {
     await Notification.create({
       type: 'review',
       message: `${user.name} left a ${rating}-star rating on ${product.Name}`,
-      link: `/admin/products?review=true&productId=${productId}`,
+      link: `/admin/reviews?id=${review._id}`,
       metadata: {
         id: productId,
         userName: user.name,

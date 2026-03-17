@@ -266,7 +266,7 @@ export async function submitOrderAction(input) {
     await Notification.create({
       type: 'order',
       message: `New Order ${order.orderId} received from ${customerName}`,
-      link: `/admin/orders?id=${order.orderId}`,
+      link: `/admin/orders/${order._id}`,
       metadata: {
         id: order.orderId,
         userName: customerName,
