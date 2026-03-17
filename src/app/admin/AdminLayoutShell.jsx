@@ -2,8 +2,8 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { signOut } from 'next-auth/react';
-import { usePathname } from 'next/navigation';
+import { signOut, useSession } from 'next-auth/react';
+import { usePathname, useRouter } from 'next/navigation';
 import NextTopLoader from 'nextjs-toploader';
 import {
   Box,
@@ -20,6 +20,20 @@ import {
 
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 
 const navItems = [
@@ -33,6 +47,8 @@ const navItems = [
 
 export default function AdminLayoutShell({ children }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { data: session } = useSession();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   if (pathname === '/admin/login') return <>{children}</>;
@@ -68,6 +84,28 @@ export default function AdminLayoutShell({ children }) {
           );
         })}
       </nav>
+
+      {/* Admin Mobile/Desktop Sidebar User Info */}
+      <div className="mt-auto flex flex-col gap-2 pt-6 border-t border-white/10">
+        <div className="flex items-center gap-3 rounded-xl bg-white/10 px-3 py-3">
+          <Avatar className="h-10 w-10 border border-white/20">
+            <AvatarImage src={session?.user?.image} alt={session?.user?.name || 'Admin'} />
+            <AvatarFallback className="bg-white/20 text-white">{(session?.user?.name || 'A').charAt(0)}</AvatarFallback>
+          </Avatar>
+          <div className="flex flex-col min-w-0">
+            <p className="truncate text-sm font-semibold">{session?.user?.name || 'Admin'}</p>
+            <p className="truncate text-xs text-primary-foreground/60">{session?.user?.email}</p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => signOut({ callbackUrl: '/admin/login' })}
+          className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-colors bg-white/10 text-white hover:bg-white/20"
+        >
+          <LogOut className="size-4" />
+          Logout
+        </button>
+      </div>
     </div>
   );
 
@@ -96,13 +134,36 @@ export default function AdminLayoutShell({ children }) {
                 </Button>
                 <div>
                   <p className="text-sm font-semibold uppercase tracking-[0.16em] text-primary">Dashboard</p>
-                  <p className="text-xs text-muted-foreground">Welcome back, Admin</p>
+                  <p className="text-xs text-muted-foreground">Welcome back, {session?.user?.name || 'Admin'}</p>
                 </div>
               </div>
-              <Button variant="outline" onClick={() => signOut({ callbackUrl: '/admin/login' })}>
-                <LogOut data-icon="inline-start" />
-                Logout
-              </Button>
+              <div className="hidden md:block">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0">
+                      <Avatar className="h-10 w-10 border border-border">
+                        <AvatarImage src={session?.user?.image} alt={session?.user?.name || 'Admin'} />
+                        <AvatarFallback className="bg-primary/5 text-primary">{(session?.user?.name || 'A').charAt(0)}</AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56" align="end" sideOffset={8}>
+                    <DropdownMenuGroup>
+                      <DropdownMenuLabel className="font-normal">
+                        <div className="flex flex-col space-y-1">
+                          <p className="text-sm font-medium leading-none">{session?.user?.name || 'Admin'}</p>
+                          <p className="text-xs leading-none text-muted-foreground">{session?.user?.email}</p>
+                        </div>
+                      </DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => signOut({ callbackUrl: '/admin/login' })} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
+                        <LogOut className="mr-2 h-4 w-4" />
+                        <span>Logout</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuGroup>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
           </header>
 
