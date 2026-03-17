@@ -4,10 +4,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { startTransition, useEffect, useMemo, useState } from "react";
-import { ImageIcon, Pencil, Plus, Search, Tag, Trash2 } from "lucide-react";
+import { ImageIcon, Pencil, Plus, Search, Tag, Trash2, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
+import AdminReviewsDialog from "@/components/AdminReviewsDialog";
 import { deleteProductAction, toggleProductLiveAction } from "@/app/actions";
 import {
   AlertDialog,
@@ -187,6 +188,7 @@ export default function AdminProductsClient({ initialProducts }) {
   const [togglingId, setTogglingId] = useState(null);
   const [togglingStockId, setTogglingStockId] = useState(null);
   const [discountModal, setDiscountModal] = useState({ open: false, product: null });
+  const [reviewsModal, setReviewsModal] = useState({ open: false, product: null });
 
   useEffect(() => {
     // Merge incoming server data into current state.
@@ -548,6 +550,13 @@ export default function AdminProductsClient({ initialProducts }) {
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem
+                          className="cursor-pointer"
+                          onClick={() => setReviewsModal({ open: true, product })}
+                        >
+                          <MessageSquare className="mr-2 size-4" />
+                          Reviews
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
                           className="cursor-pointer text-destructive focus:bg-destructive focus:text-destructive-foreground"
                           onClick={() => setDeleteModal({ open: true, product })}
                         >
@@ -728,6 +737,13 @@ export default function AdminProductsClient({ initialProducts }) {
                               </Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem
+                              className="cursor-pointer"
+                              onClick={() => setReviewsModal({ open: true, product })}
+                            >
+                              <MessageSquare className="mr-2 size-4" />
+                              Reviews
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
                               className="text-destructive focus:bg-destructive cursor-pointer focus:text-destructive-foreground"
                               onClick={() => setDeleteModal({ open: true, product })}
                             >
@@ -772,6 +788,13 @@ export default function AdminProductsClient({ initialProducts }) {
         product={discountModal.product}
         onOpenChange={(open) => setDiscountModal((previous) => ({ ...previous, open }))}
         onSuccess={handleDiscountSuccess}
+      />
+
+      {/* ---- Reviews Dialog ---- */}
+      <AdminReviewsDialog
+        open={reviewsModal.open}
+        product={reviewsModal.product}
+        onOpenChange={(open) => setReviewsModal((previous) => ({ ...previous, open }))}
       />
     </div>
   );

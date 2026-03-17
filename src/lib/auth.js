@@ -38,6 +38,8 @@ export const authOptions = {
           await dbConnect();
           const normalizedEmail = normalizeEmail(user.email);
           
+          const existingUser = await User.findOne({ email: normalizedEmail });
+          
           await User.findOneAndUpdate(
             { email: normalizedEmail },
             { 
@@ -47,6 +49,20 @@ export const authOptions = {
             },
             { upsert: true, new: true }
           );
+
+          if (!existingUser) {
+            // New User Signup - Create Notification
+            const Notification = (await import('@/models/Notification')).default;
+            await Notification.create({
+              type: 'user',
+              message: `New user ${user.name} just signed up`,
+              link: `/admin`, // No specific user profile page yet, link to dashboard
+              metadata: {
+                userName: user.name,
+              }
+            });
+          }
+
           return true;
         } catch (error) {
           console.error("Error saving user profile:", error);

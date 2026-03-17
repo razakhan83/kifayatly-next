@@ -1,6 +1,7 @@
-import { Suspense } from 'react';
+import { connection } from 'next/server';
 import AdminShippingClient from './AdminShippingClient';
 import { getAdminSettings } from '@/lib/data';
+import { requireAdmin } from '@/lib/requireAdmin';
 
 export const metadata = {
   title: 'Shipping Management - Admin',
@@ -8,6 +9,8 @@ export const metadata = {
 };
 
 export default async function ShippingPage() {
+  await connection();
+  await requireAdmin();
   const settings = await getAdminSettings();
 
   return (

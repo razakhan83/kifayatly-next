@@ -19,6 +19,7 @@ import {
   X,
 } from 'lucide-react';
 
+import AdminNotificationCenter from '@/components/AdminNotificationCenter';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import {
@@ -139,7 +140,9 @@ export default function AdminLayoutShell({ children }) {
                   <p className="text-xs text-muted-foreground">Welcome back, {session?.user?.name || 'Admin'}</p>
                 </div>
               </div>
-              <div className="hidden md:block">
+              <div className="flex items-center gap-3">
+                <AdminNotificationCenter />
+                <div className="hidden md:block">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0">
@@ -167,7 +170,8 @@ export default function AdminLayoutShell({ children }) {
                 </DropdownMenu>
               </div>
             </div>
-          </header>
+          </div>
+        </header>
 
           <main className="flex-1 px-4 py-6 md:px-8">{children}</main>
         </div>
@@ -180,13 +184,6 @@ export default function AdminLayoutShell({ children }) {
             <SheetDescription>Navigate between admin sections.</SheetDescription>
           </SheetHeader>
           {sidebar}
-          <button
-            type="button"
-            onClick={() => setSidebarOpen(false)}
-            className="absolute right-4 top-4 inline-flex size-9 items-center justify-center rounded-lg border border-white/10 text-primary-foreground/80 transition-colors hover:bg-white/10 hover:text-primary-foreground"
-          >
-            <X className="size-4" />
-          </button>
         </SheetContent>
       </Sheet>
     </div>

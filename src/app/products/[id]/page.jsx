@@ -6,6 +6,7 @@ import CategoryProductSlider from '@/components/CategoryProductSlider';
 import ProductActions from '@/components/ProductActions';
 import ProductDetailSkeleton from '@/components/ProductDetailSkeleton';
 import ProductGallery from '@/components/ProductGallery';
+import ProductReviews from '@/components/ProductReviews';
 import { Badge } from '@/components/ui/badge';
 import {
   Breadcrumb,
@@ -23,26 +24,6 @@ import { getProductCategories } from '@/lib/productCategories';
 
 const formatPrice = (raw) => `Rs. ${Number(raw || 0).toLocaleString('en-PK')}`;
 
-function ReviewCard({ initial, name, body, filledStars = 5 }) {
-  return (
-    <div className="rounded-xl border border-border bg-muted/35 p-4">
-      <div className="mb-2 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-sm font-bold text-primary">
-            {initial}
-          </div>
-          <span className="text-sm font-semibold text-foreground">{name}</span>
-        </div>
-        <div className="flex gap-0.5 text-accent-foreground">
-          {Array.from({ length: 5 }).map((_, index) => (
-            <Star key={index} className={`size-3.5 ${index < filledStars ? 'fill-current' : ''}`} />
-          ))}
-        </div>
-      </div>
-      <p className="text-sm leading-relaxed text-muted-foreground">{body}</p>
-    </div>
-  );
-}
 
 export async function generateMetadata({ params }) {
   const { id } = await params;
@@ -189,43 +170,7 @@ async function ProductPageContent({ slug }) {
         </div>
 
         <div className="mb-4 mt-12">
-          <div className="surface-card rounded-xl p-6 md:p-8">
-            <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h2 className="mb-1 text-xl font-bold text-foreground md:text-2xl">Customer Reviews</h2>
-                <div className="flex items-center gap-2">
-                  <div className="flex text-accent-foreground">
-                    {Array.from({ length: 5 }).map((_, index) => (
-                      <Star key={index} className="size-4 fill-current" />
-                    ))}
-                  </div>
-                  <span className="text-sm font-semibold text-foreground">Store favorite</span>
-                </div>
-              </div>
-              <Button variant="outline" className="max-w-max">
-                Write a Review
-              </Button>
-            </div>
-
-            <div className="grid gap-4">
-              <ReviewCard
-                initial="A"
-                name="Ahmed K."
-                body="Excellent quality! The product arrived in perfect condition. Very happy with my purchase."
-              />
-              <ReviewCard
-                initial="S"
-                name="Sara M."
-                body="Great value for money. Fast delivery and the item looks exactly like the picture."
-              />
-              <ReviewCard
-                initial="R"
-                name="Raza B."
-                body="Good product overall. Packaging was neat and delivery was on time."
-                filledStars={4}
-              />
-            </div>
-          </div>
+          <ProductReviews productId={product._id} productName={product.Name} />
         </div>
       </div>
 

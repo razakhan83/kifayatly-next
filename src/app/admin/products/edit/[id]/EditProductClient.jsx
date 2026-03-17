@@ -350,6 +350,15 @@ export default function EditProduct({ id }) {
                 {isLive ? '🟢 Live — visible to customers' : '🔴 Draft — hidden from store'}
               </p>
             </div>
+            <button
+              type="button"
+              onClick={() => setIsLive(!isLive)}
+              className={cn(
+                "relative h-5 w-10 rounded-lg transition-colors duration-300",
+                isLive ? "bg-primary" : "bg-border",
+              )}
+            >
+              <span className={cn("absolute left-0.5 top-0.5 h-4 w-4 rounded-md bg-background shadow transition-transform duration-300", isLive ? "translate-x-5" : "translate-x-0")} />
             </button>
           </div>
 
@@ -489,93 +498,25 @@ export default function EditProduct({ id }) {
               type="submit"
               disabled={saving}
               size="lg"
-              className="min-w-[140px] flex-1 rounded-xl"
+              className="flex-1 rounded-xl font-bold"
             >
-              {saving ? <><Loader2 className="mr-2 size-4 animate-spin" />Saving...</> : 'Save Changes'}
+              {saving ? (
+                <>
+                  <Loader2 className="mr-2 size-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                'Save Changes'
+              )}
             </Button>
-            <Link
-              href="/admin/products"
-              className={cn(buttonVariants({ variant: 'outline', size: 'lg' }), 'min-w-[140px] flex-1 rounded-xl text-center')}
-            >
-              Cancel
+            <Link href="/admin/products" className="flex-1">
+              <Button variant="outline" size="lg" className="w-full rounded-xl font-bold" type="button">
+                Cancel
+              </Button>
             </Link>
           </div>
         </form>
       </div>
-
-      {/* Category Modal */}
-      {isCategoryModalOpen && (
-        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-primary/20 backdrop-blur-[2px]" onClick={() => setIsCategoryModalOpen(false)}></div>
-          <div className="relative flex max-h-[85vh] w-[92%] flex-col overflow-hidden rounded-[calc(var(--radius-xl)+0.75rem)] border border-border bg-card shadow-[0_28px_80px_rgba(10,61,46,0.16)] sm:w-[512px]">
-            <div className="flex items-center justify-between border-b border-border bg-muted/35 p-5">
-              <h2 className="text-xl font-bold text-foreground">Manage Categories</h2>
-              <button type="button" onClick={() => setIsCategoryModalOpen(false)} className="flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground transition-colors hover:text-foreground">
-                <X className="size-5" />
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto p-5">
-              <form onSubmit={handleAddCategory} className="space-y-4">
-                <div className="rounded-2xl border border-border bg-muted/25 p-4">
-                  <Label className="mb-2 text-foreground">New Category Name</Label>
-                  <div className="flex flex-col gap-3">
-                    <Input type="text" value={newCatName} onChange={(e) => setNewCatName(e.target.value)} className="w-full px-4 sm:flex-1" placeholder="e.g. Health & Beauty" required />
-                    <div className="flex items-center gap-3">
-                      <label className={cn(uploadActionClass, 'h-12 rounded-xl px-4 text-sm')}>
-                        Category Image
-                        <input type="file" accept="image/*" onChange={handleCategoryImageSelect} className="hidden" />
-                      </label>
-                      {newCatImage ? (
-                        <div className="relative h-12 w-12 overflow-hidden rounded-xl border border-border">
-                          <Image
-                            src={newCatImage}
-                            alt="Category preview"
-                            fill
-                            sizes="48px"
-                            className="object-cover"
-                            {...getBlurPlaceholderProps()}
-                          />
-                        </div>
-                      ) : null}
-                      <Button type="submit" disabled={isAddingCat} className="w-full rounded-xl px-6 sm:w-auto">
-                        {isAddingCat ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />} Add
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </form>
-              <div className="mt-6 grid grid-cols-1 gap-2">
-                {allCategories.map((cat) => (
-                  <div key={cat._id} className="flex items-center justify-between rounded-xl border border-border bg-background p-3">
-                    <div className="flex min-w-0 flex-1 items-center gap-3">
-                      {cat.image ? (
-                        <div className="relative h-10 w-10 overflow-hidden rounded-full border border-border">
-                              <Image
-                                src={cat.image}
-                                alt={cat.name}
-                                fill
-                                sizes="40px"
-                                className="object-cover"
-                                {...getBlurPlaceholderProps(cat.blurDataURL)}
-                              />
-                        </div>
-                      ) : (
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
-                          {cat.name?.charAt(0) || '?'}
-                        </div>
-                      )}
-                      <span className="text-sm font-semibold text-foreground">{cat.name}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="border-t border-border bg-muted/35 p-4">
-              <Button type="button" onClick={() => setIsCategoryModalOpen(false)} variant="outline" size="lg" className="w-full rounded-xl px-12">Done & Close</Button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

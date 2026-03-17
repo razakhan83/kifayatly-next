@@ -260,6 +260,22 @@ export async function submitOrderAction(input) {
     }
   }
 
+  // Create Admin Notification
+  try {
+    const Notification = (await import('@/models/Notification')).default;
+    await Notification.create({
+      type: 'order',
+      message: `New Order ${order.orderId} received from ${customerName}`,
+      link: `/admin/orders?id=${order.orderId}`,
+      metadata: {
+        id: order.orderId,
+        userName: customerName,
+      }
+    });
+  } catch (notifyError) {
+    console.error('Failed to create order notification:', notifyError);
+  }
+
   // Trigger Notification Email (Background)
   try {
     const emailResult = await resend.emails.send({
