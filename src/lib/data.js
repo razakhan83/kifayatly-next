@@ -535,7 +535,7 @@ export async function getProductBySlug(slug) {
     return product ? toProductDetailView(product) : null;
   } catch (error) {
     console.error(`❌ [DATA] getProductBySlug failed for "${safeSlug}":`, error.message);
-    return null;
+    throw error; // Rethrow to let Next.js Error boundary handle it, preventing false 404 caching
   }
 }
 

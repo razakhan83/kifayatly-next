@@ -13,7 +13,16 @@ if (!cached) {
 }
 
 async function dbConnect() {
-  if (cached.conn) return cached.conn;
+  // If we have a cached connection and it's fully connected, return it
+  if (cached.conn && mongoose.connection.readyState === 1) {
+    return cached.conn;
+  }
+
+  // If the connection is dropped (readyState 0), reset our cached connection state
+  if (mongoose.connection.readyState === 0) {
+    cached.promise = null;
+    cached.conn = null;
+  }
 
   if (!cached.promise) {
     const opts = {
