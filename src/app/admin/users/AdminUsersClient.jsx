@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { 
   Search, 
@@ -11,7 +11,10 @@ import {
   MoreVertical,
   ShieldAlert,
   LogOut,
-  Users as UsersIcon
+  Users as UsersIcon,
+  X,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -34,6 +37,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -42,6 +46,8 @@ import { cn } from '@/lib/utils';
 export default function AdminUsersClient({ initialUsers }) {
   const [users, setUsers] = useState(initialUsers);
   const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all'); // all, active, disabled
+  const [currentPage, setCurrentPage] = useState(1);
   const [loadingId, setLoadingId] = useState(null);
 
   const searchParams = useSearchParams();
@@ -73,10 +79,41 @@ export default function AdminUsersClient({ initialUsers }) {
     }
   }, [searchParams]);
 
-  const filteredUsers = users.filter(user => 
-    user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.email?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredUsers = useMemo(() => {
+    let result = users;
+
+    if (statusFilter !== 'all') {
+      result = result.filter(user => (statusFilter === 'active' ? !user.disabled : user.disabled));
+    }
+
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(user => 
+        user.name?.toLowerCase().includes(query) ||
+        user.email?.toLowerCase().includes(query)
+      );
+    }
+
+    return result;
+  }, [users, searchQuery, statusFilter]);
+
+  const ITEMS_PER_PAGE = 10;
+  const totalPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE);
+  const paginatedUsers = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredUsers.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredUsers, currentPage]);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const clearFilters = () => {
+    setSearchQuery('');
+    setStatusFilter('all');
+    setCurrentPage(1);
+  };
 
   const handleUserAction = async (user, updateData) => {
     setLoadingId(user._id);
@@ -161,15 +198,48 @@ export default function AdminUsersClient({ initialUsers }) {
         </Card>
       </div>
 
-      <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4 shadow-sm md:flex-row md:items-center">
+      <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4 shadow-sm sm:flex-row sm:items-center">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search by name or email..."
             className="pl-10"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1);
+            }}
           />
+        </div>
+        <div className="flex items-center gap-2">
+          <Select
+            value={statusFilter}
+            onValueChange={(val) => {
+              setStatusFilter(val);
+              setCurrentPage(1);
+            }}
+          >
+            <SelectTrigger className="h-10 w-[140px]">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="active">Active Only</SelectItem>
+              <SelectItem value="disabled">Disabled Only</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {(searchQuery || statusFilter !== 'all') && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearFilters}
+              className="h-10 px-3 gap-2 text-muted-foreground hover:text-foreground"
+            >
+              <X className="size-4" />
+              Clear
+            </Button>
+          )}
         </div>
       </div>
 
@@ -185,8 +255,8 @@ export default function AdminUsersClient({ initialUsers }) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredUsers.length > 0 ? (
-              filteredUsers.map((user) => (
+            {paginatedUsers.length > 0 ? (
+              paginatedUsers.map((user) => (
                 <TableRow 
                   key={user._id} 
                   id={`user-${user._id}`}
@@ -292,6 +362,52 @@ export default function AdminUsersClient({ initialUsers }) {
           </TableBody>
         </Table>
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between px-2">
+          <p className="text-sm text-muted-foreground">
+            Showing <span className="font-medium text-foreground">{((currentPage - 1) * ITEMS_PER_PAGE) + 1}</span> to{' '}
+            <span className="font-medium text-foreground">
+              {Math.min(currentPage * ITEMS_PER_PAGE, filteredUsers.length)}
+            </span>{' '}
+            of <span className="font-medium text-foreground">{filteredUsers.length}</span> users
+          </p>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              className="size-9"
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="size-4" />
+            </Button>
+            <div className="flex items-center gap-1">
+              {[...Array(totalPages)].map((_, i) => (
+                <Button
+                  key={i + 1}
+                  variant={currentPage === i + 1 ? "default" : "outline"}
+                  size="icon"
+                  className="size-9 font-medium"
+                  onClick={() => handlePageChange(i + 1)}
+                >
+                  {i + 1}
+                </Button>
+              ))}
+            </div>
+            <Button
+              variant="outline"
+              size="icon"
+              className="size-9"
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+            >
+              <ChevronRight className="size-4" />
+            </Button>
+          </div>
+        </div>
+      )}
       
       <div className="rounded-xl bg-amber-50 p-4 border border-amber-200 flex items-start gap-4">
         <div className="bg-amber-100 p-2 rounded-lg text-amber-700 flex-shrink-0">

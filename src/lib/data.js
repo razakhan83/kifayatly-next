@@ -127,8 +127,9 @@ function toOrderSummaryRow(order) {
     totalAmount: Number(order.totalAmount || 0),
     status: order.status,
     notes: order.notes || '',
-    items: Array.isArray(order.items) 
-      ? order.items.map(item => ({
+    courierName: order.courierName || '',
+    trackingNumber: order.trackingNumber || '',
+    items: Array.isArray(order.items)  ? order.items.map(item => ({
           ...item,
           _id: item._id?.toString(),
           productId: item.productId?.toString() || item.productId

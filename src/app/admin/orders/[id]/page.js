@@ -6,11 +6,15 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { getOrderById } from '@/lib/data';
 import { requireAdmin } from '@/lib/requireAdmin';
+import OrderDetailActions from './OrderDetailActions';
 
 const statusVariant = {
   Pending: 'accent',
-  Shipped: 'secondary',
+  Confirmed: 'primary',
+  'In Process': 'secondary',
   Delivered: 'emerald',
+  'Delivery Address Issue': 'destructive',
+  Returned: 'outline',
 };
 
 export default async function AdminOrderDetailPage({ params }) {
@@ -52,6 +56,8 @@ async function OrderDetailContent({ id }) {
             {order.notes ? <p><span className="font-medium text-foreground">Notes:</span> {order.notes}</p> : null}
           </div>
         </section>
+
+        <OrderDetailActions order={order} />
 
         <section className="surface-card rounded-xl p-5 lg:col-span-2">
           <h2 className="font-semibold text-foreground">Items</h2>

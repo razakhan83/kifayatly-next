@@ -35,8 +35,7 @@ export default function InvoiceButton({ order }) {
       ) : (
         <FileText className="size-3" />
       )}
-      <span className="hidden sm:inline">Invoice</span>
-      <span className="sm:hidden">Bill</span>
+      <span>Invoice</span>
     </Button>
   );
 }

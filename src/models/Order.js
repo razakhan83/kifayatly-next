@@ -31,6 +31,7 @@ const OrderSchema = new mongoose.Schema(
                 price: { type: Number },
                 quantity: { type: Number, default: 1 },
                 image: { type: String },
+                isReviewed: { type: Boolean, default: false },
             },
         ],
         totalAmount: {
@@ -39,8 +40,16 @@ const OrderSchema = new mongoose.Schema(
         },
         status: {
             type: String,
-            enum: ['Pending', 'Shipped', 'Delivered'],
+            enum: ['Pending', 'Confirmed', 'In Process', 'Delivered', 'Delivery Address Issue', 'Returned'],
             default: 'Pending',
+        },
+        courierName: {
+            type: String,
+            required: false,
+        },
+        trackingNumber: {
+            type: String,
+            required: false,
         },
         notes: {
             type: String,
@@ -53,9 +62,16 @@ const OrderSchema = new mongoose.Schema(
 );
 
 // Next.js hot reloading can keep old models in memory. 
-// If the cached Order model doesn't have the customerEmail field, we must delete it to force re-registration.
-if (mongoose.models.Order && !mongoose.models.Order.schema.paths.customerEmail) {
-    delete mongoose.models.Order;
+// If the cached Order model doesn't have the updated status enum or missing fields, we must delete it to force re-registration.
+const cachedOrder = mongoose.models.Order;
+if (cachedOrder) {
+    const hasStatusInProcess = cachedOrder.schema.path('status').options.enum.includes('In Process');
+    const hasTracking = !!cachedOrder.schema.paths.trackingNumber;
+    const hasIsReviewed = !!cachedOrder.schema.path('items').schema.paths.isReviewed;
+    
+    if (!hasStatusInProcess || !hasTracking || !hasIsReviewed) {
+        delete mongoose.models.Order;
+    }
 }
 
 export default mongoose.models.Order || mongoose.model('Order', OrderSchema);

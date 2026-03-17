@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { connection } from 'next/server';
 import { ArrowRight, Box, CircleDollarSign, Inbox, ShoppingBag, Users } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
 
 import { Button } from '@/components/ui/button';
 import { getAdminDashboardData } from '@/lib/data';
@@ -91,7 +92,10 @@ async function DashboardContent() {
                       <p className="font-semibold text-foreground">{order.customerName}</p>
                       <p className="text-xs text-muted-foreground">{order.orderId}</p>
                     </div>
-                    <span className="text-sm font-semibold text-primary">Rs. {order.totalAmount.toLocaleString('en-PK')}</span>
+                    <div className="text-right">
+                      <p className="text-sm font-semibold text-primary">Rs. {order.totalAmount.toLocaleString('en-PK')}</p>
+                      <p className="text-[10px] text-muted-foreground">{formatDistanceToNow(new Date(order.createdAt), { addSuffix: true })}</p>
+                    </div>
                   </div>
                 </div>
               ))}
