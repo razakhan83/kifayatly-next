@@ -1,4 +1,5 @@
 import { connection } from 'next/server';
+import { Suspense } from 'react';
 import AdminShippingClient from './AdminShippingClient';
 import { getAdminSettings } from '@/lib/data';
 import { requireAdmin } from '@/lib/requireAdmin';
