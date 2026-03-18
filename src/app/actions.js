@@ -11,7 +11,7 @@ import Settings from '@/models/Settings';
 import User from '@/models/User';
 import { getServerSession } from 'next-auth';
 import { Resend } from 'resend';
-import { generateOrderEmailHtml } from '@/lib/emailTemplates';
+import { generateOrderEmailHtml, generateCustomerOrderConfirmationHtml } from '@/lib/emailTemplates';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -226,6 +226,7 @@ export async function submitOrderAction(input) {
   // Create Order record
   const order = await Order.create({
     orderId: makeOrderId(),
+    secureToken: crypto.randomUUID(),
     customerEmail: userEmail || null,
     customerName,
     customerPhone,
@@ -294,17 +295,35 @@ export async function submitOrderAction(input) {
     console.error('Failed to create order notification:', notifyError);
   }
 
-  // Trigger Notification Email (Background)
+  // Trigger Notification Emails (Background)
   try {
-    const emailResult = await resend.emails.send({
+    // 1. Notify Admin
+    const adminEmailResult = await resend.emails.send({
       from: 'China Unique <onboarding@resend.dev>',
       to: '123raza83@gmail.com',
       subject: `New Order Received - ${customerName}`,
       html: generateOrderEmailHtml(order),
+      headers: {
+        'X-Click-Tracking': 'off',
+      },
     });
-    console.log(`Email notification triggered for ${order.orderId}:`, emailResult);
+    console.log(`Admin email notification triggered for ${order.orderId}:`, adminEmailResult);
+
+    // 2. Notify Customer (Thank You Email)
+    if (userEmail) {
+      const customerEmailResult = await resend.emails.send({
+        from: 'China Unique <onboarding@resend.dev>',
+        to: userEmail,
+        subject: `Thank You for Your Order! - ${order.orderId}`,
+        html: generateCustomerOrderConfirmationHtml(order),
+        headers: {
+          'X-Click-Tracking': 'off',
+        },
+      });
+      console.log(`Customer 'Thank You' email triggered for ${order.orderId}:`, customerEmailResult);
+    }
   } catch (emailError) {
-    console.error(`Failed to send email for ${order.orderId}:`, emailError);
+    console.error(`Failed to send emails for ${order.orderId}:`, emailError);
   }
 
   const lines = [
