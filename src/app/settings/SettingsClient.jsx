@@ -15,17 +15,20 @@ import {
   Navigation,
   Building2,
   ShieldCheck,
-  MapPinned
+  MapPinned,
+  Check,
+  ChevronsUpDown
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-
-const PAKISTAN_CITIES = ['Karachi', 'Lahore', 'Islamabad', 'Rawalpindi', 'Faisalabad', 'Multan', 'Peshawar', 'Quetta', 'Other'];
+import { PAKISTAN_CITIES } from '@/lib/cities';
+import { cn } from '@/lib/utils';
 
 export default function SettingsClient() {
   const { data: session, status } = useSession();
@@ -41,6 +44,7 @@ export default function SettingsClient() {
     address: '',
     landmark: '',
   });
+  const [cityOpen, setCityOpen] = useState(false);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -204,22 +208,51 @@ export default function SettingsClient() {
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="city">City</Label>
-                  <Select 
-                    value={formData.city} 
-                    onValueChange={(val) => setFormData({ ...formData, city: val })}
-                  >
-                    <SelectTrigger className="w-full">
-                      <div className="flex items-center gap-2">
-                        <Building2 className="size-4 text-muted-foreground/60" />
-                        <SelectValue placeholder="Select your city" />
-                      </div>
-                    </SelectTrigger>
-                    <SelectContent>
-                      {PAKISTAN_CITIES.map(city => (
-                        <SelectItem key={city} value={city}>{city}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Popover open={cityOpen} onOpenChange={setCityOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={cityOpen}
+                        className={cn("w-full justify-between font-normal", !formData.city && "text-muted-foreground")}
+                      >
+                        <div className="flex items-center gap-2">
+                          <Building2 className="size-4 text-muted-foreground/60" />
+                          {formData.city || "Select your city"}
+                        </div>
+                        <ChevronsUpDown className="size-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                      <Command>
+                        <CommandInput placeholder="Search city..." />
+                        <CommandList className="max-h-60 overflow-y-auto">
+                          <CommandEmpty>No city found.</CommandEmpty>
+                          <CommandGroup>
+                            {PAKISTAN_CITIES.map((city) => (
+                              <CommandItem
+                                key={city}
+                                value={city}
+                                onSelect={(currentValue) => {
+                                  const exactCity = PAKISTAN_CITIES.find(c => c.toLowerCase() === currentValue.toLowerCase()) || currentValue;
+                                  setFormData({ ...formData, city: exactCity === formData.city ? "" : exactCity });
+                                  setCityOpen(false);
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 size-4",
+                                    formData.city === city ? "opacity-100" : "opacity-0"
+                                  )}
+                                />
+                                {city}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="landmark">Nearest Landmark</Label>

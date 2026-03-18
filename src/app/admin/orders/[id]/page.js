@@ -39,8 +39,8 @@ async function OrderDetailContent({ id }) {
           <h1 className="text-3xl font-bold tracking-tight text-foreground">Order {order.orderId}</h1>
           <p className="mt-2 text-sm text-muted-foreground">Saved order details and customer delivery information.</p>
         </div>
-        <Button asChild variant="outline">
-          <Link href="/admin/orders">Back to Orders</Link>
+        <Button variant="outline" render={<Link href="/admin/orders" />} nativeButton={false}>
+          Back to Orders
         </Button>
       </div>
 

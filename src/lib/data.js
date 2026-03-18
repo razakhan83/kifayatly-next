@@ -122,18 +122,27 @@ function toOrderSummaryRow(order) {
     _id: order._id.toString(),
     orderId: order.orderId,
     customerName: order.customerName,
+    customerEmail: order.customerEmail || '',
     customerPhone: order.customerPhone || '',
     customerAddress: order.customerAddress || '',
+    customerCity: order.customerCity || '',
+    landmark: order.landmark || '',
+    paymentStatus: order.paymentStatus || 'COD',
+    weight: Number(order.weight ?? 2),
+    manualCodAmount: order.manualCodAmount,
+    itemType: order.itemType || 'Mix',
+    orderQuantity: Number(order.orderQuantity || 1),
     totalAmount: Number(order.totalAmount || 0),
     status: order.status,
     notes: order.notes || '',
     courierName: order.courierName || '',
     trackingNumber: order.trackingNumber || '',
-    items: Array.isArray(order.items)  ? order.items.map(item => ({
+    items: Array.isArray(order.items)
+      ? order.items.map((item) => ({
           ...item,
           _id: item._id?.toString(),
-          productId: item.productId?.toString() || item.productId
-        })) 
+          productId: item.productId?.toString() || item.productId,
+        }))
       : [],
     createdAt: order.createdAt ? new Date(order.createdAt).toISOString() : null,
     updatedAt: order.updatedAt ? new Date(order.updatedAt).toISOString() : null,

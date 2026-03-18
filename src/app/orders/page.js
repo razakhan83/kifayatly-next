@@ -39,8 +39,8 @@ export default async function OrdersPage() {
               </div>
               <h2 className="text-xl font-semibold text-foreground">No orders yet</h2>
               <p className="mt-2 text-muted-foreground">You haven't placed any orders with this account yet.</p>
-              <Button asChild className="mt-6">
-                <Link href="/products">Start Shopping</Link>
+              <Button className="mt-6" render={<Link href="/products" />} nativeButton={false}>
+                Start Shopping
               </Button>
             </div>
             

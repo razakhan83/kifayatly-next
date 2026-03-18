@@ -230,6 +230,8 @@ export async function submitOrderAction(input) {
     customerName,
     customerPhone,
     customerAddress,
+    customerCity,
+    landmark,
     items: normalizedItems,
     totalAmount,
     status: 'Pending',
@@ -399,5 +401,48 @@ export async function linkOrdersAction(phone) {
       success: false, 
       message: 'No unlinked orders found with this phone number, but your phone has been saved to your profile.' 
     };
+  }
+}
+
+export async function updateOrderAction(id, updates) {
+  await assertAdmin();
+  await dbConnect();
+
+  try {
+    const order = await Order.findById(id);
+    if (!order) {
+      throw new Error('Order not found');
+    }
+
+    // Explicitly mapping allowed fields for security
+    if (updates.customerName !== undefined) order.customerName = updates.customerName;
+    if (updates.customerPhone !== undefined) order.customerPhone = updates.customerPhone;
+    if (updates.customerAddress !== undefined) order.customerAddress = updates.customerAddress;
+    if (updates.customerCity !== undefined) order.customerCity = updates.customerCity;
+    if (updates.landmark !== undefined) order.landmark = updates.landmark;
+    if (updates.customerEmail !== undefined) order.customerEmail = updates.customerEmail;
+    
+    if (updates.status !== undefined) order.status = updates.status;
+    if (updates.trackingNumber !== undefined) order.trackingNumber = updates.trackingNumber;
+    if (updates.courierName !== undefined) order.courierName = updates.courierName;
+    
+    if (updates.weight !== undefined) order.weight = Number(updates.weight);
+    if (updates.itemType !== undefined) order.itemType = updates.itemType;
+    if (updates.orderQuantity !== undefined) order.orderQuantity = Number(updates.orderQuantity);
+    
+    if (updates.manualCodAmount !== undefined) {
+      order.manualCodAmount = updates.manualCodAmount === '' ? undefined : Number(updates.manualCodAmount);
+    }
+
+    await order.save();
+    
+    revalidateTag('orders');
+    revalidateTag('admin-dashboard');
+    revalidatePath('/admin/orders');
+    
+    return { success: true, data: JSON.parse(JSON.stringify(order)) };
+  } catch (error) {
+    console.error('Failed to update order:', error);
+    return { success: false, error: error.message };
   }
 }

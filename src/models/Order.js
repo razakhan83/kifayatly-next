@@ -24,6 +24,35 @@ const OrderSchema = new mongoose.Schema(
             type: String,
             required: false,
         },
+        customerCity: {
+            type: String,
+            required: false,
+        },
+        landmark: {
+            type: String,
+            required: false,
+        },
+        paymentStatus: {
+            type: String,
+            enum: ['COD', 'Online'],
+            default: 'COD',
+        },
+        weight: {
+            type: Number,
+            default: 2,
+        },
+        manualCodAmount: {
+            type: Number,
+            required: false,
+        },
+        itemType: {
+            type: String,
+            default: 'Mix',
+        },
+        orderQuantity: {
+            type: Number,
+            default: 1,
+        },
         items: [
             {
                 productId: { type: String },
@@ -68,8 +97,10 @@ if (cachedOrder) {
     const hasStatusInProcess = cachedOrder.schema.path('status').options.enum.includes('In Process');
     const hasTracking = !!cachedOrder.schema.paths.trackingNumber;
     const hasIsReviewed = !!cachedOrder.schema.path('items').schema.paths.isReviewed;
+    const hasWeight = !!cachedOrder.schema.paths.weight;
+    const hasItemType = !!cachedOrder.schema.paths.itemType;
     
-    if (!hasStatusInProcess || !hasTracking || !hasIsReviewed) {
+    if (!hasStatusInProcess || !hasTracking || !hasIsReviewed || !hasWeight || !hasItemType) {
         delete mongoose.models.Order;
     }
 }

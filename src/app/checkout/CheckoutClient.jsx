@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { startTransition, useMemo, useState, useEffect } from 'react';
-import { Loader2, MapPin, ShieldCheck, Wallet, CheckCircle2, Copy, Check, Lock } from 'lucide-react';
+import { Loader2, MapPin, ShieldCheck, Wallet, CheckCircle2, Copy, Check, Lock, ChevronsUpDown } from 'lucide-react';
 
 import { submitOrderAction, getLastOrderDetailsAction, revalidatePathAction } from '@/app/actions';
 import AuthModal from '@/components/AuthModal';
@@ -20,12 +20,15 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import { useCart } from '@/context/CartContext';
 import { getBlurPlaceholderProps } from '@/lib/imagePlaceholder';
 import { getPrimaryProductImage } from '@/lib/productImages';
+import { PAKISTAN_CITIES } from '@/lib/cities';
+import { cn } from '@/lib/utils';
 
 const formatPrice = (raw) => Number(raw || 0);
 const formatPriceLabel = (raw) => `Rs. ${formatPrice(raw).toLocaleString('en-PK')}`;
@@ -45,6 +48,8 @@ export default function CheckoutClient({ settings }) {
     landmark: '',
     instructions: '',
   });
+  const [cityOpen, setCityOpen] = useState(false);
+  const [orderPopupShown, setOrderPopupShown] = useState(false);
 
   // Robust Auto-fill & Sync Logic
   useEffect(() => {
@@ -107,6 +112,11 @@ export default function CheckoutClient({ settings }) {
   };
 
   const handleModalClose = () => {
+    // Mark popup as shown for this order
+    if (orderState.orderId) {
+      sessionStorage.setItem(`order-popup-shown-${orderState.orderId}`, 'true');
+      setOrderPopupShown(true);
+    }
     router.push('/');
   };
 
@@ -213,7 +223,7 @@ export default function CheckoutClient({ settings }) {
   return (
     <main className="min-h-screen bg-background pb-16 pt-8">
       {/* Success Modal */}
-      <Dialog open={!!orderState.orderId} onOpenChange={(open) => !open && handleModalClose()}>
+      <Dialog open={!!orderState.orderId && !orderPopupShown} onOpenChange={(open) => !open && handleModalClose()}>
         <DialogContent className="sm:max-w-md text-center p-8" hideClose>
           <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
             <CheckCircle2 className="size-10" />
@@ -326,18 +336,49 @@ export default function CheckoutClient({ settings }) {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="city">City *</Label>
-                      <Select value={formData.city} onValueChange={(value) => handleChange({ target: { name: 'city', value } })}>
-                        <SelectTrigger aria-invalid={Boolean(errors.city)}>
-                          <SelectValue placeholder="Select City" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {['Karachi', 'Lahore', 'Islamabad', 'Rawalpindi', 'Faisalabad', 'Multan', 'Peshawar', 'Quetta', 'Other'].map((city) => (
-                            <SelectItem key={city} value={city}>
-                              {city}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <Popover open={cityOpen} onOpenChange={setCityOpen}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={cityOpen}
+                            aria-invalid={Boolean(errors.city)}
+                            className={cn("w-full justify-between font-normal bg-input", !formData.city && "text-muted-foreground", errors.city && "border-destructive")}
+                          >
+                            {formData.city || "Select City"}
+                            <ChevronsUpDown className="size-4 shrink-0 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                          <Command>
+                            <CommandInput placeholder="Search city..." />
+                            <CommandList className="max-h-60 overflow-y-auto">
+                              <CommandEmpty>No city found.</CommandEmpty>
+                              <CommandGroup>
+                                {PAKISTAN_CITIES.map((city) => (
+                                  <CommandItem
+                                    key={city}
+                                    value={city}
+                                    onSelect={(currentValue) => {
+                                      const exactCity = PAKISTAN_CITIES.find(c => c.toLowerCase() === currentValue.toLowerCase()) || currentValue;
+                                      handleChange({ target: { name: 'city', value: exactCity === formData.city ? "" : exactCity } });
+                                      setCityOpen(false);
+                                    }}
+                                  >
+                                    <Check
+                                      className={cn(
+                                        "mr-2 size-4",
+                                        formData.city === city ? "opacity-100" : "opacity-0"
+                                      )}
+                                    />
+                                    {city}
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
                       {errors.city ? <p className="text-xs text-destructive">{errors.city}</p> : null}
                     </div>
                   </div>

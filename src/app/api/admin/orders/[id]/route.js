@@ -9,7 +9,7 @@ export async function PATCH(req, { params }) {
     const { id } = await params;
     const body = await req.json();
     
-    const { status, courierName, trackingNumber } = body;
+    const { status, courierName, trackingNumber, weight, manualCodAmount } = body;
 
     await dbConnect();
     const order = await Order.findById(id);
@@ -21,6 +21,14 @@ export async function PATCH(req, { params }) {
     if (status) order.status = status;
     if (courierName !== undefined) order.courierName = courierName;
     if (trackingNumber !== undefined) order.trackingNumber = trackingNumber;
+    if (weight !== undefined) order.weight = weight;
+    if (manualCodAmount !== undefined) {
+      if (manualCodAmount === '' || manualCodAmount === null) {
+        order.manualCodAmount = undefined;
+      } else {
+        order.manualCodAmount = Number(manualCodAmount);
+      }
+    }
 
     await order.save();
 

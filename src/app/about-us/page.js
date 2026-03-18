@@ -68,11 +68,11 @@ export default function AboutUsPage() {
               We're more than just a brand; we're your partner in creating a home that feels like yours.
             </p>
             <div className="flex flex-col justify-center gap-4 sm:flex-row">
-              <Button asChild size="lg" variant="secondary" className="group h-14 rounded-2xl px-8 font-semibold">
-                <Link href="/products" className="flex items-center gap-2">
-                  Browse Collection
-                  <ChevronRight className="size-4 transition-transform group-hover:translate-x-1" />
-                </Link>
+              <Button size="lg" variant="secondary" className="group h-14 rounded-2xl px-8 font-semibold" render={<Link href="/products" />} nativeButton={false}>
+                  <div className="flex items-center gap-2">
+                    Browse Collection
+                    <ChevronRight className="size-4 transition-transform group-hover:translate-x-1" />
+                  </div>
               </Button>
             </div>
           </div>

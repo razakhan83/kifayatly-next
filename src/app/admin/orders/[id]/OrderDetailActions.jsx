@@ -30,6 +30,8 @@ export default function OrderDetailActions({ order }) {
   const [status, setStatus] = useState(order.status);
   const [courierName, setCourierName] = useState(order.courierName || '');
   const [trackingNumber, setTrackingNumber] = useState(order.trackingNumber || '');
+  const [weight, setWeight] = useState(order.weight ?? 2);
+  const [manualCodAmount, setManualCodAmount] = useState(order.manualCodAmount ?? '');
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
@@ -42,6 +44,8 @@ export default function OrderDetailActions({ order }) {
           status,
           courierName,
           trackingNumber,
+          weight: Number(weight),
+          manualCodAmount: manualCodAmount === '' ? null : Number(manualCodAmount),
         }),
       });
 
@@ -62,7 +66,9 @@ export default function OrderDetailActions({ order }) {
   const isChanged = 
     status !== order.status || 
     courierName !== (order.courierName || '') || 
-    trackingNumber !== (order.trackingNumber || '');
+    trackingNumber !== (order.trackingNumber || '') ||
+    Number(weight) !== (order.weight ?? 2) ||
+    manualCodAmount !== (order.manualCodAmount ?? '');
 
   return (
     <section className="surface-card rounded-xl p-5 shadow-sm border border-border">
@@ -108,6 +114,33 @@ export default function OrderDetailActions({ order }) {
             onChange={(e) => setTrackingNumber(e.target.value)}
             className="bg-background"
           />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="weight" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Weight (kg)</Label>
+            <Input
+              id="weight"
+              type="number"
+              min="0"
+              step="0.5"
+              value={weight}
+              onChange={(e) => setWeight(e.target.value)}
+              className="bg-background"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="manualCodAmount" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">COD Amount</Label>
+            <Input
+              id="manualCodAmount"
+              type="number"
+              min="0"
+              placeholder="Leave blank for default"
+              value={manualCodAmount}
+              onChange={(e) => setManualCodAmount(e.target.value)}
+              className="bg-background"
+            />
+          </div>
         </div>
 
         <Button 
