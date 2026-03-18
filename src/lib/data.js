@@ -374,10 +374,11 @@ export async function getHomeSections() {
         
         items = discountedProducts;
         
-        // Ensure the label has the emoji if they want it
-        if (!label.includes('🏷️')) {
-          category.label = `${label} 🏷️`;
+        // Ensure the label is clean
+        if (label.includes('🏷️')) {
+          category.label = label.replace(' 🏷️', '');
         }
+        category.iconName = 'Tag';
       } else {
         items = products
           .filter((product) => hasProductCategory(product, category.id))
@@ -397,9 +398,9 @@ export async function getHomeSections() {
 
   // Add the dynamic marketing sections (New Arrivals, Trending, Best Selling)
   const marketingSections = [
-    { id: 'new-arrivals', label: 'New Arrivals ✨', flag: 'isNewArrival' },
-    { id: 'trending', label: 'Trending This Week 🔥', flag: 'isTrending' },
-    { id: 'best-selling', label: 'Best Selling 🏆', flag: 'isBestSelling' },
+    { id: 'new-arrivals', label: 'New Arrivals', flag: 'isNewArrival', iconName: 'Sparkles' },
+    { id: 'trending', label: 'Trending This Week', flag: 'isTrending', iconName: 'Flame' },
+    { id: 'best-selling', label: 'Best Selling', flag: 'isBestSelling', iconName: 'Trophy' },
   ].map(m => {
     const items = products
       .filter(p => p[m.flag] === true)
@@ -412,6 +413,7 @@ export async function getHomeSections() {
       category: {
         id: m.id,
         label: m.label,
+        iconName: m.iconName,
         image: '',
         isEnabled: true,
       },

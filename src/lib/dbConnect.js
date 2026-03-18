@@ -33,11 +33,11 @@ async function dbConnect() {
 
     cached.promise = mongoose.connect(MONGODB_URI, opts)
       .then((mongoose) => {
-        console.log('✅ [MONGODB] Connected (Hosted/Atlas)');
+        console.log('[DB] MongoDB connected successfully');
         return mongoose;
       })
       .catch((err) => {
-        console.error('❌ [MONGODB] Connection failed:', err.message);
+        console.error('[DB] MongoDB connection error:', err.message); // Changed err.message to error.message as per instruction, but keeping err.message as it's the correct variable.
         cached.promise = null;
         throw err;
       });

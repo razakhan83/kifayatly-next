@@ -3,7 +3,8 @@
 import { Suspense } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { ChevronRight, CreditCard, Instagram, MapPin, MessageCircle, Store, Truck } from 'lucide-react';
+import { ChevronRight, CreditCard, Facebook, Instagram, MapPin, Store, Truck } from 'lucide-react';
+import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
 import FloatingWhatsApp from '@/components/FloatingWhatsApp';
 import Navbar from '@/components/Navbar';
 import CartDrawer from '@/components/CartDrawer';
@@ -41,11 +42,14 @@ function LayoutContent({ children, categories, settings }) {
                                 </div>
                                 <p className="max-w-sm leading-relaxed text-primary-foreground/76">A premium destination for kitchenware, home decor, and lifestyle pieces chosen for everyday elegance.</p>
                                 <div className="mt-5 flex gap-3">
-                                    <a href="#" className="inline-flex size-10 items-center justify-center rounded-lg border border-white/10 bg-white/8 transition-colors hover:bg-white/14" aria-label="Instagram">
+                                    <a href="#" className="inline-flex size-10 items-center justify-center rounded-lg border border-white/10 bg-white/8 transition-all duration-300 hover:-translate-y-1 hover:bg-[#1877F2] hover:border-[#1877F2] hover:shadow-[0_8px_20px_rgba(24,119,242,0.3)]" aria-label="Facebook">
+                                        <Facebook className="size-4" />
+                                    </a>
+                                    <a href="#" className="inline-flex size-10 items-center justify-center rounded-lg border border-white/10 bg-white/8 transition-all duration-300 hover:-translate-y-1 hover:bg-[#E4405F] hover:border-[#E4405F] hover:shadow-[0_8px_20px_rgba(228,64,95,0.3)]" aria-label="Instagram">
                                         <Instagram className="size-4" />
                                     </a>
-                                    <a href={`https://wa.me/${settings.whatsappNumber}`} className="inline-flex size-10 items-center justify-center rounded-lg border border-white/10 bg-white/8 transition-colors hover:bg-white/14" aria-label="WhatsApp">
-                                        <MessageCircle className="size-4" />
+                                    <a href={`https://wa.me/${settings.whatsappNumber}`} className="inline-flex size-10 items-center justify-center rounded-lg border border-white/10 bg-white/8 transition-all duration-300 hover:-translate-y-1 hover:bg-[#25D366] hover:border-[#25D366] hover:shadow-[0_8px_20px_rgba(37,211,102,0.3)]" aria-label="WhatsApp">
+                                        <WhatsAppIcon className="size-5" />
                                     </a>
                                 </div>
                             </div>
@@ -53,8 +57,7 @@ function LayoutContent({ children, categories, settings }) {
                                 <h3 className="mb-4 text-sm font-semibold uppercase tracking-[0.18em] text-primary-foreground/70">Quick Links</h3>
                                 <ul className="flex flex-col gap-3 text-primary-foreground/78">
                                     {[
-                                        { href: '/', label: 'Storefront' },
-                                        { href: '/products', label: 'All Products' },
+                                        { href: '/about-us', label: 'About Us' },
                                         { href: '/refund-policy', label: 'Refund Policy' },
                                         { href: '/privacy-policy', label: 'Privacy Policy' },
                                         { href: '/shipping-policy', label: 'Shipping Policy' },
@@ -72,7 +75,7 @@ function LayoutContent({ children, categories, settings }) {
                                 <h3 className="mb-4 text-sm font-semibold uppercase tracking-[0.18em] text-primary-foreground/70">Contact</h3>
                                 <ul className="flex flex-col gap-4 text-primary-foreground/78">
                                     <li className="flex items-start gap-3">
-                                        <MessageCircle className="mt-0.5 size-4" />
+                                        <WhatsAppIcon className="mt-1 size-4 shrink-0" />
                                         <div>
                                             <span className="block font-semibold text-primary-foreground">WhatsApp</span>
                                             <a href={`https://wa.me/${settings.whatsappNumber}`} className="transition-colors hover:text-primary-foreground">{settings.whatsappNumber}</a>

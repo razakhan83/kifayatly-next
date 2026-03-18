@@ -29,6 +29,7 @@ export default function HomeCategories({ sections = [] }) {
               <CategoryProductSlider
                 categoryId={section.category.id}
                 categoryLabel={section.category.label}
+                iconName={section.category.iconName}
                 products={section.products}
                 skipFilter
                 onViewAll={(categoryId) => router.push(`/products?category=${categoryId}`)}

@@ -184,9 +184,9 @@ function NavbarContent({ categories }) {
                   className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-foreground transition-colors hover:bg-muted"
                 >
                   <Tag className="size-4 text-accent-foreground" />
-                  Special Offers 🏷️
+                  Special Offers
                 </button>
-                {categories.filter(c => c.id !== 'special-offers').map((category) => (
+                {categories.filter(c => c.id !== 'special-offers' && c.id !== 'new-arrivals').map((category) => (
                   <button
                     key={category.id}
                     type="button"
@@ -194,7 +194,7 @@ function NavbarContent({ categories }) {
                     className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-foreground transition-colors hover:bg-muted"
                   >
                     <Tag className="size-4 text-muted-foreground" />
-                    {category.label.replace(' 🏷️', '')}
+                    {category.label}
                   </button>
                 ))}
               </div>
@@ -356,9 +356,9 @@ function NavbarContent({ categories }) {
                         )}
                       >
                         <Tag className="size-4" />
-                        Special Offers 🏷️
+                        Special Offers
                       </button>
-                      {categories.filter(c => c.id !== 'special-offers').map((category) => (
+                      {categories.filter(c => c.id !== 'special-offers' && c.id !== 'new-arrivals').map((category) => (
                         <button
                           key={category.id}
                           type="button"
@@ -369,7 +369,7 @@ function NavbarContent({ categories }) {
                           )}
                         >
                           <Tag className="size-4" />
-                          {category.label.replace(' 🏷️', '')}
+                          {category.label}
                         </button>
                       ))}
                     </div>

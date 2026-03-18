@@ -55,13 +55,13 @@ export async function POST(req) {
         console.log('[API] Session check:', session?.user?.email || 'No session');
 
         if (!session || !isAdminEmail(session.user?.email)) {
-            console.log('[API] ❌ Unauthorized access attempt');
+            console.log('[API] Unauthorized access attempt');
             return NextResponse.json({ success: false, message: 'Unauthorized Access' }, { status: 401 });
         }
 
-        console.log('[API] ✅ Admin verified, connecting to database...');
+        console.log('[API] Admin verified, connecting to database...');
         await dbConnect();
-        console.log('[API] ✅ Database connected');
+        console.log('[API] Database connected');
 
         const body = await req.json();
         console.log('[API] Body received:', { Name: body.Name, Category: body.Category, Price: body.Price, Images: body.Images?.length });
@@ -69,7 +69,7 @@ export async function POST(req) {
         let { Name, Description, Price, Images, cloudinary_id, Category: categoryInput, slug, isLive } = body;
 
         if (!Name || !Price || !categoryInput) {
-            console.log('[API] ❌ Validation failed: Missing required fields');
+            console.log('[API] Validation failed: Missing required fields');
             return NextResponse.json({ success: false, message: 'Please provide Name, Price, and Category' }, { status: 400 });
         }
 
@@ -97,7 +97,7 @@ export async function POST(req) {
 
         // New products default to In Stock
         const stockStatus = 'In Stock';
-        console.log('[API] 📦 Stock Status Defaulted To:', stockStatus);
+        console.log('[API] Stock Status Defaulted To:', stockStatus);
 
         const normalizedImages = await ensureProductImagesBlur(normalizeProductImages(Images));
 
@@ -115,7 +115,7 @@ export async function POST(req) {
 
         await product.populate('Category');
 
-        console.log('[API] ✅ Product saved:', product._id);
+        console.log('[API] Product saved:', product._id);
 
         revalidateTag('products', { expire: 0 });
         revalidateTag(`product-${uniqueSlug}`, { expire: 0 });
@@ -134,7 +134,7 @@ export async function POST(req) {
             },
         }, { status: 201 });
     } catch (error) {
-        console.error('[API] ❌ Error:', error.message);
+        console.error('[API] Error:', error.message);
         return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 }

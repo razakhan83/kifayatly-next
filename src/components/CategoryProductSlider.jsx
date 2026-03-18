@@ -7,10 +7,19 @@ import { motion } from 'framer-motion';
 import ProductCard from '@/components/ProductCard';
 import { Button } from '@/components/ui/button';
 import { hasProductCategory } from '@/lib/productCategories';
-import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowRight, Flame, Sparkles, Trophy, Tag } from 'lucide-react';
 
-export default function CategoryProductSlider({ categoryId, categoryLabel, products, onViewAll, skipFilter = false }) {
+const ICON_MAP = {
+    Flame: Flame,
+    Sparkles: Sparkles,
+    Trophy: Trophy,
+    Tag: Tag,
+};
+
+export default function CategoryProductSlider({ categoryId, categoryLabel, products, onViewAll, skipFilter = false, iconName }) {
     const categoryProducts = skipFilter ? products : products.filter((product) => hasProductCategory(product, categoryId));
+
+    const HeaderIcon = iconName ? ICON_MAP[iconName] : null;
 
     const [emblaRef, emblaApi] = useEmblaCarousel(
         {

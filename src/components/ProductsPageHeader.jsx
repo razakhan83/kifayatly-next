@@ -2,7 +2,7 @@
 
 import { useRef, useEffect } from "react";
 import Link from "next/link";
-import { Search, Sparkles } from "lucide-react";
+import { Search, Sparkles, Tag } from "lucide-react";
 
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -43,9 +43,11 @@ export default function ProductsPageHeader({
 }) {
   const categoryButtons = [
     { id: "all", label: "All Items"},
-    { id: "new-arrivals", label: "New Arrivals"},
-    { id: "special-offers", label: "Special Offers 🏷️"},
-    ...categories.filter(c => c.id !== 'special-offers'),
+    { id: "new-arrivals", label: "New Arrivals", icon: Sparkles},
+    { id: "special-offers", label: "Special Offers", icon: Tag},
+    ...categories
+      .filter(c => c.id !== 'special-offers' && c.id !== 'new-arrivals')
+      .map(c => ({ ...c, icon: Tag })),
   ];
   const pageTitle = buildTitle(activeCategory, categories, searchTerm);
 
