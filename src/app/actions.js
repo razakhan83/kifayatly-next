@@ -189,10 +189,15 @@ export async function submitOrderAction(input) {
   const customerName = String(input?.customerName || '').trim();
   const customerPhone = String(input?.customerPhone || '').trim();
   const customerAddress = String(input?.customerAddress || '').trim();
+  const customerCity = String(input?.customerCity || '').trim();
   const items = Array.isArray(input?.items) ? input.items : [];
   const totalAmount = Number(input?.totalAmount || 0);
   const notes = String(input?.notes || '').trim();
   const whatsappNumber = String(input?.whatsappNumber || '').trim();
+
+  // Simplified fields from Phase 13
+  const landmark = String(input?.landmark || '').trim();
+  const updateProfile = Boolean(input?.updateProfile);
 
   if (!customerName || !customerPhone || !customerAddress || items.length === 0 || totalAmount <= 0) {
     throw new Error('Missing required checkout details');
@@ -213,35 +218,46 @@ export async function submitOrderAction(input) {
   const inputEmail = input?.customerEmail ? normalizeEmail(input.customerEmail) : null;
   const userEmail = sessionEmail || inputEmail || null;
 
-  // STRICT VALIDATION: If user is logged in, email MUST be captured.
+  // STRICT VALIDATION
   if (session?.user && !userEmail) {
-    throw new Error('Unable to capture user email for account linking. Please try signing out and in again.');
+    throw new Error('Unable to capture user email.');
   }
 
+  // Create Order record
   const order = await Order.create({
     orderId: makeOrderId(),
-    customerEmail: userEmail,
+    customerEmail: userEmail || null,
     customerName,
     customerPhone,
     customerAddress,
     items: normalizedItems,
     totalAmount,
-    notes,
     status: 'Pending',
+    notes,
   });
 
   revalidateTag('orders');
   revalidateTag('admin-dashboard');
 
-  // Update User Profile & Link Previous Orders (Background)
+  // Update User Profile (Background)
   if (userEmail) {
     try {
-      // 1. Update user profile with the latest phone number
-      await User.findOneAndUpdate(
-        { email: userEmail },
-        { phone: customerPhone },
-        { upsert: true }
-      );
+      const dbUser = await User.findOne({ email: userEmail });
+      const isFirstOrder = dbUser && !dbUser.phone && !dbUser.address;
+
+      if (isFirstOrder || updateProfile) {
+        await User.findOneAndUpdate(
+          { email: userEmail },
+          { 
+            name: customerName,
+            phone: customerPhone, 
+            city: customerCity,
+            address: customerAddress,
+            landmark: landmark
+          },
+          { upsert: true }
+        );
+      }
 
       // 2. Link all previous orders using fuzzy phone matching
       const phoneRegex = getPhoneRegex(customerPhone);
@@ -321,7 +337,7 @@ export async function getLastOrderDetailsAction() {
   if (!session?.user?.email) return null;
 
   await dbConnect();
-  const lastOrder = await Order.findOne({ userEmail: normalizeEmail(session.user.email) })
+  const lastOrder = await Order.findOne({ customerEmail: normalizeEmail(session.user.email) })
     .sort({ createdAt: -1 })
     .lean();
 

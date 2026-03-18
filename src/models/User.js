@@ -18,6 +18,15 @@ const UserSchema = new mongoose.Schema(
     phone: {
       type: String,
     },
+    city: {
+      type: String,
+    },
+    address: {
+      type: String, // Complete Address
+    },
+    landmark: {
+      type: String,
+    },
     disabled: {
       type: Boolean,
       default: false,

@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { startTransition, useMemo, useState, useEffect } from 'react';
-import { Loader2, MapPin, ShieldCheck, Wallet, CheckCircle2, Copy, Check } from 'lucide-react';
+import { Loader2, MapPin, ShieldCheck, Wallet, CheckCircle2, Copy, Check, Lock } from 'lucide-react';
 
 import { submitOrderAction, getLastOrderDetailsAction, revalidatePathAction } from '@/app/actions';
 import AuthModal from '@/components/AuthModal';
@@ -32,47 +32,64 @@ const formatPriceLabel = (raw) => `Rs. ${formatPrice(raw).toLocaleString('en-PK'
 
 export default function CheckoutClient({ settings }) {
   const router = useRouter();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const { cart, clearCart } = useCart();
+  const [hasAutoFilled, setHasAutoFilled] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
-    phone: '',
-    altPhone: '',
     fullName: '',
+    phone: '',
+    email: '',
+    city: '',
     address: '',
     landmark: '',
-    city: '',
     instructions: '',
   });
 
-  // Auto-fill Name and Email from Session
+  // Robust Auto-fill & Sync Logic
   useEffect(() => {
-    if (session?.user) {
-      setFormData((prev) => ({
-        ...prev,
-        fullName: prev.fullName || session.user.name || '',
-        email: prev.email || session.user.email || '',
-      }));
-    }
-  }, [session]);
+    let isMounted = true;
+    
+    const syncData = async (isInitial = false) => {
+      if (status !== 'authenticated' || !session?.user) return;
+      
+      try {
+        const [settingsRes, lastOrder] = await Promise.all([
+          fetch('/api/user/settings').then(res => res.ok ? res.json() : null),
+          getLastOrderDetailsAction()
+        ]);
 
-  // Auto-fill Address and Phone from Last Order
-  useEffect(() => {
-    if (session?.user) {
-      startTransition(async () => {
-        const lastOrder = await getLastOrderDetailsAction();
-        if (lastOrder) {
-          setFormData((prev) => ({
+        if (!isMounted) return;
+
+        setFormData((prev) => {
+          return {
             ...prev,
-            phone: prev.phone || lastOrder.phone || '',
-            address: prev.address || lastOrder.addressOnly || '',
-            city: prev.city || lastOrder.city || '',
-            landmark: prev.landmark || lastOrder.landmark || '',
-          }));
-        }
-      });
+            fullName: prev.fullName || settingsRes?.name || session.user.name || '',
+            email: settingsRes?.email || session.user.email || prev.email,
+            phone: prev.phone || settingsRes?.phone || lastOrder?.phone || '',
+            city: prev.city || settingsRes?.city || lastOrder?.city || '',
+            address: prev.address || settingsRes?.address || lastOrder?.address || '',
+            landmark: prev.landmark || settingsRes?.landmark || lastOrder?.landmark || '',
+          };
+        });
+        
+        if (isInitial) setHasAutoFilled(true);
+      } catch (error) {
+        console.error('Auto-fill sync error:', error);
+      }
+    };
+
+    if (status === 'authenticated' && !hasAutoFilled) {
+      syncData(true);
     }
-  }, [session]);
+
+    // Real-time Sync on Window Focus
+    window.addEventListener('focus', () => syncData());
+    return () => {
+      isMounted = false;
+      window.removeEventListener('focus', () => syncData());
+    };
+  }, [status, session, hasAutoFilled]);
 
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
@@ -129,8 +146,8 @@ export default function CheckoutClient({ settings }) {
     const nextErrors = {};
     if (!formData.fullName.trim()) nextErrors.fullName = 'Full Name is required.';
     if (!formData.phone.trim()) nextErrors.phone = 'Phone Number is required.';
-    if (!formData.address.trim()) nextErrors.address = 'Complete Address is required.';
     if (!formData.city.trim()) nextErrors.city = 'City is required.';
+    if (!formData.address.trim()) nextErrors.address = 'Complete Address is required.';
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   }
@@ -142,20 +159,17 @@ export default function CheckoutClient({ settings }) {
     setSubmitting(true);
     startTransition(async () => {
       try {
-        const customerAddress = [
-          formData.address,
-          formData.landmark || null,
-          formData.city,
-        ]
-          .filter(Boolean)
-          .join(', ');
-
         const result = await submitOrderAction({
           customerEmail: formData.email,
           customerName: formData.fullName,
           customerPhone: formData.phone,
-          customerAddress,
+          customerAddress: formData.address,
+          customerCity: formData.city,
+          customerAddressOnly: formData.address,
+          landmark: formData.landmark,
           notes: formData.instructions,
+          // Phase 13: Always update profile with latest checkout details
+          updateProfile: true,
           totalAmount: total,
           whatsappNumber: settings.whatsappNumber,
           items: cart.map((item) => ({
@@ -275,17 +289,27 @@ export default function CheckoutClient({ settings }) {
                   <h3 className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Contact Details</h3>
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div className="space-y-2">
-                      <Label htmlFor="email">Email Address</Label>
-                      <Input id="email" type="email" name="email" value={formData.email} onChange={handleChange} placeholder="you@example.com" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="phone">Phone Number *</Label>
-                      <Input id="phone" type="tel" name="phone" value={formData.phone} onChange={handleChange} aria-invalid={Boolean(errors.phone)} />
-                      {errors.phone ? <p className="text-xs text-destructive">{errors.phone}</p> : null}
+                      <Label htmlFor="email" className="flex items-center gap-2">
+                        Email Address
+                        {session?.user && <Lock className="size-3 text-muted-foreground/60" title="Locked to your account" />}
+                      </Label>
+                      <div className="relative">
+                        <Input 
+                          id="email" 
+                          type="email" 
+                          name="email" 
+                          value={formData.email} 
+                          onChange={handleChange} 
+                          placeholder="you@example.com"
+                          readOnly={!!session?.user}
+                          className={session?.user ? "bg-muted/30 cursor-not-allowed" : ""}
+                        />
+                      </div>
                     </div>
                     <div className="space-y-2 md:col-span-2">
-                      <Label htmlFor="altPhone">Alternate Phone</Label>
-                      <Input id="altPhone" type="tel" name="altPhone" value={formData.altPhone} onChange={handleChange} />
+                       <Label htmlFor="phone">Phone Number *</Label>
+                       <Input id="phone" type="tel" name="phone" value={formData.phone} onChange={handleChange} placeholder="e.g. 0300 1234567" aria-invalid={Boolean(errors.phone)} />
+                       {errors.phone ? <p className="text-xs text-destructive">{errors.phone}</p> : null}
                     </div>
                   </div>
                 </div>
@@ -317,14 +341,16 @@ export default function CheckoutClient({ settings }) {
                       {errors.city ? <p className="text-xs text-destructive">{errors.city}</p> : null}
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="address">Complete Address *</Label>
-                    <Input id="address" name="address" value={formData.address} onChange={handleChange} aria-invalid={Boolean(errors.address)} />
-                    {errors.address ? <p className="text-xs text-destructive">{errors.address}</p> : null}
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="landmark">Nearest Landmark</Label>
-                    <Input id="landmark" name="landmark" value={formData.landmark} onChange={handleChange} />
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="address">Complete Address (Street/Area) *</Label>
+                      <Input id="address" name="address" value={formData.address} onChange={handleChange} placeholder="House, Street, Sector/Area" aria-invalid={Boolean(errors.address)} />
+                      {errors.address ? <p className="text-xs text-destructive">{errors.address}</p> : null}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="landmark">Nearest Landmark</Label>
+                      <Input id="landmark" name="landmark" value={formData.landmark} onChange={handleChange} placeholder="e.g. Near ABC School" />
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="instructions">Special Notes</Label>

@@ -13,6 +13,7 @@ import {
   Sparkles,
   Store,
   Tag,
+  Settings,
   User,
   X,
 } from 'lucide-react';
@@ -248,6 +249,10 @@ function NavbarContent({ categories }) {
                       <ShoppingBag className="mr-2 h-4 w-4" />
                       <span>My Orders</span>
                     </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => router.push('/settings')}>
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>Account Settings</span>
+                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={() => signOut()} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
                       <LogOut className="mr-2 h-4 w-4" />
@@ -389,6 +394,17 @@ function NavbarContent({ categories }) {
                     <p className="truncate text-xs text-muted-foreground">{session.user?.email}</p>
                   </div>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsSidebarOpen(false);
+                    router.push('/settings');
+                  }}
+                  className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors bg-muted/60 text-foreground hover:bg-muted"
+                >
+                  <Settings className="size-4" />
+                  Account Settings
+                </button>
                 <button
                   type="button"
                   onClick={() => {
