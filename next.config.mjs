@@ -3,7 +3,6 @@ const nextConfig = {
     debugIds: true,
   },
   reactCompiler: true,
-  cacheComponents: true,
   experimental: {
     turbopackFileSystemCacheForDev: true,
     turbopackFileSystemCacheForBuild: true,

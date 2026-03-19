@@ -1,6 +1,6 @@
 import 'server-only';
 import mongoose from 'mongoose';
-import { cacheLife, cacheTag } from 'next/cache';
+import { revalidateTag } from 'next/cache';
 
 import Category from '@/models/Category';
 import CoverPhoto from '@/models/CoverPhoto';
@@ -150,11 +150,6 @@ function toOrderSummaryRow(order) {
 }
 
 async function getLiveProductsRaw() {
-  'use cache';
-
-  cacheLife('minutes');
-  cacheTag('products');
-
   await mongooseConnect();
 
   const products = await Product.find({ isLive: true })
@@ -165,11 +160,6 @@ async function getLiveProductsRaw() {
 }
 
 async function getAllProductsRaw() {
-  'use cache';
-
-  cacheLife('minutes');
-  cacheTag('products');
-
   await mongooseConnect();
 
   const products = await Product.find({})
@@ -180,11 +170,6 @@ async function getAllProductsRaw() {
 }
 
 async function getSettingsRaw() {
-  'use cache';
-
-  cacheLife('hours');
-  cacheTag('settings');
-
   await mongooseConnect();
 
   let settings = await Settings.findOne({ singletonKey: SETTINGS_KEY }).lean();
@@ -208,11 +193,6 @@ async function getSettingsRaw() {
 }
 
 async function getCoverPhotosRaw() {
-  'use cache';
-
-  cacheLife('hours');
-  cacheTag('cover-photos');
-
   await mongooseConnect();
 
   let coverPhoto = await CoverPhoto.findOne({ singletonKey: COVER_PHOTOS_KEY }).lean();
@@ -250,11 +230,6 @@ async function getCoverPhotosRaw() {
 }
 
 async function getCategoriesRaw() {
-  'use cache';
-
-  cacheLife('hours');
-  cacheTag('categories');
-
   await mongooseConnect();
 
   // Sort by sortOrder first (admin-defined order), then by name as fallback
@@ -518,12 +493,6 @@ export async function getProductBySlug(slug) {
   if (!safeSlug) return null;
 
   async function getSingleProduct(productSlug) {
-    'use cache';
-
-    cacheLife('minutes');
-    cacheTag('products');
-    cacheTag(`product-${productSlug}`);
-
     try {
       await mongooseConnect();
       
