@@ -1,25 +1,14 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback } from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
-import Autoplay from 'embla-carousel-autoplay';
-import { motion } from 'framer-motion';
 import ProductCard from '@/components/ProductCard';
 import { Button } from '@/components/ui/button';
 import { hasProductCategory } from '@/lib/productCategories';
-import { ChevronLeft, ChevronRight, ArrowRight, Flame, Sparkles, Trophy, Tag } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 
-const ICON_MAP = {
-    Flame: Flame,
-    Sparkles: Sparkles,
-    Trophy: Trophy,
-    Tag: Tag,
-};
-
-export default function CategoryProductSlider({ categoryId, categoryLabel, products, onViewAll, skipFilter = false, iconName }) {
+export default function CategoryProductSlider({ categoryId, categoryLabel, products, onViewAll, skipFilter = false }) {
     const categoryProducts = skipFilter ? products : products.filter((product) => hasProductCategory(product, categoryId));
-
-    const HeaderIcon = iconName ? ICON_MAP[iconName] : null;
 
     const [emblaRef, emblaApi] = useEmblaCarousel(
         {
@@ -28,22 +17,8 @@ export default function CategoryProductSlider({ categoryId, categoryLabel, produ
             slidesToScroll: 1,
             containScroll: 'trimSnaps',
             dragFree: false,
-        },
-        [Autoplay({ delay: 5000, stopOnInteraction: true, stopOnMouseEnter: true })]
+        }
     );
-
-    // Bounce key increments each time Embla settles after a slide,
-    // triggering a spring overshoot animation on visible cards.
-    const [bounceKey, setBounceKey] = useState(0);
-
-    useEffect(() => {
-        if (!emblaApi) return;
-        const onSettle = () => setBounceKey(k => k + 1);
-        emblaApi.on('settle', onSettle);
-        return () => {
-            emblaApi.off('settle', onSettle);
-        };
-    }, [emblaApi]);
 
     const scrollPrev = useCallback(() => emblaApi?.scrollPrev(), [emblaApi]);
     const scrollNext = useCallback(() => emblaApi?.scrollNext(), [emblaApi]);
@@ -88,21 +63,12 @@ export default function CategoryProductSlider({ categoryId, categoryLabel, produ
                 <div ref={emblaRef} className="overflow-hidden -my-4">
                     <div className="flex gap-4 py-4">
                         {categoryProducts.map((p, idx) => (
-                            <motion.div
+                            <div
                                 key={`${p.slug || p._id || p.id || 'item'}-${idx}`}
-                                initial={false}
-                                animate={{ x: 0 }}
-                                transition={{
-                                    type: 'spring',
-                                    stiffness: 100,
-                                    damping: 20,
-                                    mass: 1,
-                                }}
-                                style={{ x: bounceKey > 0 ? -5 : 0 }}
-                                className="min-w-0 flex-[0_0_calc(50%-0.5rem)] md:flex-[0_0_22vw] md:max-w-[280px] will-change-transform"
+                                className="min-w-0 flex-[0_0_calc(50%-0.5rem)] md:flex-[0_0_22vw] md:max-w-[280px]"
                             >
                                 <ProductCard product={p} />
-                            </motion.div>
+                            </div>
                         ))}
                     </div>
                 </div>

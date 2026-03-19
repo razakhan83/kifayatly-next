@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import { BadgeCheck, PackageCheck, Star, Truck } from 'lucide-react';
+import { BadgeCheck, PackageCheck, Truck } from 'lucide-react';
 import { notFound } from 'next/navigation';
 
 import CategoryProductSlider from '@/components/CategoryProductSlider';
@@ -16,12 +16,15 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
-import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { getProductBySlug, getRelatedProducts } from '@/lib/data';
 import { getCategoryColor } from '@/lib/categoryColors';
 import { getProductCategories } from '@/lib/productCategories';
 const formatPrice = (raw) => `Rs. ${Number(raw || 0).toLocaleString('en-PK')}`;
+
+export async function generateStaticParams() {
+  return [{ id: '__placeholder__' }];
+}
 
 
 export async function generateMetadata({ params }) {
@@ -56,6 +59,10 @@ export default async function ProductPage({ params }) {
 }
 
 async function ProductPageContent({ slug }) {
+  if (slug === '__placeholder__') {
+    notFound();
+  }
+
   const product = await getProductBySlug(slug);
 
   if (!product) {
