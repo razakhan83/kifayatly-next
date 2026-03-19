@@ -21,7 +21,6 @@ import { Separator } from '@/components/ui/separator';
 import { getProductBySlug, getRelatedProducts } from '@/lib/data';
 import { getCategoryColor } from '@/lib/categoryColors';
 import { getProductCategories } from '@/lib/productCategories';
-
 const formatPrice = (raw) => `Rs. ${Number(raw || 0).toLocaleString('en-PK')}`;
 
 
@@ -170,7 +169,9 @@ async function ProductPageContent({ slug }) {
         </div>
 
         <div className="mb-4 mt-12">
-          <ProductReviews productId={product._id} productName={product.Name} />
+          <Suspense fallback={<div className="h-32 animate-pulse rounded-lg bg-muted" />}>
+            <ProductReviews productId={product._id} productName={product.Name} />
+          </Suspense>
         </div>
       </div>
 

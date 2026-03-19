@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath, revalidateTag } from 'next/cache';
+import { updateTag } from 'next/cache';
 
 import { isAdminEmail, normalizeEmail, normalizePhone, getPhoneRegex } from '@/lib/admin';
 import { authOptions } from '@/lib/auth';
@@ -93,6 +94,7 @@ export async function toggleProductLiveAction(productId, nextValue) {
     updateTag(`product-${product.slug}`);
   }
   revalidateTag('admin-dashboard');
+  revalidateTag('home-sections');
 
   return { success: true, isLive: product.isLive };
 }
@@ -111,6 +113,7 @@ export async function deleteProductAction(productId) {
     revalidateTag(`product-${product.slug}`);
   }
   revalidateTag('admin-dashboard');
+  revalidateTag('home-sections');
 
   return { success: true };
 }
@@ -136,6 +139,7 @@ export async function setProductDiscountAction(productId, discountPercentage) {
     revalidateTag(`product-${product.slug}`);
   }
   revalidateTag('admin-dashboard');
+  revalidateTag('home-sections');
   revalidatePath('/admin/products');
   revalidatePath('/');
 
@@ -173,6 +177,7 @@ export async function saveStoreSettingsAction(nextSettings) {
   ).lean();
 
   revalidateTag('settings');
+  revalidateTag('home-sections');
 
   return {
     success: true,
@@ -300,7 +305,7 @@ export async function submitOrderAction(input) {
     // 1. Notify Admin
     const adminEmailResult = await resend.emails.send({
       from: 'China Unique <onboarding@resend.dev>',
-      to: '123raza83@gmail.com',
+      to: process.env.ADMIN_EMAIL || '123raza83@gmail.com',
       subject: `New Order Received - ${customerName}`,
       html: generateOrderEmailHtml(order),
       headers: {
@@ -413,7 +418,7 @@ export async function linkOrdersAction(phone) {
     revalidatePath('/orders');
     return { 
       success: true, 
-      message: `Successfully linked ${result.matchedCount} order(s) to your account.` 
+      message: `Successfully linked ${modifiedCount} order(s) to your account.` 
     };
   } else {
     return { 

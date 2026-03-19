@@ -38,6 +38,13 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
+
+# temp scripts & debug output
+tmp/
+*.py
+
+# generated
+skills-lock.json
 next-env.d.ts
 
 .vercel

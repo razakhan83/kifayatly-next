@@ -117,12 +117,12 @@ export async function POST(req) {
 
         console.log('[API] Product saved:', product._id);
 
-        revalidateTag('products', { expire: 0 });
-        revalidateTag(`product-${uniqueSlug}`, { expire: 0 });
-        revalidateTag('admin-dashboard', { expire: 0 });
+        revalidateTag('products');
+        revalidateTag(`product-${uniqueSlug}`);
+        revalidateTag('admin-dashboard');
+        revalidateTag('home-sections');
         revalidatePath('/admin/products');
         revalidatePath('/products');
-        revalidatePath(`/products/${uniqueSlug}`);
         return NextResponse.json({
             success: true,
             data: {

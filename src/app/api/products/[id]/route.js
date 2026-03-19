@@ -63,8 +63,7 @@ export async function PUT(request, { params }) {
                 revalidateTag(`product-${existingProduct.slug}`, 'max');
             }
             revalidateTag('admin-dashboard', 'max');
-
-            return NextResponse.json({ success: true, data: existingProduct });
+            revalidateTag('home-sections');
         }
 
         const categoryInput = Array.isArray(body.Category)
@@ -111,6 +110,7 @@ export async function PUT(request, { params }) {
             revalidatePath(`/products/${existingProduct.slug}`);
         }
         revalidateTag('admin-dashboard', 'max');
+        revalidateTag('home-sections');
         revalidatePath('/admin/products');
         revalidatePath('/products');
 
@@ -156,6 +156,7 @@ export async function PATCH(request, { params }) {
                 revalidatePath(`/products/${updatedProduct.slug}`);
             }
             revalidateTag('admin-dashboard');
+            revalidateTag('home-sections');
             revalidatePath('/admin/products');
             revalidatePath('/products');
             revalidatePath('/');
@@ -188,6 +189,7 @@ export async function PATCH(request, { params }) {
                 revalidatePath(`/products/${updatedProduct.slug}`);
             }
             revalidateTag('admin-dashboard');
+            revalidateTag('home-sections');
             revalidatePath('/admin/products');
             revalidatePath('/products');
             revalidatePath('/');
@@ -240,6 +242,7 @@ export async function PATCH(request, { params }) {
             revalidatePath(`/products/${updatedProduct.slug}`);
         }
         revalidateTag('admin-dashboard');
+        revalidateTag('home-sections');
         revalidatePath('/admin/products');
         revalidatePath('/products');
         revalidatePath('/');
@@ -282,6 +285,7 @@ export async function DELETE(_request, { params }) {
             revalidatePath(`/products/${deletedProduct.slug}`);
         }
         revalidateTag('admin-dashboard', 'max');
+        revalidateTag('home-sections');
         revalidatePath('/admin/products');
         revalidatePath('/products');
 

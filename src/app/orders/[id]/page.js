@@ -10,18 +10,15 @@ import Order from '@/models/Order';
 import OrderDetailsClient from './OrderDetailsClient';
 import { Button } from '@/components/ui/button';
 
-export const dynamic = 'force-dynamic';
-
 export const metadata = {
   title: 'Order Details | China Unique',
   description: 'View your order status and invoice.',
 };
 
 export default async function SingleOrderPage({ params, searchParams }) {
-  // 0. Await everything first as Next.js 15 requires
+  await connection();
   const resolvedParams = await params;
   const resolvedSearchParams = await searchParams;
-  await headers(); // The 'Headers' trick to force dynamic context
   
   const { id } = resolvedParams;
   const { token } = resolvedSearchParams;

@@ -1,6 +1,8 @@
 import 'server-only';
 import mongoose from 'mongoose';
 import { revalidateTag } from 'next/cache';
+import { cacheLife } from 'next/cache';
+import { cacheTag } from 'next/cache';
 
 import Category from '@/models/Category';
 import CoverPhoto from '@/models/CoverPhoto';
@@ -290,6 +292,9 @@ async function getCategoriesRaw() {
 }
 
 export async function getStoreSettings() {
+  'use cache';
+  cacheLife('days');
+  cacheTag('settings');
   return getSettingsRaw();
 }
 
@@ -331,10 +336,16 @@ export async function getAdminCoverPhotos() {
 }
 
 export async function getStoreCategories() {
+  'use cache';
+  cacheLife('days');
+  cacheTag('categories');
   return getCategoriesRaw();
 }
 
 export async function getHomeSections() {
+  'use cache';
+  cacheLife('minutes');
+  cacheTag('home-sections', 'products', 'categories');
   const [products, categories, coverPhotos] = await Promise.all([
     getLiveProductsRaw(),
     getCategoriesRaw(),
@@ -422,6 +433,9 @@ export async function getHomeSections() {
 }
 
 export async function getProductsList({ category = 'all', search = '', sort = 'newest', page = 1, limit = 24 } = {}) {
+  'use cache';
+  cacheLife('minutes');
+  cacheTag('products');
   const products = await getLiveProductsRaw();
   const normalizedSearch = String(search || '').trim().toLowerCase();
 
@@ -489,6 +503,9 @@ export async function getProductsList({ category = 'all', search = '', sort = 'n
 }
 
 export async function getProductBySlug(slug) {
+  'use cache';
+  cacheLife('max');
+  cacheTag('products', `product-${slug}`);
   const safeSlug = String(slug || '').trim();
   if (!safeSlug) return null;
 
@@ -521,6 +538,9 @@ export async function getProductBySlug(slug) {
 }
 
 export async function getRelatedProducts({ category = '', excludeSlug = '', limit = 8 } = {}) {
+  'use cache';
+  cacheLife('max');
+  cacheTag('products');
   const products = await getLiveProductsRaw();
 
   return products
@@ -543,7 +563,7 @@ export async function getAdminProducts() {
 export async function getOrdersList() {
   await mongooseConnect();
   const orders = await Order.find({}).sort({ createdAt: -1 }).lean();
-  return JSON.parse(JSON.stringify(orders.map(toOrderSummaryRow)));
+  return orders.map(toOrderSummaryRow);
 }
 
 export async function getUserOrders(email) {
@@ -570,7 +590,7 @@ export async function getUserOrders(email) {
   }
 
   const orders = await Order.find(query).sort({ createdAt: -1 }).lean();
-  return JSON.parse(JSON.stringify(orders.map(toOrderSummaryRow)));
+  return orders.map(toOrderSummaryRow);
 }
 
 export async function getOrderById(id) {

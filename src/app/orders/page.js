@@ -10,13 +10,12 @@ import { Button } from '@/components/ui/button';
 import LinkOrdersForm from '@/components/LinkOrdersForm';
 import OrdersClient from './OrdersClient';
 
-export const dynamic = 'force-dynamic';
-
 export const metadata = {
   title: 'My Orders | Kifayatly',
 };
 
 export default async function OrdersPage() {
+  await connection();
   const session = await getServerSession(authOptions);
 
   if (!session) {
@@ -24,7 +23,7 @@ export default async function OrdersPage() {
   }
 
   const rawOrders = await getUserOrders(session.user.email);
-  const orders = JSON.parse(JSON.stringify(rawOrders));
+  const orders = rawOrders;
 
   return (
     <main className="min-h-screen bg-background pb-16 pt-8">

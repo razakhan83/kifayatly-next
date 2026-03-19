@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import { connection } from 'next/server';
 import { ArrowRight, Box, CircleDollarSign, Inbox, ShoppingBag, Users } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -15,7 +14,6 @@ const statsConfig = [
 ];
 
 export default async function AdminDashboardPage() {
-  await connection();
   await requireAdmin();
 
   return <DashboardContent />;

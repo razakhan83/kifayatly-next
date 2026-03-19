@@ -5,6 +5,5 @@ export default withAuth({
 });
 
 export const config = { 
-  // Iska matlab: /admin ke andar sab ko protect karo, lekin /admin/login ko chorr do
-  matcher: ["/admin/:path*", "/admin/((?!login).*)"] 
+  matcher: ["/admin", "/admin/((?!login).*)"] 
 };

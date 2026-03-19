@@ -1,3 +1,0 @@
-﻿Files potentially missing await:
-C:\Users\razak\kifayatly-next\src\app\orders\[id]\page.js
-C:\Users\razak\kifayatly-next\src\app\products\page.js

@@ -1,3 +1,5 @@
+import 'server-only';
+
 /**
  * Generates a clean HTML template for order notification emails.
  * 
