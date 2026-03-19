@@ -4,6 +4,8 @@ const nextConfig = {
   experimental: {
     turbopackFileSystemCacheForDev: true,
     turbopackFileSystemCacheForBuild: true,
+    cachedNavigations: true,
+    appNewScrollHandler: true,
   },
   images: {
     remotePatterns: [

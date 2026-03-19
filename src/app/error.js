@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { AlertTriangle, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-export default function Error({ error, reset }) {
+export default function Error({ error, unstable_retry }) {
   useEffect(() => {
     console.error(error);
   }, [error]);
@@ -20,7 +20,7 @@ export default function Error({ error, reset }) {
           An unexpected error occurred. Please try again.
         </p>
       </div>
-      <Button onClick={reset} variant="outline" className="gap-2">
+      <Button onClick={() => unstable_retry()} variant="outline" className="gap-2">
         <RotateCcw className="size-4" />
         Try again
       </Button>
