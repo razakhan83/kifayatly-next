@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { isAdminEmail } from '@/lib/admin';
-import dbConnect from '@/lib/dbConnect';
+import mongooseConnect from '@/lib/mongooseConnect';
 import Order from '@/models/Order';
 import { Resend } from 'resend';
 import { generateOrderEmailHtml } from '@/lib/emailTemplates';
@@ -18,7 +18,7 @@ export async function GET() {
             return NextResponse.json({ success: false, message: 'Unauthorized Access' }, { status: 401 });
         }
 
-        await dbConnect();
+        await mongooseConnect();
         const orders = await Order.find({}).sort({ createdAt: -1 }).lean();
 
         const safeOrders = orders.map(o => ({
@@ -35,7 +35,7 @@ export async function GET() {
 // POST new order — Public (called by checkout)
 export async function POST(req) {
     try {
-        await dbConnect();
+        await mongooseConnect();
 
         const body = await req.json();
         const { customerName, customerPhone, customerAddress, items, totalAmount, notes } = body;

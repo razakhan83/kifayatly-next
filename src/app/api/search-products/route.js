@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
-import dbConnect from '@/lib/dbConnect';
+import mongooseConnect from '@/lib/mongooseConnect';
 import Product from '@/models/Product';
 import { getProductCategories } from '@/lib/productCategories';
 import { normalizeProductImages } from '@/lib/productImages';
 
 export async function GET(req) {
     try {
-        await dbConnect();
+        await mongooseConnect();
         
         // Return only the fields needed for the search autocomplete to keep it fast and light
         const products = await Product.find(

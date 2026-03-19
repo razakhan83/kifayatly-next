@@ -84,6 +84,10 @@ const OrderSchema = new mongoose.Schema(
             type: String,
             required: false,
         },
+        secureToken: {
+            type: String,
+            required: false,
+        },
     },
     {
         timestamps: true,
@@ -99,8 +103,9 @@ if (cachedOrder) {
     const hasIsReviewed = !!cachedOrder.schema.path('items').schema.paths.isReviewed;
     const hasWeight = !!cachedOrder.schema.paths.weight;
     const hasItemType = !!cachedOrder.schema.paths.itemType;
+    const hasSecureToken = !!cachedOrder.schema.paths.secureToken;
     
-    if (!hasStatusInProcess || !hasTracking || !hasIsReviewed || !hasWeight || !hasItemType) {
+    if (!hasStatusInProcess || !hasTracking || !hasIsReviewed || !hasWeight || !hasItemType || !hasSecureToken) {
         delete mongoose.models.Order;
     }
 }

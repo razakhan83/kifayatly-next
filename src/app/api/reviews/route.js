@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import dbConnect from '@/lib/dbConnect';
+import mongooseConnect from '@/lib/mongooseConnect';
 import Review from '@/models/Review';
 import Notification from '@/models/Notification';
 import User from '@/models/User';
@@ -18,7 +18,7 @@ export async function GET(req) {
       return NextResponse.json({ success: false, error: 'Product ID is required' }, { status: 400 });
     }
 
-    await dbConnect();
+    await mongooseConnect();
     const reviews = await Review.find({ productId, isApproved: true })
       .sort({ createdAt: -1 })
       .lean();
@@ -37,7 +37,7 @@ export async function POST(req) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    await dbConnect();
+    await mongooseConnect();
     const body = await req.json();
     const { productId, rating, comment } = body;
 

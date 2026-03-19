@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/requireAdmin';
-import dbConnect from '@/lib/dbConnect';
+import mongooseConnect from '@/lib/mongooseConnect';
 import Review from '@/models/Review';
 
 export async function GET() {
   try {
     await requireAdmin();
-    await dbConnect();
+    await mongooseConnect();
     
     const reviews = await Review.find({})
       .populate('productId', 'Name slug')
@@ -41,7 +41,7 @@ export async function DELETE(req) {
       return NextResponse.json({ success: false, error: 'Review ID is required' }, { status: 400 });
     }
 
-    await dbConnect();
+    await mongooseConnect();
     const result = await Review.findByIdAndDelete(id);
 
     if (!result) {

@@ -4,7 +4,7 @@ import { getServerSession } from 'next-auth';
 
 import { authOptions } from '@/lib/auth';
 import { isAdminEmail } from '@/lib/admin';
-import dbConnect from '@/lib/dbConnect';
+import mongooseConnect from '@/lib/mongooseConnect';
 import CoverPhoto from '@/models/CoverPhoto';
 import { ensureAssetBlurData } from '@/lib/serverImageBlur';
 
@@ -58,7 +58,7 @@ async function normalizeSlides(input) {
 
 export async function GET() {
   try {
-    await dbConnect();
+    await mongooseConnect();
 
     let coverPhoto = await CoverPhoto.findOne({ singletonKey: SINGLETON_KEY }).lean();
     if (!coverPhoto) {
@@ -80,7 +80,7 @@ export async function PUT(req) {
       return NextResponse.json({ success: false, message: 'Unauthorized Access' }, { status: 401 });
     }
 
-    await dbConnect();
+    await mongooseConnect();
 
     const body = await req.json();
     const slides = await normalizeSlides(body.slides);

@@ -4,14 +4,14 @@ import { revalidatePath, revalidateTag } from 'next/cache';
 
 import { isAdminEmail, normalizeEmail, normalizePhone, getPhoneRegex } from '@/lib/admin';
 import { authOptions } from '@/lib/auth';
-import dbConnect from '@/lib/dbConnect';
+import mongooseConnect from '@/lib/mongooseConnect';
 import Order from '@/models/Order';
 import Product from '@/models/Product';
 import Settings from '@/models/Settings';
 import User from '@/models/User';
 import { getServerSession } from 'next-auth';
 import { Resend } from 'resend';
-import { generateOrderEmailHtml } from '@/lib/emailTemplates';
+import { generateOrderEmailHtml, generateCustomerOrderConfirmationHtml } from '@/lib/emailTemplates';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -78,7 +78,7 @@ async function assertAdmin() {
 
 export async function toggleProductLiveAction(productId, nextValue) {
   await assertAdmin();
-  await dbConnect();
+  await mongooseConnect();
 
   const product = await Product.findById(productId);
   if (!product) {
@@ -99,7 +99,7 @@ export async function toggleProductLiveAction(productId, nextValue) {
 
 export async function deleteProductAction(productId) {
   await assertAdmin();
-  await dbConnect();
+  await mongooseConnect();
 
   const product = await Product.findByIdAndDelete(productId);
   if (!product) {
@@ -117,7 +117,7 @@ export async function deleteProductAction(productId) {
 
 export async function setProductDiscountAction(productId, discountPercentage) {
   await assertAdmin();
-  await dbConnect();
+  await mongooseConnect();
 
   const product = await Product.findById(productId);
   if (!product) {
@@ -144,7 +144,7 @@ export async function setProductDiscountAction(productId, discountPercentage) {
 
 export async function saveStoreSettingsAction(nextSettings) {
   await assertAdmin();
-  await dbConnect();
+  await mongooseConnect();
 
   const allowedFields = [
     'storeName',
@@ -184,7 +184,7 @@ export async function saveStoreSettingsAction(nextSettings) {
 }
 
 export async function submitOrderAction(input) {
-  await dbConnect();
+  await mongooseConnect();
 
   const customerName = String(input?.customerName || '').trim();
   const customerPhone = String(input?.customerPhone || '').trim();
@@ -226,6 +226,7 @@ export async function submitOrderAction(input) {
   // Create Order record
   const order = await Order.create({
     orderId: makeOrderId(),
+    secureToken: crypto.randomUUID(),
     customerEmail: userEmail || null,
     customerName,
     customerPhone,
@@ -294,17 +295,35 @@ export async function submitOrderAction(input) {
     console.error('Failed to create order notification:', notifyError);
   }
 
-  // Trigger Notification Email (Background)
+  // Trigger Notification Emails (Background)
   try {
-    const emailResult = await resend.emails.send({
+    // 1. Notify Admin
+    const adminEmailResult = await resend.emails.send({
       from: 'China Unique <onboarding@resend.dev>',
       to: '123raza83@gmail.com',
       subject: `New Order Received - ${customerName}`,
       html: generateOrderEmailHtml(order),
+      headers: {
+        'X-Click-Tracking': 'off',
+      },
     });
-    console.log(`Email notification triggered for ${order.orderId}:`, emailResult);
+    console.log(`Admin email notification triggered for ${order.orderId}:`, adminEmailResult);
+
+    // 2. Notify Customer (Thank You Email)
+    if (userEmail) {
+      const customerEmailResult = await resend.emails.send({
+        from: 'China Unique <onboarding@resend.dev>',
+        to: userEmail,
+        subject: `Thank You for Your Order! - ${order.orderId}`,
+        html: generateCustomerOrderConfirmationHtml(order),
+        headers: {
+          'X-Click-Tracking': 'off',
+        },
+      });
+      console.log(`Customer 'Thank You' email triggered for ${order.orderId}:`, customerEmailResult);
+    }
   } catch (emailError) {
-    console.error(`Failed to send email for ${order.orderId}:`, emailError);
+    console.error(`Failed to send emails for ${order.orderId}:`, emailError);
   }
 
   const lines = [
@@ -338,7 +357,7 @@ export async function getLastOrderDetailsAction() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.email) return null;
 
-  await dbConnect();
+  await mongooseConnect();
   const lastOrder = await Order.findOne({ customerEmail: normalizeEmail(session.user.email) })
     .sort({ createdAt: -1 })
     .lean();
@@ -369,7 +388,7 @@ export async function linkOrdersAction(phone) {
     return { success: false, message: 'Phone number is required.' };
   }
 
-  await dbConnect();
+  await mongooseConnect();
 
   // 1. Update User profile with this phone
   await User.findOneAndUpdate(
@@ -406,7 +425,7 @@ export async function linkOrdersAction(phone) {
 
 export async function updateOrderAction(id, updates) {
   await assertAdmin();
-  await dbConnect();
+  await mongooseConnect();
 
   try {
     const order = await Order.findById(id);

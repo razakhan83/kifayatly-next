@@ -2,12 +2,15 @@ import { redirect } from 'next/navigation';
 import { getServerSession } from 'next-auth';
 import { ShoppingBag } from 'lucide-react';
 import Link from 'next/link';
+import { connection } from 'next/server';
 
 import { authOptions } from '@/lib/auth';
 import { getUserOrders } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import LinkOrdersForm from '@/components/LinkOrdersForm';
 import OrdersClient from './OrdersClient';
+
+export const dynamic = 'force-dynamic';
 
 export const metadata = {
   title: 'My Orders | Kifayatly',

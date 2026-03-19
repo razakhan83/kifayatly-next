@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { isAdminEmail } from '@/lib/admin';
-import dbConnect from '@/lib/dbConnect';
+import mongooseConnect from '@/lib/mongooseConnect';
 import User from '@/models/User';
 
 export async function PATCH(request, { params }) {
@@ -14,7 +14,7 @@ export async function PATCH(request, { params }) {
 
     const { id } = await params;
     const { disabled, action } = await request.json();
-    await dbConnect();
+    await mongooseConnect();
 
     let update = {};
     if (action === 'force-logout') {

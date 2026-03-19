@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { isAdminEmail } from '@/lib/admin';
-import dbConnect from '@/lib/dbConnect';
+import mongooseConnect from '@/lib/mongooseConnect';
 import Category from '@/models/Category';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryImage';
 import {
@@ -27,7 +27,7 @@ export async function PATCH(req, { params }) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
-    await dbConnect();
+    await mongooseConnect();
     const { id } = await params;
 
     if (!id) {

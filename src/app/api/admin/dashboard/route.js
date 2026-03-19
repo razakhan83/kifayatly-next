@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { isAdminEmail } from '@/lib/admin';
-import dbConnect from '@/lib/dbConnect';
+import mongooseConnect from '@/lib/mongooseConnect';
 import Order from '@/models/Order';
 import Product from '@/models/Product';
 
@@ -17,7 +17,7 @@ export async function GET(request) {
             );
         }
 
-        await dbConnect();
+        await mongooseConnect();
 
         // --- Summary Stats ---
         const totalOrders = await Order.countDocuments();

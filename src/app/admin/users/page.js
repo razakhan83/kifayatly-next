@@ -2,7 +2,7 @@ import { connection } from 'next/server';
 import { Suspense } from 'react';
 import { requireAdmin } from '@/lib/requireAdmin';
 import AdminUsersClient from './AdminUsersClient';
-import dbConnect from '@/lib/dbConnect';
+import mongooseConnect from '@/lib/mongooseConnect';
 import User from '@/models/User';
 
 export const metadata = {
@@ -17,7 +17,7 @@ export default async function AdminUsersPage() {
 }
 
 async function UsersContent() {
-  await dbConnect();
+  await mongooseConnect();
   const users = await User.find({}).sort({ createdAt: -1 }).lean();
   
   const serializedUsers = users.map(user => ({

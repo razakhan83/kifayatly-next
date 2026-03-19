@@ -2,7 +2,7 @@ import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { isAdminEmail, normalizeEmail } from "@/lib/admin";
-import dbConnect from "@/lib/dbConnect";
+import mongooseConnect from "@/lib/mongooseConnect";
 import User from "@/models/User";
 
 export const authOptions = {
@@ -35,7 +35,7 @@ export const authOptions = {
     async signIn({ user, account }) {
       if (account.provider === "google") {
         try {
-          await dbConnect();
+          await mongooseConnect();
           const normalizedEmail = normalizeEmail(user.email);
           
           const existingUser = await User.findOne({ email: normalizedEmail });
@@ -89,7 +89,7 @@ export const authOptions = {
         try {
           // We only need to check DB if it's not the initial sign in (where user is provided)
           // or if we want to enforce "immediate" logout on every request/refresh
-          await dbConnect();
+          await mongooseConnect();
           const dbUser = await User.findOne({ email: token.email }).select('disabled forceLogoutAt').lean();
           
           if (dbUser) {
