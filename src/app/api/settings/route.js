@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { isAdminEmail } from '@/lib/admin';
-import dbConnect from '@/lib/dbConnect';
+import mongooseConnect from '@/lib/mongooseConnect';
 import Settings from '@/models/Settings';
 
 const SINGLETON_KEY = 'site-settings';
@@ -11,7 +11,7 @@ const SINGLETON_KEY = 'site-settings';
 // GET settings — Public (used across the site)
 export async function GET() {
     try {
-        await dbConnect();
+        await mongooseConnect();
 
         // Find or create the singleton settings document
         let settings = await Settings.findOne({ singletonKey: SINGLETON_KEY }).lean();
@@ -38,7 +38,7 @@ export async function PUT(req) {
             return NextResponse.json({ success: false, message: 'Unauthorized Access' }, { status: 401 });
         }
 
-        await dbConnect();
+        await mongooseConnect();
 
         const body = await req.json();
 

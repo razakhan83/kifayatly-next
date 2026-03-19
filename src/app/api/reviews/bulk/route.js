@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import dbConnect from '@/lib/dbConnect';
+import mongooseConnect from '@/lib/mongooseConnect';
 import Review from '@/models/Review';
 import Order from '@/models/Order';
 import Product from '@/models/Product';
@@ -21,7 +21,7 @@ export async function POST(req) {
       return NextResponse.json({ success: false, error: 'Invalid request data' }, { status: 400 });
     }
 
-    await dbConnect();
+    await mongooseConnect();
 
     // Check if order exists and belongs to user
     const order = await Order.findById(orderId);

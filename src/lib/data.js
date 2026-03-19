@@ -8,7 +8,7 @@ import Order from '@/models/Order';
 import Product from '@/models/Product';
 import Settings from '@/models/Settings';
 import User from '@/models/User';
-import dbConnect from '@/lib/dbConnect';
+import mongooseConnect from '@/lib/mongooseConnect';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryImage';
 import { normalizeEmail, getPhoneRegex } from '@/lib/admin';
 import {
@@ -155,7 +155,7 @@ async function getLiveProductsRaw() {
   cacheLife('minutes');
   cacheTag('products');
 
-  await dbConnect();
+  await mongooseConnect();
 
   const products = await Product.find({ isLive: true })
     .populate('Category')
@@ -170,7 +170,7 @@ async function getAllProductsRaw() {
   cacheLife('minutes');
   cacheTag('products');
 
-  await dbConnect();
+  await mongooseConnect();
 
   const products = await Product.find({})
     .populate('Category')
@@ -185,7 +185,7 @@ async function getSettingsRaw() {
   cacheLife('hours');
   cacheTag('settings');
 
-  await dbConnect();
+  await mongooseConnect();
 
   let settings = await Settings.findOne({ singletonKey: SETTINGS_KEY }).lean();
   if (!settings) {
@@ -213,7 +213,7 @@ async function getCoverPhotosRaw() {
   cacheLife('hours');
   cacheTag('cover-photos');
 
-  await dbConnect();
+  await mongooseConnect();
 
   let coverPhoto = await CoverPhoto.findOne({ singletonKey: COVER_PHOTOS_KEY }).lean();
   if (!coverPhoto) {
@@ -255,7 +255,7 @@ async function getCategoriesRaw() {
   cacheLife('hours');
   cacheTag('categories');
 
-  await dbConnect();
+  await mongooseConnect();
 
   // Sort by sortOrder first (admin-defined order), then by name as fallback
   const dbCategories = await Category.find({}).sort({ sortOrder: 1, name: 1 }).lean();
@@ -319,7 +319,7 @@ export async function getStoreSettings() {
 }
 
 export async function getAdminCoverPhotos() {
-  await dbConnect();
+  await mongooseConnect();
 
   let coverPhoto = await CoverPhoto.findOne({ singletonKey: COVER_PHOTOS_KEY }).lean();
   if (!coverPhoto) {
@@ -525,7 +525,7 @@ export async function getProductBySlug(slug) {
     cacheTag(`product-${productSlug}`);
 
     try {
-      await dbConnect();
+      await mongooseConnect();
       
       // 1. Try finding by slug first (vanity URL)
       let product = await Product.findOne({ slug: productSlug, isLive: true }).populate('Category').lean();
@@ -565,21 +565,21 @@ export async function getRelatedProducts({ category = '', excludeSlug = '', limi
 }
 
 export async function getAdminProducts() {
-  await dbConnect();
+  await mongooseConnect();
   const products = await Product.find({}).populate('Category').sort({ createdAt: -1 }).lean();
   const serializedProducts = products.map(serializeProduct);
   return serializedProducts.map(toAdminProductRow);
 }
 
 export async function getOrdersList() {
-  await dbConnect();
+  await mongooseConnect();
   const orders = await Order.find({}).sort({ createdAt: -1 }).lean();
   return JSON.parse(JSON.stringify(orders.map(toOrderSummaryRow)));
 }
 
 export async function getUserOrders(email) {
   if (!email) return [];
-  await dbConnect();
+  await mongooseConnect();
   
   const normalizedEmail = normalizeEmail(email);
 
@@ -605,13 +605,13 @@ export async function getUserOrders(email) {
 }
 
 export async function getOrderById(id) {
-  await dbConnect();
+  await mongooseConnect();
   const order = await Order.findById(String(id || '')).lean();
   return order ? toOrderSummaryRow(order) : null;
 }
 
 export async function getAdminDashboardData() {
-  await dbConnect();
+  await mongooseConnect();
 
   const [
     totalOrders,
@@ -645,7 +645,7 @@ export async function getAdminDashboardData() {
 }
 
 export async function getAdminSettings() {
-  await dbConnect();
+  await mongooseConnect();
 
   let settings = await Settings.findOne({ singletonKey: SETTINGS_KEY }).lean();
   if (!settings) {

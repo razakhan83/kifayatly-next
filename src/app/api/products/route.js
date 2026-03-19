@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { isAdminEmail } from '@/lib/admin';
-import dbConnect from '@/lib/dbConnect';
+import mongooseConnect from '@/lib/mongooseConnect';
 import Category from '@/models/Category';
 import Product from '@/models/Product';
 import { getProductCategories } from '@/lib/productCategories';
@@ -23,7 +23,7 @@ const slugify = (text) => {
 // GET all products - used by both Public Store and Admin
 export async function GET() {
     try {
-        await dbConnect();
+        await mongooseConnect();
         const products = await Product.find({}).populate('Category').sort({ createdAt: -1 }).lean();
 
         // Format objectId to string securely
@@ -60,7 +60,7 @@ export async function POST(req) {
         }
 
         console.log('[API] Admin verified, connecting to database...');
-        await dbConnect();
+        await mongooseConnect();
         console.log('[API] Database connected');
 
         const body = await req.json();

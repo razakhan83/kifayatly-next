@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { isAdminEmail } from '@/lib/admin';
-import dbConnect from '@/lib/dbConnect';
+import mongooseConnect from '@/lib/mongooseConnect';
 import Category from '@/models/Category';
 import Product from '@/models/Product';
 import { getProductCategories } from '@/lib/productCategories';
@@ -12,7 +12,7 @@ import { ensureProductImagesBlur } from '@/lib/serverImageBlur';
 
 export async function GET(_request, { params }) {
     try {
-        await dbConnect();
+        await mongooseConnect();
 
         const { id } = await params;
         const product = await Product.findById(id).populate('Category').lean();
@@ -45,7 +45,7 @@ export async function PUT(request, { params }) {
             return NextResponse.json({ success: false, message: 'Unauthorized Access' }, { status: 401 });
         }
 
-        await dbConnect();
+        await mongooseConnect();
 
         const { id } = await params;
         const body = await request.json();
@@ -137,7 +137,7 @@ export async function PATCH(request, { params }) {
             return NextResponse.json({ success: false, message: 'Unauthorized Access' }, { status: 401 });
         }
 
-        await dbConnect();
+        await mongooseConnect();
 
         const { id } = await params;
         const body = await request.json();
@@ -267,7 +267,7 @@ export async function DELETE(_request, { params }) {
             return NextResponse.json({ success: false, message: 'Unauthorized Access' }, { status: 401 });
         }
 
-        await dbConnect();
+        await mongooseConnect();
 
         const { id } = await params;
         const deletedProduct = await Product.findByIdAndDelete(id);

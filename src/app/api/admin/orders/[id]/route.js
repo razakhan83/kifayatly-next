@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/requireAdmin';
-import dbConnect from '@/lib/dbConnect';
+import mongooseConnect from '@/lib/mongooseConnect';
 import Order from '@/models/Order';
 
 export async function PATCH(req, { params }) {
@@ -11,7 +11,7 @@ export async function PATCH(req, { params }) {
     
     const { status, courierName, trackingNumber, weight, manualCodAmount } = body;
 
-    await dbConnect();
+    await mongooseConnect();
     const order = await Order.findById(id);
 
     if (!order) {

@@ -4,7 +4,7 @@ import { revalidatePath, revalidateTag } from 'next/cache';
 
 import { isAdminEmail, normalizeEmail, normalizePhone, getPhoneRegex } from '@/lib/admin';
 import { authOptions } from '@/lib/auth';
-import dbConnect from '@/lib/dbConnect';
+import mongooseConnect from '@/lib/mongooseConnect';
 import Order from '@/models/Order';
 import Product from '@/models/Product';
 import Settings from '@/models/Settings';
@@ -78,7 +78,7 @@ async function assertAdmin() {
 
 export async function toggleProductLiveAction(productId, nextValue) {
   await assertAdmin();
-  await dbConnect();
+  await mongooseConnect();
 
   const product = await Product.findById(productId);
   if (!product) {
@@ -99,7 +99,7 @@ export async function toggleProductLiveAction(productId, nextValue) {
 
 export async function deleteProductAction(productId) {
   await assertAdmin();
-  await dbConnect();
+  await mongooseConnect();
 
   const product = await Product.findByIdAndDelete(productId);
   if (!product) {
@@ -117,7 +117,7 @@ export async function deleteProductAction(productId) {
 
 export async function setProductDiscountAction(productId, discountPercentage) {
   await assertAdmin();
-  await dbConnect();
+  await mongooseConnect();
 
   const product = await Product.findById(productId);
   if (!product) {
@@ -144,7 +144,7 @@ export async function setProductDiscountAction(productId, discountPercentage) {
 
 export async function saveStoreSettingsAction(nextSettings) {
   await assertAdmin();
-  await dbConnect();
+  await mongooseConnect();
 
   const allowedFields = [
     'storeName',
@@ -184,7 +184,7 @@ export async function saveStoreSettingsAction(nextSettings) {
 }
 
 export async function submitOrderAction(input) {
-  await dbConnect();
+  await mongooseConnect();
 
   const customerName = String(input?.customerName || '').trim();
   const customerPhone = String(input?.customerPhone || '').trim();
@@ -357,7 +357,7 @@ export async function getLastOrderDetailsAction() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.email) return null;
 
-  await dbConnect();
+  await mongooseConnect();
   const lastOrder = await Order.findOne({ customerEmail: normalizeEmail(session.user.email) })
     .sort({ createdAt: -1 })
     .lean();
@@ -388,7 +388,7 @@ export async function linkOrdersAction(phone) {
     return { success: false, message: 'Phone number is required.' };
   }
 
-  await dbConnect();
+  await mongooseConnect();
 
   // 1. Update User profile with this phone
   await User.findOneAndUpdate(
@@ -425,7 +425,7 @@ export async function linkOrdersAction(phone) {
 
 export async function updateOrderAction(id, updates) {
   await assertAdmin();
-  await dbConnect();
+  await mongooseConnect();
 
   try {
     const order = await Order.findById(id);

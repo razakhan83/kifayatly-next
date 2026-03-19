@@ -12,9 +12,9 @@ if (!cached) {
   cached = global.mongoose = { conn: null, promise: null };
 }
 
-async function dbConnect() {
-  // If we have a cached connection and it's fully connected, return it
-  if (cached.conn && mongoose.connection.readyState === 1) {
+async function mongooseConnect() {
+  // If we have a cached connection, return it
+  if (cached.conn) {
     return cached.conn;
   }
 
@@ -37,7 +37,7 @@ async function dbConnect() {
         return mongoose;
       })
       .catch((err) => {
-        console.error('[DB] MongoDB connection error:', err.message); // Changed err.message to error.message as per instruction, but keeping err.message as it's the correct variable.
+        console.error('[DB] MongoDB connection error:', err.message);
         cached.promise = null;
         throw err;
       });
@@ -53,4 +53,4 @@ async function dbConnect() {
   return cached.conn;
 }
 
-export default dbConnect;
+export default mongooseConnect;

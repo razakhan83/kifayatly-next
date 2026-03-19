@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { isAdminEmail } from "@/lib/admin";
-import dbConnect from "@/lib/dbConnect";
+import mongooseConnect from "@/lib/mongooseConnect";
 import { optimizeCloudinaryUrl } from "@/lib/cloudinaryImage";
 import {
   generateBlurDataURLFromDataUrl,
@@ -24,7 +24,7 @@ function slugifyCategory(name = "") {
 // GET all categories — sorted by sortOrder then name
 export async function GET() {
   try {
-    await dbConnect();
+    await mongooseConnect();
     
     // Ensure 'special-offers' category exists
     await Category.findOneAndUpdate(
@@ -59,7 +59,7 @@ export async function POST(req) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
-    await dbConnect();
+    await mongooseConnect();
     const body = await req.json();
 
     if (!body.name) {
@@ -128,7 +128,7 @@ export async function PUT(req) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
-    await dbConnect();
+    await mongooseConnect();
     const body = await req.json();
 
     if (!Array.isArray(body.categories)) {
@@ -171,7 +171,7 @@ export async function DELETE(req) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
-    await dbConnect();
+    await mongooseConnect();
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
 

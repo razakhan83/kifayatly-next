@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import dbConnect from '@/lib/dbConnect';
+import mongooseConnect from '@/lib/mongooseConnect';
 import User from '@/models/User';
 
 export async function GET() {
@@ -11,7 +11,7 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    await dbConnect();
+    await mongooseConnect();
     const user = await User.findOne({ email: session.user.email }).lean();
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
@@ -44,7 +44,7 @@ export async function PATCH(request) {
       return NextResponse.json({ error: 'Name is required' }, { status: 400 });
     }
 
-    await dbConnect();
+    await mongooseConnect();
     const user = await User.findOneAndUpdate(
       { email: session.user.email },
       { 

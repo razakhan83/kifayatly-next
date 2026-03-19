@@ -2,7 +2,7 @@ import { connection } from 'next/server';
 import { Suspense } from 'react';
 import { requireAdmin } from '@/lib/requireAdmin';
 import AdminReviewsClient from './AdminReviewsClient';
-import dbConnect from '@/lib/dbConnect';
+import mongooseConnect from '@/lib/mongooseConnect';
 import Review from '@/models/Review';
 
 export const metadata = {
@@ -17,7 +17,7 @@ export default async function AdminReviewsPage() {
 }
 
 async function ReviewsContent() {
-  await dbConnect();
+  await mongooseConnect();
   const reviews = await Review.find({})
     .populate('productId', 'Name slug')
     .sort({ createdAt: -1 })

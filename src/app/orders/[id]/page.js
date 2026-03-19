@@ -1,10 +1,11 @@
 import { redirect } from 'next/navigation';
+import { connection } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { ChevronLeft } from 'lucide-react';
 import Link from 'next/link';
 
 import { authOptions } from '@/lib/auth';
-import dbConnect from '@/lib/dbConnect';
+import mongooseConnect from '@/lib/mongooseConnect';
 import Order from '@/models/Order';
 import OrderDetailsClient from './OrderDetailsClient';
 import { Button } from '@/components/ui/button';
@@ -15,10 +16,10 @@ export const metadata = {
 };
 
 export default async function SingleOrderPage({ params, searchParams }) {
-  const { id } = params;
-  const { token } = searchParams;
+  const { id } = await params;
+  const { token } = await searchParams;
 
-  await dbConnect();
+  await mongooseConnect();
   
   // 1. Fetch Order
   const orderDoc = await Order.findById(id).lean();

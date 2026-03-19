@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { isAdminEmail } from '@/lib/admin';
-import dbConnect from '@/lib/dbConnect';
+import mongooseConnect from '@/lib/mongooseConnect';
 import Notification from '@/models/Notification';
 
 // GET recent notifications
@@ -13,7 +13,7 @@ export async function GET() {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    await dbConnect();
+    await mongooseConnect();
     const notifications = await Notification.find()
       .sort({ createdAt: -1 })
       .limit(50)
@@ -34,7 +34,7 @@ export async function PATCH(req) {
     }
 
     const { id, all } = await req.json();
-    await dbConnect();
+    await mongooseConnect();
 
     if (all) {
       await Notification.updateMany({ isRead: false }, { isRead: true });
