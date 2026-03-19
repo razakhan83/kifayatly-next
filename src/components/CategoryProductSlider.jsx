@@ -71,7 +71,7 @@ export default function CategoryProductSlider({ categoryId, categoryLabel, produ
             <div className="group/slider relative mx-auto w-full px-4">
                 <button
                     onClick={scrollPrev}
-                    className="absolute left-0 top-1/2 z-10 flex h-10 w-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-lg border border-border bg-card/95 text-foreground opacity-0 transition-all duration-300 group-hover/slider:translate-x-0 group-hover/slider:opacity-100 will-change-transform"
+                    className="absolute left-2 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-lg border border-border bg-card/95 text-foreground transition-all duration-300 md:left-0 md:-translate-x-1/2 md:opacity-0 md:group-hover/slider:translate-x-0 md:group-hover/slider:opacity-100 will-change-transform"
                     aria-label="Previous products"
                 >
                     <ChevronLeft className="size-5" />
@@ -79,7 +79,7 @@ export default function CategoryProductSlider({ categoryId, categoryLabel, produ
 
                 <button
                     onClick={scrollNext}
-                    className="absolute right-0 top-1/2 z-10 flex h-10 w-10 translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-lg border border-border bg-card/95 text-foreground opacity-0 transition-all duration-300 group-hover/slider:translate-x-0 group-hover/slider:opacity-100 will-change-transform"
+                    className="absolute right-2 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-lg border border-border bg-card/95 text-foreground transition-all duration-300 md:right-0 md:translate-x-1/2 md:opacity-0 md:group-hover/slider:translate-x-0 md:group-hover/slider:opacity-100 will-change-transform"
                     aria-label="Next products"
                 >
                     <ChevronRight className="size-5" />

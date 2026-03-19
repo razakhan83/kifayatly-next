@@ -125,13 +125,16 @@ function NavbarContent({ categories }) {
 
   return (
     <div className="sticky top-0 z-40 border-b border-border/60 bg-card/95 backdrop-blur">
-      <div className="border-b border-border/60 bg-primary px-4 py-2 text-primary-foreground">
-        <div className="w-full overflow-hidden text-xs font-medium uppercase tracking-[0.16em]">
-          <div className="marquee-track gap-8 whitespace-nowrap">
-            {Array.from({ length: 6 }).map((_, index) => (
-              <div key={index} className="inline-flex items-center gap-8">
-                <span>Imported homeware with a refined finish</span>
-                <span className="inline-flex items-center gap-2">
+      <div className="relative border-b border-border/60 bg-primary px-4 py-2 text-primary-foreground">
+        <div className="mx-auto max-w-7xl overflow-hidden text-xs font-medium uppercase tracking-[0.16em]">
+          <div className="marquee-track flex gap-16 whitespace-nowrap">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div key={index} className="flex items-center gap-16">
+                <span className="flex items-center gap-2">
+                  <Sparkles className="size-3.5" />
+                  Imported homeware with a refined finish
+                </span>
+                <span className="flex items-center gap-2">
                   <Sparkles className="size-3.5" />
                   Free delivery above Rs. 3000
                 </span>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useCallback, useEffect, useState } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import AutoScroll from "embla-carousel-auto-scroll";
 import Image from "next/image";
@@ -51,7 +51,7 @@ export default function CategoryIconCarousel({ categories }) {
     return [...categories, ...categories, ...categories];
   }, [categories]);
 
-  const [emblaRef] = useEmblaCarousel(
+  const [emblaRef, emblaApi] = useEmblaCarousel(
     {
       loop: true,
       align: "start",
@@ -67,6 +67,21 @@ export default function CategoryIconCarousel({ categories }) {
       }),
     ],
   );
+  
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [scrollSnaps, setScrollSnaps] = useState([]);
+
+  const onSelect = useCallback(() => {
+    if (!emblaApi) return;
+    setSelectedIndex(emblaApi.selectedScrollSnap() % categories.length);
+  }, [emblaApi, categories.length]);
+
+  useEffect(() => {
+    if (!emblaApi) return;
+    setScrollSnaps(emblaApi.scrollSnapList().slice(0, categories.length));
+    emblaApi.on("select", onSelect);
+    emblaApi.on("reInit", onSelect);
+  }, [emblaApi, onSelect, categories.length]);
 
   if (!categories?.length) return null;
 
@@ -74,12 +89,12 @@ export default function CategoryIconCarousel({ categories }) {
     <div className="w-full border-b border-border bg-card/70 py-4 md:py-5">
       <div className="relative mx-auto w-full max-w-[1240px] px-4">
         <div
-          className="pointer-events-none absolute inset-y-0 left-4 z-10 w-8 md:w-12"
-          style={{ background: "linear-gradient(to right, color-mix(in oklab, var(--color-card) 70%, transparent), transparent)" }}
+          className="pointer-events-none absolute inset-y-0 left-4 z-10 w-12 md:w-20"
+          style={{ background: "linear-gradient(to right, var(--color-card), transparent)" }}
         />
         <div
-          className="pointer-events-none absolute inset-y-0 right-4 z-10 w-8 md:w-12"
-          style={{ background: "linear-gradient(to left, color-mix(in oklab, var(--color-card) 70%, transparent), transparent)" }}
+          className="pointer-events-none absolute inset-y-0 right-4 z-10 w-12 md:w-20"
+          style={{ background: "linear-gradient(to left, var(--color-card), transparent)" }}
         />
         <div ref={emblaRef} className="overflow-hidden">
           <div className="flex gap-4 md:gap-6">
@@ -117,6 +132,18 @@ export default function CategoryIconCarousel({ categories }) {
               );
             })}
           </div>
+        </div>
+        
+        {/* Mobile Dot Indicators */}
+        <div className="mt-4 flex justify-center gap-1.5 md:hidden">
+          {scrollSnaps.map((_, index) => (
+            <div
+              key={index}
+              className={`h-1 w-4 rounded-full transition-all duration-300 ${
+                index === selectedIndex ? "bg-primary w-6" : "bg-primary/20"
+              }`}
+            />
+          ))}
         </div>
       </div>
     </div>

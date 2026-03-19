@@ -27,7 +27,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/Table';
+} from '@/components/ui/table';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -243,7 +243,7 @@ export default function AdminUsersClient({ initialUsers }) {
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+      <div className="rounded-xl border border-border bg-card shadow-sm">
         <Table>
           <TableHeader className="bg-muted/50">
             <TableRow>
@@ -295,7 +295,9 @@ export default function AdminUsersClient({ initialUsers }) {
                   <TableCell>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Calendar className="size-3" />
-                      {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
+                      <span suppressHydrationWarning>
+                        {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
+                      </span>
                     </div>
                   </TableCell>
                   <TableCell>
