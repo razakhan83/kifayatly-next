@@ -2,7 +2,6 @@
 
 import { useMemo, useCallback, useEffect, useState } from "react";
 import useEmblaCarousel from "embla-carousel-react";
-import AutoScroll from "embla-carousel-auto-scroll";
 import Image from "next/image";
 import {
   Armchair,
@@ -58,14 +57,7 @@ export default function CategoryIconCarousel({ categories }) {
       dragFree: true,
       containScroll: false,
       slidesToScroll: 1,
-    },
-    [
-      AutoScroll({
-        speed: 0.8,
-        stopOnInteraction: false,
-        stopOnMouseEnter: true,
-      }),
-    ],
+    }
   );
   
   const [selectedIndex, setSelectedIndex] = useState(0);

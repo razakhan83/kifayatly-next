@@ -4,7 +4,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Minus, Plus, ShoppingBag, Trash2, Truck, ArrowRight } from 'lucide-react';
 import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
-import { AnimatePresence, motion } from 'framer-motion';
 
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
@@ -56,15 +55,10 @@ export default function CartDrawer() {
 
         <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto pr-1">
           {cart.length ? (
-            <AnimatePresence mode="popLayout">
+            <>
               {cart.map((item, index) => (
-                <motion.div
+                <div
                   key={item.slug || item._id || item.id || item.Name || item.name || index}
-                  layout
-                  initial={{ opacity: 1, x: 0 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 200 }}
-                  transition={{ duration: 0.5, ease: 'easeInOut' }}
                   className="surface-card rounded-xl p-3"
                 >
                 <div className="flex gap-3">
@@ -117,9 +111,9 @@ export default function CartDrawer() {
                     </div>
                   </div>
                 </div>
-                </motion.div>
+                </div>
               ))}
-            </AnimatePresence>
+            </>
           ) : (
             <div className="surface-card flex flex-1 flex-col items-center justify-center rounded-xl px-6 py-12 text-center">
               <div className="mb-4 flex size-16 items-center justify-center rounded-xl bg-primary/10 text-primary">

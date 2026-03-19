@@ -1,6 +1,5 @@
 'use client';
 import { useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Toast({ message, isVisible, onClose, type = 'success', action = null }) {
     useEffect(() => {
@@ -15,18 +14,10 @@ export default function Toast({ message, isVisible, onClose, type = 'success', a
     const isSuccess = type === 'success';
 
     return (
-        <AnimatePresence mode="wait">
+        <>
             {isVisible && (
                 <div key={message?._trigger || message} className="fixed md:bottom-10 md:right-10 md:top-auto md:left-auto top-4 left-1/2 -translate-x-1/2 md:translate-x-0 z-[100] w-[90%] md:w-80 pointer-events-none transition-all duration-500">
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.8, y: -40 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.8, y: -20, transition: { duration: 0.15 } }}
-                        transition={{ 
-                            type: "spring", 
-                            stiffness: 400, 
-                            damping: 25 
-                        }}
+                    <div
                         className={`
                             pointer-events-auto
                             flex items-center gap-4 p-4 rounded-2xl border
@@ -72,20 +63,19 @@ export default function Toast({ message, isVisible, onClose, type = 'success', a
                             <i className="fa-solid fa-xmark text-sm opacity-50"></i>
                         </button>
 
-                        <motion.div 
-                            key={`progress-${message?._trigger || Date.now()}`}
-                            initial={{ scaleX: 1 }}
-                            animate={{ scaleX: 0 }}
-                            transition={{ duration: 3, ease: "linear" }}
-                            style={{ originX: 0 }}
+                        <div 
                             className={`
                                 absolute bottom-0 left-0 right-0 h-1 rounded-full
                                 ${isSuccess ? 'bg-emerald-500/40' : 'bg-red-500/40'}
                             `}
+                            style={{
+                                transformOrigin: 'left',
+                                animation: 'toast-progress 3s linear forwards',
+                            }}
                         />
-                    </motion.div>
+                    </div>
                 </div>
             )}
-        </AnimatePresence>
+        </>
     );
 }
